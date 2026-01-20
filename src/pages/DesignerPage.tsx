@@ -35,6 +35,7 @@ import { EventMessageDesigner } from '../components/EventMessageDesigner';
 import { Layout } from '../components/Layout';
 import { MultiServiceExport } from '../components/MultiServiceExport';
 import { RelationForm } from '../components/RelationForm';
+import { SectionErrorBoundary } from '../components/SectionErrorBoundary';
 import { ServiceConfigPanel } from '../components/ServiceConfigPanel';
 import { useEntityDeletion, useHistory, useKeyboardShortcuts, useSelectedEntity } from '../hooks';
 import { useProjectStore, useServiceActions } from '../store/projectStore';
@@ -226,29 +227,33 @@ export function DesignerPage() {
         <Grid gutter="md">
           <Grid.Col span={selectedEntity ? 8 : 12}>
             <Paper withBorder style={{ height: 'calc(100vh - 160px)' }}>
-              <DesignerCanvas
-                onAddEntity={handleAddEntity}
-                onEditEntity={handleEditEntity}
-                onSelectEntity={selectEntity}
-                onAddRelation={handleAddRelation}
-                onAddService={handleAddService}
-                onEditService={handleEditService}
-                onConfigureService={handleConfigureService}
-              />
+              <SectionErrorBoundary section="Canvas" variant="full">
+                <DesignerCanvas
+                  onAddEntity={handleAddEntity}
+                  onEditEntity={handleEditEntity}
+                  onSelectEntity={selectEntity}
+                  onAddRelation={handleAddRelation}
+                  onAddService={handleAddService}
+                  onEditService={handleEditService}
+                  onConfigureService={handleConfigureService}
+                />
+              </SectionErrorBoundary>
             </Paper>
           </Grid.Col>
 
           {/* Detail panel for canvas view - using shared component */}
           {selectedEntity && (
             <Grid.Col span={4}>
-              <EntityDetailPanel
-                entity={selectedEntity}
-                onEdit={() => handleEditEntity(selectedEntity.id)}
-                onClose={clearSelection}
-                onUpdateField={updateSelectedField}
-                onRemoveField={removeSelectedField}
-                showEditButton={true}
-              />
+              <SectionErrorBoundary section="Entity Details" variant="panel">
+                <EntityDetailPanel
+                  entity={selectedEntity}
+                  onEdit={() => handleEditEntity(selectedEntity.id)}
+                  onClose={clearSelection}
+                  onUpdateField={updateSelectedField}
+                  onRemoveField={removeSelectedField}
+                  showEditButton={true}
+                />
+              </SectionErrorBoundary>
             </Grid.Col>
           )}
         </Grid>
@@ -333,13 +338,15 @@ export function DesignerPage() {
           {/* Detail panel for grid view - using shared component */}
           {selectedEntity && (
             <Grid.Col span={6}>
-              <EntityDetailPanel
-                entity={selectedEntity}
-                onClose={clearSelection}
-                onUpdateField={updateSelectedField}
-                onRemoveField={removeSelectedField}
-                showEditButton={false}
-              />
+              <SectionErrorBoundary section="Entity Details" variant="panel">
+                <EntityDetailPanel
+                  entity={selectedEntity}
+                  onClose={clearSelection}
+                  onUpdateField={updateSelectedField}
+                  onRemoveField={removeSelectedField}
+                  showEditButton={false}
+                />
+              </SectionErrorBoundary>
             </Grid.Col>
           )}
         </Grid>
@@ -420,7 +427,9 @@ export function DesignerPage() {
         size="xl"
         padding="lg"
       >
-        <EventMessageDesigner />
+        <SectionErrorBoundary section="Event Designer" variant="modal">
+          <EventMessageDesigner />
+        </SectionErrorBoundary>
       </Drawer>
 
       {/* Multi-service export drawer */}
@@ -437,7 +446,9 @@ export function DesignerPage() {
         size="lg"
         padding="lg"
       >
-        <MultiServiceExport />
+        <SectionErrorBoundary section="Service Export" variant="modal">
+          <MultiServiceExport />
+        </SectionErrorBoundary>
       </Drawer>
     </Layout>
   );
