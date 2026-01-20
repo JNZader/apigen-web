@@ -1,0 +1,196 @@
+# =============================================================================
+# APiGen Studio - Full Stack Docker Compose
+# =============================================================================
+#
+# Levanta frontend + backend en un solo comando
+#
+# Uso:
+#   docker compose -f docker-compose.full.yml up              # Frontend dev + Backend
+#   docker compose -f docker-compose.full.yml up --build      # Rebuild e iniciar
+#   docker compose -f docker-compose.full.yml up -d           # En background
+#   docker compose -f docker-compose.full.yml logs -f         # Ver todos los logs
+#   docker compose -f docker-compose.full.yml logs -f api     # Ver logs del backend
+#   docker compose -f docker-compose.full.yml down            # Detener todo
+#
+#   Con frontend en modo produccion:
+#   docker compose -f docker-compose.full.yml --profile prod up
+#
+#   Con PostgreSQL (en lugar de H2):
+#   docker compose -f docker-compose.full.yml --profile postgres up
+#
+#   Con pgAdmin:
+#   docker compose -f docker-compose.full.yml --profile tools up
+#
+# Acceso:
+#   Frontend Dev:   http://localhost:5173
+#   Frontend Prod:  http://localhost:3000 (requiere --profile prod)
+#   Backend API:    http://localhost:8080
+#   Swagger:        http://localhost:8080/swagger-ui.html
+#   H2 Console:     http://localhost:8080/h2-console
+#   pgAdmin:        http://localhost:5050 (requiere --profile tools)
+#
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Frontend - Vite Dev Server (con hot reload)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: apigen-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:8080
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - api
+    networks:
+      - apigen-network
+    stdin_open: true
+    tty: true
+
+  # ---------------------------------------------------------------------------
+  # Frontend Production - Nginx (opcional, usar con --profile prod)
+  # ---------------------------------------------------------------------------
+  frontend-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: apigen-frontend-prod
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - api
+    networks:
+      - apigen-network
+    profiles:
+      - prod
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Backend API - Spring Boot (usa H2 por defecto)
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: ../apigen
+      dockerfile: apigen-server/Dockerfile
+    container_name: apigen-api
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: 8080
+    networks:
+      - apigen-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ---------------------------------------------------------------------------
+  # Backend API con PostgreSQL (usar con --profile postgres)
+  # ---------------------------------------------------------------------------
+  api-postgres:
+    build:
+      context: ../apigen
+      dockerfile: apigen-server/Dockerfile
+    container_name: apigen-api-pg
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/apigen
+      SPRING_DATASOURCE_USERNAME: apigen_user
+      SPRING_DATASOURCE_PASSWORD: apigen_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - apigen-network
+    profiles:
+      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database (opcional, usar con --profile postgres)
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:17-alpine
+    container_name: apigen-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: apigen
+      POSTGRES_USER: apigen_user
+      POSTGRES_PASSWORD: apigen_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - apigen-network
+    profiles:
+      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apigen_user -d apigen"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # pgAdmin (opcional, usar con --profile tools)
+  # ---------------------------------------------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: apigen-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@apigen.local
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - apigen-network
+    profiles:
+      - tools
+    restart: unless-stopped
+
+# ---------------------------------------------------------------------------
+# Networks
+# ---------------------------------------------------------------------------
+networks:
+  apigen-network:
+    driver: bridge
+    name: apigen-fullstack-network
+
+# ---------------------------------------------------------------------------
+# Volumes
+# ---------------------------------------------------------------------------
+volumes:
+  postgres-data:
+    name: apigen-fullstack-postgres
+  pgadmin-data:
+    name: apigen-fullstack-pgadmin

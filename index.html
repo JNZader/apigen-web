@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary Meta Tags -->
+    <title>APiGen Studio - Visual API Designer for Spring Boot</title>
+    <meta name="title" content="APiGen Studio - Visual API Designer for Spring Boot" />
+    <meta name="description" content="Design and generate production-ready Spring Boot REST APIs visually. Create entities, define relationships, and export complete Java projects with best practices built-in." />
+    <meta name="keywords" content="API designer, Spring Boot, Java, REST API, code generator, visual editor, entity modeling" />
+    <meta name="author" content="APiGen Studio" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Theme Color for browsers -->
+    <meta name="theme-color" content="#228be6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a1b1e" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="APiGen Studio - Visual API Designer" />
+    <meta property="og:description" content="Design and generate production-ready Spring Boot REST APIs visually." />
+    <meta property="og:image" content="/java.svg" />
+    <meta property="og:site_name" content="APiGen Studio" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="APiGen Studio - Visual API Designer" />
+    <meta name="twitter:description" content="Design and generate production-ready Spring Boot REST APIs visually." />
+
+    <!-- Favicon and Icons -->
+    <link rel="icon" type="image/svg+xml" href="/java.svg" />
+    <link rel="apple-touch-icon" href="/java.svg" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Preconnect to improve performance -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+
+    <!-- Prevent FOUC (Flash of Unstyled Content) -->
+    <style>
+      /* Critical CSS - prevents layout shift */
+      #root {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      /* Loading state before React hydrates */
+      .app-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #f8f9fa;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        .app-loading {
+          background: #1a1b1e;
+          color: #c1c2c5;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <!-- Loading fallback shown before JS loads -->
+      <div class="app-loading" aria-label="Loading APiGen Studio">
+        <noscript>
+          <div style="text-align: center; padding: 2rem;">
+            <h1>APiGen Studio</h1>
+            <p>JavaScript is required to run this application.</p>
+            <p>Please enable JavaScript in your browser settings.</p>
+          </div>
+        </noscript>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

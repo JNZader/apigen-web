@@ -1,0 +1,146 @@
+/*
+ * Global styles for APiGen Studio
+ */
+
+/* WCAG 2.1 AA Contrast Fixes - Override Mantine colors for accessibility */
+:root {
+  /* Override dimmed color to meet 4.5:1 contrast ratio against white */
+  --mantine-color-dimmed: #5c5f66 !important;
+
+  /* Fix Stepper step description contrast */
+  --mantine-color-gray-6: #5c5f66 !important;
+}
+
+[data-mantine-color-scheme="dark"] {
+  /* Override dimmed color for dark mode - must contrast against dark background */
+  --mantine-color-dimmed: #909296 !important;
+  --mantine-color-gray-6: #909296 !important;
+}
+
+/* Ensure button labels have proper contrast */
+.mantine-Button-label {
+  color: inherit;
+}
+
+/* Ensure Code elements have proper contrast */
+.mantine-Code-root {
+  color: var(--mantine-color-text) !important;
+}
+
+/* Respect user's motion preferences for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Disable React Flow canvas animations */
+  .react-flow__node,
+  .react-flow__edge,
+  .react-flow__viewport {
+    transition: none !important;
+  }
+
+  /* Disable Mantine transitions */
+  .mantine-Modal-content,
+  .mantine-Drawer-content,
+  .mantine-Tooltip-tooltip,
+  .mantine-Notification-root {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Improve focus visibility for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--mantine-color-blue-5);
+  outline-offset: 2px;
+}
+
+/* Remove outline for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--mantine-color-gray-1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--mantine-color-gray-4);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--mantine-color-gray-5);
+}
+
+/* Dark mode scrollbar */
+[data-mantine-color-scheme="dark"] ::-webkit-scrollbar-track {
+  background: var(--mantine-color-dark-6);
+}
+
+[data-mantine-color-scheme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--mantine-color-dark-4);
+}
+
+[data-mantine-color-scheme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--mantine-color-dark-3);
+}
+
+/* Fix React Flow attribution contrast for accessibility (WCAG 2.1 AA) */
+.react-flow__attribution {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.react-flow__attribution a {
+  color: #1a1b1e !important;
+}
+
+[data-mantine-color-scheme="dark"] .react-flow__attribution {
+  background-color: rgba(37, 38, 43, 0.9) !important;
+}
+
+[data-mantine-color-scheme="dark"] .react-flow__attribution a {
+  color: #c1c2c5 !important;
+}
+
+/* Badge outline variant contrast fix for WCAG 2.1 AA */
+.mantine-Badge-root[data-variant="outline"] .mantine-Badge-label {
+  /* Ensure minimum 4.5:1 contrast ratio */
+  font-weight: 600;
+}
+
+/* Improve outline badge border contrast */
+.mantine-Badge-root[data-variant="outline"] {
+  border-width: 1.5px;
+}
+
+/* ActionIcon minimum touch target size (WCAG 2.1 - 44x44px minimum) */
+.mantine-ActionIcon-root {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Entity node specific: keep visual size small but expand touch target */
+.react-flow__node .mantine-ActionIcon-root {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 6px;
+}
+
+/* Ensure touch targets have adequate spacing */
+.react-flow__node .mantine-ActionIcon-root + .mantine-ActionIcon-root {
+  margin-left: 4px;
+}

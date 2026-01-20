@@ -1,0 +1,6 @@
+# APiGen Studio - robots.txt
+User-agent: *
+Allow: /
+
+# Note: Sitemap should be configured with absolute URL when deployed
+# Example: Sitemap: https://yourdomain.com/sitemap.xml

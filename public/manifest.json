@@ -1,0 +1,21 @@
+{
+  "name": "APiGen Studio",
+  "short_name": "APiGen",
+  "description": "Visual API Designer for Spring Boot - Design and generate production-ready REST APIs",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#228be6",
+  "orientation": "any",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["developer tools", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/java.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
