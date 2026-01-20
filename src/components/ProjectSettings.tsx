@@ -51,7 +51,7 @@ import {
   IconVersions,
   IconWebhook,
 } from '@tabler/icons-react';
-import { useProjectStore } from '../store/projectStore';
+import { useProject, useProjectActions } from '../store';
 import type {
   FeatureFlag,
   ProjectConfig,
@@ -69,7 +69,8 @@ interface ProjectSettingsProps {
 }
 
 export function ProjectSettings({ opened, onClose }: Readonly<ProjectSettingsProps>) {
-  const { project, setProject } = useProjectStore();
+  const project = useProject();
+  const { setProject } = useProjectActions();
 
   const form = useForm<ProjectConfig>({
     initialValues: project,

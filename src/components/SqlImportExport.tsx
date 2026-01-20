@@ -28,7 +28,7 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { useCallback, useRef, useState } from 'react';
-import { useProjectStore } from '../store/projectStore';
+import { useEntities, useEntityActions, useProject, useRelationActions, useRelations } from '../store';
 import { generateSQL } from '../utils/sqlGenerator';
 import { parseSQL } from '../utils/sqlParser';
 
@@ -38,7 +38,11 @@ interface SqlImportExportProps {
 }
 
 export function SqlImportExport({ opened, onClose }: Readonly<SqlImportExportProps>) {
-  const { entities, relations, project, setEntities, setRelations } = useProjectStore();
+  const entities = useEntities();
+  const relations = useRelations();
+  const project = useProject();
+  const { setEntities } = useEntityActions();
+  const { setRelations } = useRelationActions();
 
   const [importSql, setImportSql] = useState('');
   const [importError, setImportError] = useState<string | null>(null);

@@ -21,7 +21,7 @@ import {
 } from '@tabler/icons-react';
 import type { ProjectTemplate } from '../data/templates';
 import { applyTemplate, PROJECT_TEMPLATES } from '../data/templates';
-import { useProjectStore } from '../store/projectStore';
+import { useEntities, useEntityActions, useRelationActions } from '../store';
 
 interface TemplateSelectorProps {
   readonly opened: boolean;
@@ -45,7 +45,9 @@ const COLOR_MAP: Record<string, string> = {
 };
 
 export function TemplateSelector({ opened, onClose }: Readonly<TemplateSelectorProps>) {
-  const { setEntities, setRelations, entities } = useProjectStore();
+  const entities = useEntities();
+  const { setEntities } = useEntityActions();
+  const { setRelations } = useRelationActions();
 
   const applySelectedTemplate = (template: ProjectTemplate) => {
     if (template.id === 'blank') {
