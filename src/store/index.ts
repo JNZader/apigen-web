@@ -1,0 +1,109 @@
+// ============================================================================
+// Store Index - Re-exports all stores and hooks
+// ============================================================================
+
+// Individual stores
+export { useEntityStore } from './entityStore';
+export { useHistoryStore } from './historyStore';
+export { useLayoutStore } from './layoutStore';
+// Combined store facade (for backward compatibility)
+export { useProjectStore, useProjectStoreInternal } from './projectStore';
+export { useRelationStore } from './relationStore';
+export { useServiceConnectionStore } from './serviceConnectionStore';
+export { useServiceStore } from './serviceStore';
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export type { CanvasView, LayoutPreset } from './layoutStore';
+
+// ============================================================================
+// Entity Store Exports
+// ============================================================================
+
+export {
+  // Atomic selectors
+  useEntities,
+  // Action selectors
+  useEntityActions,
+  useEntityById,
+  useEntityCount,
+  useFieldActions,
+  useSelectedEntity,
+  useSelectedEntityId,
+} from './entityStore';
+
+// ============================================================================
+// Relation Store Exports
+// ============================================================================
+
+export {
+  // Action selectors
+  useRelationActions,
+  useRelationCount,
+  // Atomic selectors
+  useRelations,
+} from './relationStore';
+
+// ============================================================================
+// Service Store Exports
+// ============================================================================
+
+export {
+  useEntitiesForService,
+  useSelectedService,
+  useSelectedServiceId,
+  // Action selectors
+  useServiceActions,
+  useServiceById,
+  useServiceCount,
+  // Atomic selectors
+  useServices,
+} from './serviceStore';
+
+// ============================================================================
+// Service Connection Store Exports
+// ============================================================================
+
+export {
+  // Action selectors
+  useServiceConnectionActions,
+  // Atomic selectors
+  useServiceConnections,
+} from './serviceConnectionStore';
+
+// ============================================================================
+// Layout Store Exports
+// ============================================================================
+
+export {
+  // Atomic selectors
+  useCanvasView,
+  // Action selectors
+  useCanvasViewActions,
+  useLayoutActions,
+  useLayoutPreference,
+  useNeedsAutoLayout,
+} from './layoutStore';
+
+// ============================================================================
+// Project Store Exports
+// ============================================================================
+
+export {
+  // Atomic selectors
+  useProject,
+  // Action selectors
+  useProjectActions,
+} from './projectStore';
+
+// ============================================================================
+// History Store Exports
+// ============================================================================
+
+export {
+  useCanRedo,
+  useCanUndo,
+  useHistoryActions,
+} from './historyStore';

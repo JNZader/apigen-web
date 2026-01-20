@@ -1,64 +1,30 @@
-import type { Connection, Edge, EdgeTypes, Node, NodeChange, NodeTypes } from '@xyflow/react';
-import {
-  Background,
-  BackgroundVariant,
-  Controls,
-  getNodesBounds,
-  MiniMap,
-  Panel,
-  ReactFlow,
-  useEdgesState,
-  useNodesState,
-} from '@xyflow/react';
+import type { EdgeTypes, Node, NodeTypes } from '@xyflow/react';
+import { Background, BackgroundVariant, Controls, MiniMap, Panel, ReactFlow } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import '@xyflow/react/dist/style.css';
-import {
-  ActionIcon,
-  Button,
-  Group,
-  Menu,
-  Paper,
-  SegmentedControl,
-  Text,
-  Tooltip,
-  useMantineColorScheme,
-  VisuallyHidden,
-} from '@mantine/core';
-import { useDebouncedCallback, useThrottledCallback } from '@mantine/hooks';
+import { useMantineColorScheme, VisuallyHidden } from '@mantine/core';
 import { modals } from '@mantine/modals';
-import { notifications } from '@mantine/notifications';
 import {
-  IconCamera,
-  IconChevronDown,
-  IconLayoutDistributeHorizontal,
-  IconPlus,
-  IconServer,
-  IconTable,
-} from '@tabler/icons-react';
-import { toPng, toSvg } from 'html-to-image';
-import {
-  type CanvasView,
   useCanvasView,
-  useCanvasViewActions,
   useEntities,
   useEntityActions,
   useLayoutActions,
   useLayoutPreference,
   useNeedsAutoLayout,
-  useRelationActions,
   useRelations,
   useSelectedEntityId,
   useSelectedServiceId,
   useServiceActions,
-  useServiceConnectionActions,
   useServiceConnections,
   useServices,
 } from '../../store/projectStore';
-import type { CommunicationType, ServiceDesign } from '../../types';
-import { defaultServiceConnectionConfig } from '../../types';
+import { CANVAS, CANVAS_VIEWS } from '../../utils/canvasConstants';
 import { calculateAutoLayout, LAYOUT_PRESETS } from '../../utils/canvasLayout';
-import { CANVAS, CANVAS_VIEWS, ENTITY_NODE } from '../../utils/canvasConstants';
+import { CanvasEmptyStates, CanvasHelpTip } from './CanvasEmptyStates';
+import { CanvasToolbar } from './CanvasToolbar';
+import { buildEntityViewDescription, buildServicesViewDescription } from './canvasAccessibility';
 import { EntityNode } from './EntityNode';
+import { useCanvasConnections, useCanvasEdges, useCanvasNodes, useNodeDragHandlers } from './hooks';
 import { RelationEdge } from './RelationEdge';
 import { ServiceConnectionEdge } from './ServiceConnectionEdge';
 import { ServiceNode } from './ServiceNode';
@@ -81,76 +47,6 @@ interface DesignerCanvasProps {
   readonly onAddService?: () => void;
   readonly onEditService?: (id: string) => void;
   readonly onConfigureService?: (id: string) => void;
-}
-
-// Helper to generate entity view description for accessibility
-function buildEntityViewDescription(
-  entities: Array<{ id: string; name: string; fields: unknown[] }>,
-  relations: Array<{ sourceEntityId: string; targetEntityId: string; type: string }>,
-  selectedEntityId: string | null,
-): string {
-  if (entities.length === 0) {
-    return 'Empty entity diagram canvas. Use the Add Entity button to create your first entity.';
-  }
-
-  const entityNames = entities.map((e) => e.name).join(', ');
-  const relationDescriptions = relations.map((r) => {
-    const source = entities.find((e) => e.id === r.sourceEntityId)?.name || 'Unknown';
-    const target = entities.find((e) => e.id === r.targetEntityId)?.name || 'Unknown';
-    return `${source} to ${target} (${r.type})`;
-  });
-
-  let description = `Entity diagram with ${entities.length} ${entities.length === 1 ? 'entity' : 'entities'}: ${entityNames}.`;
-
-  if (relations.length > 0) {
-    description += ` ${relations.length} ${relations.length === 1 ? 'relation' : 'relations'}: ${relationDescriptions.join('; ')}.`;
-  }
-
-  if (selectedEntityId) {
-    const selected = entities.find((e) => e.id === selectedEntityId);
-    if (selected) {
-      description += ` Currently selected: ${selected.name} with ${selected.fields.length} fields.`;
-    }
-  }
-
-  return description;
-}
-
-// Helper to generate services view description for accessibility
-function buildServicesViewDescription(
-  services: Array<{ id: string; name: string; entityIds: string[] }>,
-  serviceConnections: Array<{
-    sourceServiceId: string;
-    targetServiceId: string;
-    communicationType: string;
-  }>,
-  selectedServiceId: string | null,
-): string {
-  if (services.length === 0) {
-    return 'Empty microservices canvas. Use the Add Service button to create your first service.';
-  }
-
-  const serviceNames = services.map((s) => s.name).join(', ');
-  const connectionDescriptions = serviceConnections.map((c) => {
-    const source = services.find((s) => s.id === c.sourceServiceId)?.name || 'Unknown';
-    const target = services.find((s) => s.id === c.targetServiceId)?.name || 'Unknown';
-    return `${source} to ${target} (${c.communicationType})`;
-  });
-
-  let description = `Microservices diagram with ${services.length} ${services.length === 1 ? 'service' : 'services'}: ${serviceNames}.`;
-
-  if (serviceConnections.length > 0) {
-    description += ` ${serviceConnections.length} ${serviceConnections.length === 1 ? 'connection' : 'connections'}: ${connectionDescriptions.join('; ')}.`;
-  }
-
-  if (selectedServiceId) {
-    const selected = services.find((s) => s.id === selectedServiceId);
-    if (selected) {
-      description += ` Currently selected: ${selected.name} with ${selected.entityIds.length} entities.`;
-    }
-  }
-
-  return description;
 }
 
 export function DesignerCanvas({
@@ -177,29 +73,13 @@ export function DesignerCanvas({
 
   // Use action selectors for stable references
   const { removeEntity } = useEntityActions();
-  const { removeRelation } = useRelationActions();
-  const {
-    updateService,
-    removeService,
-    selectService,
-    assignEntityToService,
-    removeEntityFromService,
-  } = useServiceActions();
-  const { addServiceConnection, removeServiceConnection } = useServiceConnectionActions();
-  const { setCanvasView } = useCanvasViewActions();
-  const { updateEntityPositions, updateServicePositions, setLayoutPreference, setNeedsAutoLayout } =
-    useLayoutActions();
+  const { removeService, selectService } = useServiceActions();
+  const { updateEntityPositions, setNeedsAutoLayout } = useLayoutActions();
 
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-
   // Track which service is being hovered during entity drag (for visual feedback)
   const [dropTargetServiceId, setDropTargetServiceId] = useState<string | null>(null);
-
-  // Track if a drag operation is in progress to prevent node reconstruction
-  const isDraggingRef = useRef(false);
 
   // Memoize delete handler to avoid recreation on every render
   const handleDeleteEntity = useCallback(
@@ -231,227 +111,38 @@ export function DesignerCanvas({
     [removeService],
   );
 
-  // Calculate entity count for a service
-  const getEntityCountForService = useCallback(
-    (service: ServiceDesign) =>
-      service.entityIds.filter((id) => entities.some((e) => e.id === id)).length,
-    [entities],
-  );
-
-  // Get entity names for a service
-  const getEntityNamesForService = useCallback(
-    (service: ServiceDesign) =>
-      service.entityIds
-        .map((id) => entities.find((e) => e.id === id)?.name)
-        .filter((name): name is string => name !== undefined),
-    [entities],
-  );
-
-  // Create structural fingerprints that exclude positions/dimensions AND entityIds
-  // This prevents node reconstruction on every position change or entity assignment
-  const entityStructureKey = useMemo(
-    () => entities.map((e) => `${e.id}:${e.name}:${e.fields.length}`).join(','),
-    [entities],
-  );
-
-  // Exclude entityIds from service structure key to prevent rebuilds during drag
-  // entityIds changes are handled separately in the selection effect
-  const serviceStructureKey = useMemo(
-    () => services.map((s) => `${s.id}:${s.name}`).join(','),
-    [services],
-  );
-
-  // Track entityIds separately to update service node data without full rebuild
-  const serviceEntityIdsKey = useMemo(
-    () => services.map((s) => `${s.id}:${s.entityIds.join('-')}`).join(','),
-    [services],
-  );
-
-  // Build entity nodes
-  const buildEntityNodes = useCallback(() => {
-    return entities.map((entity) => ({
-      id: entity.id,
-      type: 'entity' as const,
-      position: entity.position,
-      zIndex: 10, // Entities above services
-      data: {
-        entity,
-        onEdit: onEditEntity,
-        onDelete: (id: string) => handleDeleteEntity(id, entity.name),
-        isSelected: false, // Will be updated by separate effect
-      },
-    }));
-  }, [entities, onEditEntity, handleDeleteEntity]);
-
-  // Build service nodes
-  const buildServiceNodes = useCallback(() => {
-    return services.map((service) => ({
-      id: service.id,
-      type: 'service' as const,
-      position: service.position,
-      // Set initial dimensions from service
-      width: service.width,
-      height: service.height,
-      style: { width: service.width, height: service.height },
-      zIndex: 1, // Services as background containers
-      data: {
-        service,
-        entityCount: getEntityCountForService(service),
-        entityNames: getEntityNamesForService(service),
-        onEdit: (id: string) => onEditService?.(id),
-        onDelete: (id: string) => handleDeleteService(id, service.name),
-        onConfigure: (id: string) => onConfigureService?.(id),
-        isSelected: false, // Will be updated by separate effect
-        isDropTarget: false, // Will be updated by separate effect
-      },
-    }));
-  }, [
-    services,
+  // Use custom hooks for nodes and edges
+  const { nodes, setNodes, onNodesChange, isDraggingRef } = useCanvasNodes({
+    canvasView,
+    selectedEntityId,
+    selectedServiceId,
+    dropTargetServiceId,
+    onEditEntity,
     onEditService,
     onConfigureService,
-    handleDeleteService,
-    getEntityCountForService,
-    getEntityNamesForService,
-  ]);
+    onDeleteEntity: handleDeleteEntity,
+    onDeleteService: handleDeleteService,
+  });
 
-  // Sync nodes based on canvas view
-  // Only rebuild when structure changes (not on position/dimension changes or entityIds)
-  useEffect(() => {
-    // Skip rebuild during drag operations to prevent visual glitches
-    if (isDraggingRef.current) {
-      return;
-    }
+  const { edges, onEdgesChange } = useCanvasEdges({ canvasView });
 
-    if (canvasView === CANVAS_VIEWS.ENTITIES) {
-      setNodes(buildEntityNodes());
-    } else if (canvasView === CANVAS_VIEWS.SERVICES) {
-      setNodes(buildServiceNodes());
-    } else {
-      // Both view - services first (background), then entities on top
-      setNodes([...buildServiceNodes(), ...buildEntityNodes()]);
-    }
-    // Use structural keys to avoid rebuilding on position changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvasView, entityStructureKey, serviceStructureKey, setNodes]);
+  // Use custom hook for drag handlers
+  const { handleNodesChange, handleNodeDrag, handleNodeDragStop } = useNodeDragHandlers({
+    canvasView,
+    entities,
+    services,
+    isDraggingRef,
+    setNodes,
+    onNodesChange,
+    setDropTargetServiceId,
+  });
 
-  // Update service entity counts and names when entityIds change (without full rebuild)
-  useEffect(() => {
-    // Skip during drag operations
-    if (isDraggingRef.current) {
-      return;
-    }
-
-    setNodes((currentNodes) =>
-      currentNodes.map((node) => {
-        const service = services.find((s) => s.id === node.id);
-        if (service && node.type === 'service') {
-          const newEntityCount = getEntityCountForService(service);
-          const newEntityNames = getEntityNamesForService(service);
-          if (
-            node.data.entityCount !== newEntityCount ||
-            JSON.stringify(node.data.entityNames) !== JSON.stringify(newEntityNames)
-          ) {
-            return {
-              ...node,
-              data: {
-                ...node.data,
-                service,
-                entityCount: newEntityCount,
-                entityNames: newEntityNames,
-              },
-            };
-          }
-        }
-        return node;
-      }),
-    );
-  }, [serviceEntityIdsKey, services, getEntityCountForService, getEntityNamesForService, setNodes]);
-
-  // Update selection and drop target state without rebuilding nodes
-  // This preserves node positions during drag operations
-  useEffect(() => {
-    setNodes((currentNodes) =>
-      currentNodes.map((node) => {
-        const isEntity = entities.some((e) => e.id === node.id);
-        if (isEntity) {
-          const newIsSelected = selectedEntityId === node.id;
-          if (node.data.isSelected !== newIsSelected) {
-            return { ...node, data: { ...node.data, isSelected: newIsSelected } };
-          }
-        } else {
-          const newIsSelected = selectedServiceId === node.id;
-          const newIsDropTarget = dropTargetServiceId === node.id;
-          if (node.data.isSelected !== newIsSelected || node.data.isDropTarget !== newIsDropTarget) {
-            return {
-              ...node,
-              data: { ...node.data, isSelected: newIsSelected, isDropTarget: newIsDropTarget },
-            };
-          }
-        }
-        return node;
-      }),
-    );
-  }, [selectedEntityId, selectedServiceId, dropTargetServiceId, entities, setNodes]);
-
-  // Memoized relation delete handler
-  const handleRelationDelete = useCallback(
-    (id: string) => {
-      removeRelation(id);
-    },
-    [removeRelation],
-  );
-
-  // Memoized service connection delete handler
-  const handleServiceConnectionDelete = useCallback(
-    (id: string) => {
-      removeServiceConnection(id);
-    },
-    [removeServiceConnection],
-  );
-
-  // Build relation edges
-  const buildRelationEdges = useCallback(() => {
-    return relations.map((relation) => ({
-      id: relation.id,
-      source: relation.sourceEntityId,
-      target: relation.targetEntityId,
-      type: 'relation' as const,
-      data: {
-        type: relation.type,
-        onDelete: handleRelationDelete,
-      },
-    }));
-  }, [relations, handleRelationDelete]);
-
-  // Build service connection edges
-  const buildServiceConnectionEdges = useCallback(() => {
-    return serviceConnections.map((connection) => ({
-      id: connection.id,
-      source: connection.sourceServiceId,
-      target: connection.targetServiceId,
-      sourceHandle: 'source-right',
-      targetHandle: 'target-left',
-      type: 'service-connection' as const,
-      data: {
-        communicationType: connection.communicationType,
-        label: connection.label,
-        config: connection.config,
-        onDelete: handleServiceConnectionDelete,
-      },
-    }));
-  }, [serviceConnections, handleServiceConnectionDelete]);
-
-  // Sync edges based on canvas view
-  useEffect(() => {
-    if (canvasView === CANVAS_VIEWS.ENTITIES) {
-      setEdges(buildRelationEdges());
-    } else if (canvasView === CANVAS_VIEWS.SERVICES) {
-      setEdges(buildServiceConnectionEdges());
-    } else {
-      // Both view - show both relations and service connections
-      setEdges([...buildRelationEdges(), ...buildServiceConnectionEdges()]);
-    }
-  }, [canvasView, buildRelationEdges, buildServiceConnectionEdges, setEdges]);
+  // Use custom hook for connections
+  const { onConnect } = useCanvasConnections({
+    entities,
+    services,
+    onAddRelation,
+  });
 
   // Auto-apply layout when needed (e.g., after importing entities)
   useEffect(() => {
@@ -469,319 +160,18 @@ export function DesignerCanvas({
     setNeedsAutoLayout,
   ]);
 
-  // Debounced position update to avoid excessive store updates during drag
-  // Uses batch update pattern to update all positions in a single store operation
-  const debouncedEntityPositionUpdate = useDebouncedCallback(
-    (positions: Array<{ id: string; position: { x: number; y: number } }>) => {
-      const positionMap = new Map(positions.map(({ id, position }) => [id, position]));
-      updateEntityPositions(positionMap);
-    },
-    100,
-  );
-
-  const debouncedServicePositionUpdate = useDebouncedCallback(
-    (positions: Array<{ id: string; position: { x: number; y: number } }>) => {
-      const positionMap = new Map(positions.map(({ id, position }) => [id, position]));
-      updateServicePositions(positionMap);
-    },
-    100,
-  );
-
-  // Debounced callback to update service dimensions after resize
-  // Uses batch update pattern to update all dimensions in a single operation
-  const debouncedServiceDimensionsUpdate = useDebouncedCallback(
-    (dimensions: Array<{ id: string; width: number; height: number }>) => {
-      for (const { id, width, height } of dimensions) {
-        updateService(id, { width, height });
-      }
-    },
-    100,
-  );
-
-  // Cleanup debounced callbacks on unmount to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      debouncedEntityPositionUpdate.cancel();
-      debouncedServicePositionUpdate.cancel();
-      debouncedServiceDimensionsUpdate.cancel();
-    };
-  }, [debouncedEntityPositionUpdate, debouncedServicePositionUpdate, debouncedServiceDimensionsUpdate]);
-
-  // Collect position changes during drag
-  const pendingPositions = useRef<Map<string, { x: number; y: number }>>(new Map());
-
-  // Track previous service positions to calculate movement delta
-  const previousServicePositions = useRef<Map<string, { x: number; y: number }>>(new Map());
-
-  // Initialize previousServicePositions with current service positions
-  // This prevents race condition where first drag uses potentially stale store positions
-  useEffect(() => {
-    for (const service of services) {
-      if (!previousServicePositions.current.has(service.id)) {
-        previousServicePositions.current.set(service.id, service.position);
-      }
-    }
-  }, [services]);
-
-  // Check if a position is inside a service's bounds
-  // Uses the center of the entity node for more intuitive detection
-  const findServiceAtPosition = useCallback(
-    (position: { x: number; y: number }): ServiceDesign | null => {
-      // Calculate the center of the entity node
-      const centerX = position.x + ENTITY_NODE.WIDTH / 2;
-      const centerY = position.y + ENTITY_NODE.MIN_HEIGHT / 2;
-
-      for (const service of services) {
-        const isInside =
-          centerX >= service.position.x &&
-          centerX <= service.position.x + service.width &&
-          centerY >= service.position.y &&
-          centerY <= service.position.y + service.height;
-        if (isInside) {
-          return service;
-        }
-      }
-      return null;
-    },
-    [services],
-  );
-
-  // Handle node position changes with debouncing
-  const handleNodesChange = useCallback(
-    (changes: NodeChange[]) => {
-      // Collect position changes
-      const entityPositions: Array<{ id: string; position: { x: number; y: number } }> = [];
-      const servicePositions: Array<{ id: string; position: { x: number; y: number } }> = [];
-      const serviceDimensions: Array<{ id: string; width: number; height: number }> = [];
-      const additionalEntityMoves: Array<{ id: string; position: { x: number; y: number } }> = [];
-
-      // Check if any change is a drag start or drag end
-      for (const change of changes) {
-        if (change.type === 'position') {
-          if (change.dragging === true) {
-            isDraggingRef.current = true;
-          } else if (change.dragging === false) {
-            // Drag ended - will be handled in handleNodeDragStop
-          }
-        }
-      }
-
-      for (const change of changes) {
-        if (change.type === 'position' && change.position) {
-          pendingPositions.current.set(change.id, change.position);
-
-          // Determine if this is an entity or service
-          const isEntity = entities.some((e) => e.id === change.id);
-          const service = services.find((s) => s.id === change.id);
-
-          if (isEntity) {
-            entityPositions.push({ id: change.id, position: change.position });
-          } else if (service) {
-            servicePositions.push({ id: change.id, position: change.position });
-
-            // When a service moves in 'both' view, move its assigned entities too
-            if (canvasView === CANVAS_VIEWS.BOTH && service.entityIds.length > 0) {
-              const prevPos = previousServicePositions.current.get(service.id) || service.position;
-              const deltaX = change.position.x - prevPos.x;
-              const deltaY = change.position.y - prevPos.y;
-
-              // Move all entities assigned to this service
-              for (const entityId of service.entityIds) {
-                const entity = entities.find((e) => e.id === entityId);
-                if (entity) {
-                  const currentEntityPos = pendingPositions.current.get(entityId) || entity.position;
-                  const newEntityPos = {
-                    x: currentEntityPos.x + deltaX,
-                    y: currentEntityPos.y + deltaY,
-                  };
-                  pendingPositions.current.set(entityId, newEntityPos);
-                  additionalEntityMoves.push({ id: entityId, position: newEntityPos });
-                }
-              }
-            }
-
-            // Update previous position for next delta calculation
-            previousServicePositions.current.set(service.id, change.position);
-          }
-        }
-
-        // Capture dimension changes (from NodeResizer)
-        if (change.type === 'dimensions' && change.dimensions) {
-          const isService = services.some((s) => s.id === change.id);
-          if (
-            isService &&
-            change.dimensions.width !== undefined &&
-            change.dimensions.height !== undefined
-          ) {
-            serviceDimensions.push({
-              id: change.id,
-              width: change.dimensions.width,
-              height: change.dimensions.height,
-            });
-          }
-        }
-      }
-
-      // Apply the original changes
-      onNodesChange(changes);
-
-      // If we have additional entity moves from service dragging, update those nodes too
-      if (additionalEntityMoves.length > 0) {
-        setNodes((currentNodes) =>
-          currentNodes.map((node) => {
-            const move = additionalEntityMoves.find((m) => m.id === node.id);
-            if (move) {
-              return { ...node, position: move.position };
-            }
-            return node;
-          }),
-        );
-        // Also update the store
-        debouncedEntityPositionUpdate(additionalEntityMoves);
-      }
-
-      // Debounce the store updates
-      if (entityPositions.length > 0) {
-        debouncedEntityPositionUpdate(entityPositions);
-      }
-      if (servicePositions.length > 0) {
-        debouncedServicePositionUpdate(servicePositions);
-      }
-      if (serviceDimensions.length > 0) {
-        debouncedServiceDimensionsUpdate(serviceDimensions);
-      }
-    },
-    [
-      onNodesChange,
-      setNodes,
-      entities,
-      services,
-      canvasView,
-      debouncedEntityPositionUpdate,
-      debouncedServicePositionUpdate,
-      debouncedServiceDimensionsUpdate,
-    ],
-  );
-
-  // Throttled drop target update to reduce re-renders during drag (every 50ms)
-  const throttledSetDropTarget = useThrottledCallback((serviceId: string | null) => {
-    setDropTargetServiceId(serviceId);
-  }, 50);
-
-  // Handle entity drag - update drop target for visual feedback (throttled)
-  const handleNodeDrag = useCallback(
-    (_event: React.MouseEvent, node: Node) => {
-      // Only track drop target in 'both' view for entities
-      if (canvasView !== CANVAS_VIEWS.BOTH) return;
-
-      const isEntity = entities.some((e) => e.id === node.id);
-      if (!isEntity) {
-        throttledSetDropTarget(null);
-        return;
-      }
-
-      const targetService = findServiceAtPosition(node.position);
-      throttledSetDropTarget(targetService?.id ?? null);
-    },
-    [canvasView, entities, findServiceAtPosition, throttledSetDropTarget],
-  );
-
-  // Handle entity drag stop - check if dropped inside a service
-  const handleNodeDragStop = useCallback(
-    (_event: React.MouseEvent, node: Node) => {
-      // Mark drag as ended
-      isDraggingRef.current = false;
-
-      // Clear drop target visual feedback
-      setDropTargetServiceId(null);
-
-      // Clear previous positions tracking
-      previousServicePositions.current.clear();
-
-      // Only check for entity-to-service assignment in 'both' view
-      if (canvasView !== CANVAS_VIEWS.BOTH) return;
-
-      // Check if the dragged node is an entity
-      const isEntity = entities.some((e) => e.id === node.id);
-      if (!isEntity) return;
-
-      const entityPosition = node.position;
-      const targetService = findServiceAtPosition(entityPosition);
-
-      if (targetService) {
-        // Check if entity is already in this service
-        if (!targetService.entityIds.includes(node.id)) {
-          assignEntityToService(node.id, targetService.id);
-          notifications.show({
-            title: 'Entity assigned',
-            message: `Entity added to ${targetService.name}`,
-            color: 'green',
-          });
-        }
-      } else {
-        // Entity was dragged outside all services - remove from any service
-        const currentService = services.find((s) => s.entityIds.includes(node.id));
-        if (currentService) {
-          removeEntityFromService(node.id, currentService.id);
-          notifications.show({
-            title: 'Entity removed',
-            message: `Entity removed from ${currentService.name}`,
-            color: 'blue',
-          });
-        }
-      }
-    },
-    [
-      canvasView,
-      entities,
-      services,
-      findServiceAtPosition,
-      assignEntityToService,
-      removeEntityFromService,
-    ],
-  );
-
-  // Handle new connections (creating relations or service connections)
-  const onConnect = useCallback(
-    (connection: Connection) => {
-      if (connection.source && connection.target && connection.source !== connection.target) {
-        // Determine if this is an entity or service connection
-        const sourceIsEntity = entities.some((e) => e.id === connection.source);
-        const targetIsEntity = entities.some((e) => e.id === connection.target);
-        const sourceIsService = services.some((s) => s.id === connection.source);
-        const targetIsService = services.some((s) => s.id === connection.target);
-
-        if (sourceIsEntity && targetIsEntity) {
-          // Create entity relation
-          onAddRelation(connection.source, connection.target);
-        } else if (sourceIsService && targetIsService) {
-          // Create service connection with default REST type
-          addServiceConnection({
-            sourceServiceId: connection.source,
-            targetServiceId: connection.target,
-            communicationType: 'REST' as CommunicationType,
-            config: { ...defaultServiceConnectionConfig },
-          });
-        }
-        // Mixed connections (entity to service) are not supported
-      }
-    },
-    [entities, services, onAddRelation, addServiceConnection],
-  );
-
   // Handle node selection
   const onNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
-      // Determine if this is an entity or service
       const isEntity = entities.some((e) => e.id === node.id);
       const isService = services.some((s) => s.id === node.id);
 
       if (isEntity) {
         onSelectEntity(node.id);
-        selectService(null); // Deselect service when selecting entity
+        selectService(null);
       } else if (isService) {
         selectService(node.id);
-        onSelectEntity(null); // Deselect entity when selecting service
+        onSelectEntity(null);
       }
     },
     [entities, services, onSelectEntity, selectService],
@@ -792,165 +182,6 @@ export function DesignerCanvas({
     onSelectEntity(null);
     selectService(null);
   }, [onSelectEntity, selectService]);
-
-  // Auto-layout with dagre algorithm
-  const handleAutoLayout = useCallback(
-    (preset: keyof typeof LAYOUT_PRESETS = 'horizontal') => {
-      if (canvasView === CANVAS_VIEWS.ENTITIES) {
-        if (entities.length === 0) {
-          notifications.show({
-            title: 'No entities',
-            message: 'Add at least one entity to auto-arrange',
-            color: 'yellow',
-          });
-          return;
-        }
-
-        const positions = calculateAutoLayout(entities, relations, LAYOUT_PRESETS[preset]);
-        updateEntityPositions(positions);
-        setLayoutPreference(preset);
-
-        notifications.show({
-          title: 'Layout applied',
-          message: `Entities arranged using ${preset} layout`,
-          color: 'green',
-        });
-      } else {
-        if (services.length === 0) {
-          notifications.show({
-            title: 'No services',
-            message: 'Add at least one service to auto-arrange',
-            color: 'yellow',
-          });
-          return;
-        }
-
-        // Simple grid layout for services
-        const servicePositions = new Map<string, { x: number; y: number }>();
-        const cols = Math.ceil(Math.sqrt(services.length));
-        services.forEach((service, index) => {
-          const col = index % cols;
-          const row = Math.floor(index / cols);
-          servicePositions.set(service.id, { x: col * 450 + 50, y: row * 350 + 50 });
-        });
-        updateServicePositions(servicePositions);
-
-        // In combined view, move entities along with their assigned services
-        if (canvasView === CANVAS_VIEWS.BOTH) {
-          const entityPositions = new Map<string, { x: number; y: number }>();
-
-          services.forEach((service) => {
-            const newServicePos = servicePositions.get(service.id);
-            if (!newServicePos) return;
-
-            // Calculate how much the service moved
-            const deltaX = newServicePos.x - service.position.x;
-            const deltaY = newServicePos.y - service.position.y;
-
-            // Move all entities assigned to this service by the same delta
-            for (const entityId of service.entityIds) {
-              const entity = entities.find((e) => e.id === entityId);
-              if (entity) {
-                entityPositions.set(entityId, {
-                  x: entity.position.x + deltaX,
-                  y: entity.position.y + deltaY,
-                });
-              }
-            }
-          });
-
-          if (entityPositions.size > 0) {
-            updateEntityPositions(entityPositions);
-          }
-        }
-
-        setLayoutPreference(preset);
-
-        notifications.show({
-          title: 'Layout applied',
-          message: `Services arranged using grid layout`,
-          color: 'green',
-        });
-      }
-    },
-    [
-      canvasView,
-      entities,
-      relations,
-      services,
-      updateEntityPositions,
-      updateServicePositions,
-      setLayoutPreference,
-    ],
-  );
-
-  // Download canvas as image
-  const handleDownloadImage = useCallback(
-    async (format: 'png' | 'svg' = 'png') => {
-      const viewport = reactFlowWrapper.current?.querySelector(
-        '.react-flow__viewport',
-      ) as HTMLElement;
-      if (!viewport) {
-        notifications.show({
-          title: 'Error',
-          message: 'Could not capture canvas',
-          color: 'red',
-        });
-        return;
-      }
-
-      try {
-        // Get the bounds of all nodes
-        const nodesBounds = getNodesBounds(nodes);
-        const padding = 50;
-        const width = nodesBounds.width + padding * 2;
-        const height = nodesBounds.height + padding * 2;
-
-        const imageOptions = {
-          backgroundColor: colorScheme === 'dark' ? '#1a1b1e' : '#f8f9fa',
-          width: Math.max(width, 800),
-          height: Math.max(height, 600),
-          style: {
-            transform: `translate(${-nodesBounds.x + padding}px, ${-nodesBounds.y + padding}px)`,
-          },
-        };
-
-        let dataUrl: string;
-        let filename: string;
-
-        if (format === 'svg') {
-          dataUrl = await toSvg(viewport, imageOptions);
-          filename = 'entity-diagram.svg';
-        } else {
-          dataUrl = await toPng(viewport, {
-            ...imageOptions,
-            pixelRatio: 2, // Higher resolution
-          });
-          filename = 'entity-diagram.png';
-        }
-
-        // Download
-        const link = document.createElement('a');
-        link.download = filename;
-        link.href = dataUrl;
-        link.click();
-
-        notifications.show({
-          title: 'Image downloaded',
-          message: `Diagram saved as ${filename}`,
-          color: 'green',
-        });
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        notifications.show({
-          title: 'Export Error',
-          message: `Failed to export image: ${errorMessage}`,
-          color: 'red',
-        });
-      }
-    },
-    [nodes, colorScheme],
-  );
 
   // Memoized nodeColor callback for MiniMap
   const getNodeColor = useCallback(
@@ -984,7 +215,6 @@ export function DesignerCanvas({
       aria-label="Entity relationship diagram canvas"
       aria-describedby="canvas-description"
     >
-      {/* Accessible description for screen readers */}
       <VisuallyHidden>
         <output id="canvas-description" aria-live="polite">
           {canvasDescription}
@@ -1044,233 +274,27 @@ export function DesignerCanvas({
         />
 
         <Panel position="top-left">
-          <Paper p="xs" withBorder shadow="sm" role="toolbar" aria-label="Canvas tools">
-            <Group gap="xs">
-              {/* View Toggle */}
-              <SegmentedControl
-                size="xs"
-                value={canvasView}
-                onChange={(value) => setCanvasView(value as CanvasView)}
-                data={[
-                  {
-                    label: (
-                      <Group gap={4} wrap="nowrap">
-                        <IconTable size={14} />
-                        <span>Entities</span>
-                      </Group>
-                    ),
-                    value: CANVAS_VIEWS.ENTITIES,
-                  },
-                  {
-                    label: (
-                      <Group gap={4} wrap="nowrap">
-                        <IconServer size={14} />
-                        <span>Services</span>
-                      </Group>
-                    ),
-                    value: CANVAS_VIEWS.SERVICES,
-                  },
-                  {
-                    label: (
-                      <Group gap={4} wrap="nowrap">
-                        <IconTable size={14} />
-                        <IconServer size={14} />
-                        <span>Both</span>
-                      </Group>
-                    ),
-                    value: CANVAS_VIEWS.BOTH,
-                  },
-                ]}
-              />
-
-              {/* Add buttons based on view */}
-              {(canvasView === CANVAS_VIEWS.ENTITIES || canvasView === CANVAS_VIEWS.BOTH) && (
-                <Button
-                  size="xs"
-                  leftSection={<IconPlus size={14} aria-hidden="true" />}
-                  onClick={onAddEntity}
-                >
-                  Add Entity
-                </Button>
-              )}
-              {(canvasView === CANVAS_VIEWS.SERVICES || canvasView === CANVAS_VIEWS.BOTH) && (
-                <Button
-                  size="xs"
-                  color="teal"
-                  leftSection={<IconPlus size={14} aria-hidden="true" />}
-                  onClick={onAddService}
-                >
-                  Add Service
-                </Button>
-              )}
-
-              <Menu shadow="md" width={180}>
-                <Menu.Target>
-                  <Tooltip label={`Auto-arrange ${canvasView}`}>
-                    <Button
-                      size="xs"
-                      variant="default"
-                      leftSection={<IconLayoutDistributeHorizontal size={14} aria-hidden="true" />}
-                      rightSection={<IconChevronDown size={12} aria-hidden="true" />}
-                      aria-haspopup="menu"
-                    >
-                      Auto Layout
-                    </Button>
-                  </Tooltip>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Label>Layout Style</Menu.Label>
-                  <Menu.Item onClick={() => handleAutoLayout('horizontal')}>
-                    Horizontal (Left → Right)
-                  </Menu.Item>
-                  <Menu.Item onClick={() => handleAutoLayout('vertical')}>
-                    Vertical (Top → Bottom)
-                  </Menu.Item>
-                  <Menu.Divider />
-                  <Menu.Item onClick={() => handleAutoLayout('compact')}>Compact</Menu.Item>
-                  <Menu.Item onClick={() => handleAutoLayout('spacious')}>Spacious</Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-
-              <Menu shadow="md" width={160}>
-                <Menu.Target>
-                  <Tooltip label="Download diagram as image">
-                    <ActionIcon
-                      variant="default"
-                      size="md"
-                      aria-label="Export diagram menu"
-                      aria-haspopup="menu"
-                    >
-                      <IconCamera size={16} aria-hidden="true" />
-                    </ActionIcon>
-                  </Tooltip>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Label>Export Format</Menu.Label>
-                  <Menu.Item onClick={() => handleDownloadImage('png')}>
-                    PNG (High Quality)
-                  </Menu.Item>
-                  <Menu.Item onClick={() => handleDownloadImage('svg')}>SVG (Vector)</Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-
-              <Text component="output" size="xs" c="dimmed" aria-live="polite">
-                {canvasView === CANVAS_VIEWS.ENTITIES &&
-                  `${entities.length} entities · ${relations.length} relations`}
-                {canvasView === CANVAS_VIEWS.SERVICES &&
-                  `${services.length} services · ${serviceConnections.length} connections`}
-                {canvasView === CANVAS_VIEWS.BOTH &&
-                  `${entities.length} entities · ${services.length} services`}
-              </Text>
-            </Group>
-          </Paper>
+          <CanvasToolbar
+            nodes={nodes}
+            reactFlowWrapper={reactFlowWrapper}
+            onAddEntity={onAddEntity}
+            onAddService={onAddService}
+          />
         </Panel>
 
-        {/* Empty state for entities view */}
-        {canvasView === CANVAS_VIEWS.ENTITIES && entities.length === 0 && (
-          <Panel position="top-center" style={{ top: '40%' }}>
-            <Paper
-              p="xl"
-              withBorder
-              shadow="md"
-              style={{ textAlign: 'center' }}
-              role="region"
-              aria-label="Getting started"
-            >
-              <Text size="lg" fw={500} mb="xs">
-                No entities yet
-              </Text>
-              <Text size="sm" c="dimmed" mb="md">
-                Click "Add Entity" to create your first entity.
-                <br />
-                Drag entities to position them. Connect them to create relations.
-              </Text>
-              <Button leftSection={<IconPlus size={16} aria-hidden="true" />} onClick={onAddEntity}>
-                Create First Entity
-              </Button>
-            </Paper>
-          </Panel>
-        )}
+        <CanvasEmptyStates
+          canvasView={canvasView}
+          entitiesCount={entities.length}
+          servicesCount={services.length}
+          onAddEntity={onAddEntity}
+          onAddService={onAddService}
+        />
 
-        {/* Empty state for services view */}
-        {canvasView === CANVAS_VIEWS.SERVICES && services.length === 0 && (
-          <Panel position="top-center" style={{ top: '40%' }}>
-            <Paper
-              p="xl"
-              withBorder
-              shadow="md"
-              style={{ textAlign: 'center' }}
-              role="region"
-              aria-label="Getting started with services"
-            >
-              <Text size="lg" fw={500} mb="xs">
-                No services yet
-              </Text>
-              <Text size="sm" c="dimmed" mb="md">
-                Click "Add Service" to create your first microservice.
-                <br />
-                Services can contain entities and connect to each other via REST, gRPC, or
-                messaging.
-              </Text>
-              <Button
-                color="teal"
-                leftSection={<IconPlus size={16} aria-hidden="true" />}
-                onClick={onAddService}
-              >
-                Create First Service
-              </Button>
-            </Paper>
-          </Panel>
-        )}
-
-        {/* Help tip for 'both' view */}
-        {canvasView === CANVAS_VIEWS.BOTH && services.length > 0 && entities.length > 0 && (
-          <Panel position="bottom-center">
-            <Paper p="xs" withBorder shadow="sm" style={{ opacity: 0.9 }}>
-              <Text size="xs" c="dimmed">
-                Drag entities inside a service to assign them. Drag outside to unassign.
-              </Text>
-            </Paper>
-          </Panel>
-        )}
-
-        {/* Empty state for 'both' view when nothing exists */}
-        {canvasView === CANVAS_VIEWS.BOTH && entities.length === 0 && services.length === 0 && (
-          <Panel position="top-center" style={{ top: '40%' }}>
-            <Paper
-              p="xl"
-              withBorder
-              shadow="md"
-              style={{ textAlign: 'center' }}
-              role="region"
-              aria-label="Getting started"
-            >
-              <Text size="lg" fw={500} mb="xs">
-                Combined View
-              </Text>
-              <Text size="sm" c="dimmed" mb="md">
-                Create entities and services to see them together.
-                <br />
-                Drag entities inside services to assign them.
-              </Text>
-              <Group justify="center" gap="sm">
-                <Button
-                  leftSection={<IconPlus size={16} aria-hidden="true" />}
-                  onClick={onAddEntity}
-                >
-                  Add Entity
-                </Button>
-                <Button
-                  color="teal"
-                  leftSection={<IconPlus size={16} aria-hidden="true" />}
-                  onClick={onAddService}
-                >
-                  Add Service
-                </Button>
-              </Group>
-            </Paper>
-          </Panel>
-        )}
+        <CanvasHelpTip
+          canvasView={canvasView}
+          entitiesCount={entities.length}
+          servicesCount={services.length}
+        />
       </ReactFlow>
     </div>
   );
