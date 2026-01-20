@@ -247,8 +247,8 @@ function calculateServiceGridLayout(
   const cols = Math.ceil(Math.sqrt(services.length));
 
   // Calculate max dimensions for uniform spacing
-  let maxWidth = SERVICE_NODE.DEFAULT_WIDTH;
-  let maxHeight = SERVICE_NODE.DEFAULT_HEIGHT;
+  let maxWidth: number = SERVICE_NODE.DEFAULT_WIDTH;
+  let maxHeight: number = SERVICE_NODE.DEFAULT_HEIGHT;
   for (const service of services) {
     maxWidth = Math.max(maxWidth, service.width || SERVICE_NODE.DEFAULT_WIDTH);
     maxHeight = Math.max(maxHeight, service.height || SERVICE_NODE.DEFAULT_HEIGHT);
