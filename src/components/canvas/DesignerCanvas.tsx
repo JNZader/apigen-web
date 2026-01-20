@@ -265,10 +265,10 @@ export function DesignerCanvas({
         entity,
         onEdit: onEditEntity,
         onDelete: (id: string) => handleDeleteEntity(id, entity.name),
-        isSelected: selectedEntityId === entity.id,
+        isSelected: false, // Will be updated by separate effect
       },
     }));
-  }, [entities, selectedEntityId, onEditEntity, handleDeleteEntity]);
+  }, [entities, onEditEntity, handleDeleteEntity]);
 
   // Build service nodes
   const buildServiceNodes = useCallback(() => {
@@ -288,14 +288,12 @@ export function DesignerCanvas({
         onEdit: (id: string) => onEditService?.(id),
         onDelete: (id: string) => handleDeleteService(id, service.name),
         onConfigure: (id: string) => onConfigureService?.(id),
-        isSelected: selectedServiceId === service.id,
-        isDropTarget: dropTargetServiceId === service.id,
+        isSelected: false, // Will be updated by separate effect
+        isDropTarget: false, // Will be updated by separate effect
       },
     }));
   }, [
     services,
-    selectedServiceId,
-    dropTargetServiceId,
     onEditService,
     onConfigureService,
     handleDeleteService,
@@ -316,7 +314,33 @@ export function DesignerCanvas({
     }
     // Use structural keys to avoid rebuilding on position changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvasView, entityStructureKey, serviceStructureKey, selectedEntityId, selectedServiceId, dropTargetServiceId, setNodes]);
+  }, [canvasView, entityStructureKey, serviceStructureKey, setNodes]);
+
+  // Update selection and drop target state without rebuilding nodes
+  // This preserves node positions during drag operations
+  useEffect(() => {
+    setNodes((currentNodes) =>
+      currentNodes.map((node) => {
+        const isEntity = entities.some((e) => e.id === node.id);
+        if (isEntity) {
+          const newIsSelected = selectedEntityId === node.id;
+          if (node.data.isSelected !== newIsSelected) {
+            return { ...node, data: { ...node.data, isSelected: newIsSelected } };
+          }
+        } else {
+          const newIsSelected = selectedServiceId === node.id;
+          const newIsDropTarget = dropTargetServiceId === node.id;
+          if (node.data.isSelected !== newIsSelected || node.data.isDropTarget !== newIsDropTarget) {
+            return {
+              ...node,
+              data: { ...node.data, isSelected: newIsSelected, isDropTarget: newIsDropTarget },
+            };
+          }
+        }
+        return node;
+      }),
+    );
+  }, [selectedEntityId, selectedServiceId, dropTargetServiceId, entities, setNodes]);
 
   // Memoized relation delete handler
   const handleRelationDelete = useCallback(
