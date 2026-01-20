@@ -397,6 +397,9 @@ export function DesignerCanvas({
   // Collect position changes during drag
   const pendingPositions = useRef<Map<string, { x: number; y: number }>>(new Map());
 
+  // Track previous service positions to calculate movement delta
+  const previousServicePositions = useRef<Map<string, { x: number; y: number }>>(new Map());
+
   // Check if a position is inside a service's bounds
   const findServiceAtPosition = useCallback(
     (position: { x: number; y: number }): ServiceDesign | null => {
@@ -418,11 +421,10 @@ export function DesignerCanvas({
   // Handle node position changes with debouncing
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
-      onNodesChange(changes);
-
       // Collect position changes
       const entityPositions: Array<{ id: string; position: { x: number; y: number } }> = [];
       const servicePositions: Array<{ id: string; position: { x: number; y: number } }> = [];
+      const additionalEntityMoves: Array<{ id: string; position: { x: number; y: number } }> = [];
 
       for (const change of changes) {
         if (change.type === 'position' && change.position) {
@@ -430,14 +432,56 @@ export function DesignerCanvas({
 
           // Determine if this is an entity or service
           const isEntity = entities.some((e) => e.id === change.id);
-          const isService = services.some((s) => s.id === change.id);
+          const service = services.find((s) => s.id === change.id);
 
           if (isEntity) {
             entityPositions.push({ id: change.id, position: change.position });
-          } else if (isService) {
+          } else if (service) {
             servicePositions.push({ id: change.id, position: change.position });
+
+            // When a service moves in 'both' view, move its assigned entities too
+            if (canvasView === 'both' && service.entityIds.length > 0) {
+              const prevPos = previousServicePositions.current.get(service.id) || service.position;
+              const deltaX = change.position.x - prevPos.x;
+              const deltaY = change.position.y - prevPos.y;
+
+              // Move all entities assigned to this service
+              for (const entityId of service.entityIds) {
+                const entity = entities.find((e) => e.id === entityId);
+                if (entity) {
+                  const currentEntityPos = pendingPositions.current.get(entityId) || entity.position;
+                  const newEntityPos = {
+                    x: currentEntityPos.x + deltaX,
+                    y: currentEntityPos.y + deltaY,
+                  };
+                  pendingPositions.current.set(entityId, newEntityPos);
+                  additionalEntityMoves.push({ id: entityId, position: newEntityPos });
+                }
+              }
+            }
+
+            // Update previous position for next delta calculation
+            previousServicePositions.current.set(service.id, change.position);
           }
         }
+      }
+
+      // Apply the original changes
+      onNodesChange(changes);
+
+      // If we have additional entity moves from service dragging, update those nodes too
+      if (additionalEntityMoves.length > 0) {
+        setNodes((currentNodes) =>
+          currentNodes.map((node) => {
+            const move = additionalEntityMoves.find((m) => m.id === node.id);
+            if (move) {
+              return { ...node, position: move.position };
+            }
+            return node;
+          }),
+        );
+        // Also update the store
+        debouncedEntityPositionUpdate(additionalEntityMoves);
       }
 
       // Debounce the store updates
@@ -450,8 +494,10 @@ export function DesignerCanvas({
     },
     [
       onNodesChange,
+      setNodes,
       entities,
       services,
+      canvasView,
       debouncedEntityPositionUpdate,
       debouncedServicePositionUpdate,
     ],
