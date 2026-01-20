@@ -11,10 +11,11 @@ import { CANVAS_VIEWS, type CanvasView } from '../../../utils/canvasConstants';
 
 interface UseCanvasEdgesOptions {
   canvasView: CanvasView;
+  onEditServiceConnection?: (connectionId: string) => void;
 }
 
 export function useCanvasEdges(options: UseCanvasEdgesOptions) {
-  const { canvasView } = options;
+  const { canvasView, onEditServiceConnection } = options;
 
   const relations = useRelations();
   const serviceConnections = useServiceConnections();
@@ -66,10 +67,11 @@ export function useCanvasEdges(options: UseCanvasEdgesOptions) {
         communicationType: connection.communicationType,
         label: connection.label,
         config: connection.config,
+        onEdit: onEditServiceConnection,
         onDelete: handleServiceConnectionDelete,
       },
     }));
-  }, [serviceConnections, handleServiceConnectionDelete]);
+  }, [serviceConnections, onEditServiceConnection, handleServiceConnectionDelete]);
 
   // Sync edges based on canvas view
   useEffect(() => {

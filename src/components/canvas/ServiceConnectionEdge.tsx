@@ -1,5 +1,12 @@
 import { ActionIcon, Badge, Group, Tooltip } from '@mantine/core';
-import { IconApi, IconCloud, IconCode, IconPlugConnected, IconTrash } from '@tabler/icons-react';
+import {
+  IconApi,
+  IconCloud,
+  IconCode,
+  IconPencil,
+  IconPlugConnected,
+  IconTrash,
+} from '@tabler/icons-react';
 import type { Edge, EdgeProps } from '@xyflow/react';
 import { BaseEdge, EdgeLabelRenderer, getBezierPath } from '@xyflow/react';
 import { memo } from 'react';
@@ -108,18 +115,21 @@ function ServiceConnectionEdgeComponent({
           className="nodrag nopan"
         >
           <Group gap={4}>
-            <Badge
-              size="sm"
-              color={selected ? undefined : 'gray'}
-              style={{
-                backgroundColor: selected ? COMMUNICATION_COLORS[communicationType] : undefined,
-                cursor: 'pointer',
-              }}
-              variant={selected ? 'filled' : 'light'}
-              leftSection={<Icon size={12} />}
-            >
-              {COMMUNICATION_LABELS[communicationType]}
-            </Badge>
+            <Tooltip label="Click to edit connection">
+              <Badge
+                size="sm"
+                color={selected ? undefined : 'gray'}
+                style={{
+                  backgroundColor: selected ? COMMUNICATION_COLORS[communicationType] : undefined,
+                  cursor: 'pointer',
+                }}
+                variant={selected ? 'filled' : 'light'}
+                leftSection={<Icon size={12} />}
+                onClick={() => data?.onEdit?.(id)}
+              >
+                {COMMUNICATION_LABELS[communicationType]}
+              </Badge>
+            </Tooltip>
 
             {/* Show topic/path info when selected */}
             {selected && data?.config && (
@@ -140,6 +150,21 @@ function ServiceConnectionEdgeComponent({
                   </Badge>
                 )}
               </>
+            )}
+
+            {/* Edit button when selected */}
+            {selected && data?.onEdit && (
+              <Tooltip label="Edit connection">
+                <ActionIcon
+                  size="xs"
+                  color="blue"
+                  variant="filled"
+                  onClick={() => data.onEdit?.(id)}
+                  aria-label="Edit this connection"
+                >
+                  <IconPencil size={10} aria-hidden="true" />
+                </ActionIcon>
+              </Tooltip>
             )}
 
             {/* Delete button when selected */}

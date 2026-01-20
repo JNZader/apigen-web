@@ -18,8 +18,10 @@ import {
   useServiceConnections,
   useServices,
 } from '../../store/projectStore';
+import type { ServiceConnectionDesign } from '../../types';
 import { CANVAS, CANVAS_VIEWS } from '../../utils/canvasConstants';
 import { calculateAutoLayout, LAYOUT_PRESETS } from '../../utils/canvasLayout';
+import { ServiceConnectionForm } from '../ServiceConnectionForm';
 import { CanvasEmptyStates, CanvasHelpTip } from './CanvasEmptyStates';
 import { CanvasToolbar } from './CanvasToolbar';
 import { buildEntityViewDescription, buildServicesViewDescription } from './canvasAccessibility';
@@ -81,6 +83,19 @@ export function DesignerCanvas({
   // Track which service is being hovered during entity drag (for visual feedback)
   const [dropTargetServiceId, setDropTargetServiceId] = useState<string | null>(null);
 
+  // State for service connection form
+  const [connectionFormOpened, setConnectionFormOpened] = useState(false);
+  const [pendingConnection, setPendingConnection] = useState<{
+    sourceServiceId: string;
+    targetServiceId: string;
+  } | null>(null);
+  const [editingConnectionId, setEditingConnectionId] = useState<string | null>(null);
+
+  // Get the editing connection from store
+  const editingConnection: ServiceConnectionDesign | null = editingConnectionId
+    ? (serviceConnections.find((c) => c.id === editingConnectionId) ?? null)
+    : null;
+
   // Memoize delete handler to avoid recreation on every render
   const handleDeleteEntity = useCallback(
     (id: string, entityName: string) => {
@@ -111,6 +126,30 @@ export function DesignerCanvas({
     [removeService],
   );
 
+  // Handler for when user drags to create a new service connection
+  const handlePendingServiceConnection = useCallback(
+    (pending: { sourceServiceId: string; targetServiceId: string }) => {
+      setPendingConnection(pending);
+      setEditingConnectionId(null);
+      setConnectionFormOpened(true);
+    },
+    [],
+  );
+
+  // Handler for editing an existing service connection
+  const handleEditServiceConnection = useCallback((connectionId: string) => {
+    setEditingConnectionId(connectionId);
+    setPendingConnection(null);
+    setConnectionFormOpened(true);
+  }, []);
+
+  // Handler for closing the connection form
+  const handleCloseConnectionForm = useCallback(() => {
+    setConnectionFormOpened(false);
+    setPendingConnection(null);
+    setEditingConnectionId(null);
+  }, []);
+
   // Use custom hooks for nodes and edges
   const { nodes, setNodes, onNodesChange, isDraggingRef } = useCanvasNodes({
     canvasView,
@@ -124,7 +163,10 @@ export function DesignerCanvas({
     onDeleteService: handleDeleteService,
   });
 
-  const { edges, onEdgesChange } = useCanvasEdges({ canvasView });
+  const { edges, onEdgesChange } = useCanvasEdges({
+    canvasView,
+    onEditServiceConnection: handleEditServiceConnection,
+  });
 
   // Use custom hook for drag handlers
   const { handleNodesChange, handleNodeDrag, handleNodeDragStop } = useNodeDragHandlers({
@@ -142,6 +184,7 @@ export function DesignerCanvas({
     entities,
     services,
     onAddRelation,
+    onPendingServiceConnection: handlePendingServiceConnection,
   });
 
   // Auto-apply layout when needed (e.g., after importing entities)
@@ -296,6 +339,14 @@ export function DesignerCanvas({
           servicesCount={services.length}
         />
       </ReactFlow>
+
+      {/* Service Connection Form for creating/editing connections */}
+      <ServiceConnectionForm
+        opened={connectionFormOpened}
+        onClose={handleCloseConnectionForm}
+        pendingConnection={pendingConnection}
+        editingConnection={editingConnection}
+      />
     </div>
   );
 }

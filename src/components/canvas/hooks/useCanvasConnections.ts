@@ -1,18 +1,21 @@
 import type { Connection } from '@xyflow/react';
 import { useCallback } from 'react';
-import { useServiceConnectionActions } from '../../../store/projectStore';
-import type { CommunicationType, EntityDesign, ServiceDesign } from '../../../types';
-import { defaultServiceConnectionConfig } from '../../../types';
+import type { EntityDesign, ServiceDesign } from '../../../types';
+
+interface PendingServiceConnection {
+  sourceServiceId: string;
+  targetServiceId: string;
+}
 
 interface UseCanvasConnectionsOptions {
   entities: EntityDesign[];
   services: ServiceDesign[];
   onAddRelation: (sourceId: string, targetId: string) => void;
+  onPendingServiceConnection?: (pending: PendingServiceConnection) => void;
 }
 
 export function useCanvasConnections(options: UseCanvasConnectionsOptions) {
-  const { entities, services, onAddRelation } = options;
-  const { addServiceConnection } = useServiceConnectionActions();
+  const { entities, services, onAddRelation, onPendingServiceConnection } = options;
 
   // Handle new connections (creating relations or service connections)
   const onConnect = useCallback(
@@ -28,18 +31,18 @@ export function useCanvasConnections(options: UseCanvasConnectionsOptions) {
           // Create entity relation
           onAddRelation(connection.source, connection.target);
         } else if (sourceIsService && targetIsService) {
-          // Create service connection with default REST type
-          addServiceConnection({
-            sourceServiceId: connection.source,
-            targetServiceId: connection.target,
-            communicationType: 'REST' as CommunicationType,
-            config: { ...defaultServiceConnectionConfig },
-          });
+          // Instead of auto-creating REST, open the form for user to choose type
+          if (onPendingServiceConnection) {
+            onPendingServiceConnection({
+              sourceServiceId: connection.source,
+              targetServiceId: connection.target,
+            });
+          }
         }
         // Mixed connections (entity to service) are not supported
       }
     },
-    [entities, services, onAddRelation, addServiceConnection],
+    [entities, services, onAddRelation, onPendingServiceConnection],
   );
 
   return {
