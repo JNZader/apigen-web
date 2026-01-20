@@ -1,5 +1,6 @@
 import {
   Badge,
+  Box,
   Button,
   Checkbox,
   Divider,
@@ -7,6 +8,7 @@ import {
   Grid,
   Group,
   NumberInput,
+  ScrollArea,
   Select,
   Stack,
   Tabs,
@@ -16,14 +18,15 @@ import {
 } from '@mantine/core';
 import {
   IconCloud,
+  IconCube,
   IconDatabase,
   IconNetwork,
   IconServer,
   IconSettings,
   IconShield,
 } from '@tabler/icons-react';
-import { useEffect, useState } from 'react';
-import { useServiceActions, useServices } from '../store/projectStore';
+import { useCallback, useEffect, useState } from 'react';
+import { useEntities, useServiceActions, useServices } from '../store/projectStore';
 import type { ServiceConfig, ServiceDatabaseType, ServiceDiscoveryType } from '../types';
 
 interface ServiceConfigPanelProps {
@@ -53,9 +56,23 @@ export function ServiceConfigPanel({
   onClose,
 }: Readonly<ServiceConfigPanelProps>) {
   const services = useServices();
-  const { updateService } = useServiceActions();
+  const entities = useEntities();
+  const { updateService, assignEntityToService, removeEntityFromService } = useServiceActions();
 
   const service = services.find((s) => s.id === serviceId);
+
+  // Get entities assigned to other services (to show which are already taken)
+  const getEntityServiceName = useCallback(
+    (entityId: string): string | null => {
+      for (const s of services) {
+        if (s.id !== serviceId && s.entityIds.includes(entityId)) {
+          return s.name;
+        }
+      }
+      return null;
+    },
+    [services, serviceId],
+  );
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -95,6 +112,16 @@ export function ServiceConfigPanel({
 
   const updateConfig = <K extends keyof ServiceConfig>(key: K, value: ServiceConfig[K]) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // Handle entity assignment toggle
+  const handleEntityToggle = (entityId: string, checked: boolean) => {
+    if (!serviceId) return;
+    if (checked) {
+      assignEntityToService(entityId, serviceId);
+    } else {
+      removeEntityFromService(entityId, serviceId);
+    }
   };
 
   if (!service) return null;
@@ -137,8 +164,11 @@ export function ServiceConfigPanel({
 
         <Divider />
 
-        <Tabs defaultValue="general">
+        <Tabs defaultValue="entities">
           <Tabs.List>
+            <Tabs.Tab value="entities" leftSection={<IconCube size={14} />}>
+              Entities
+            </Tabs.Tab>
             <Tabs.Tab value="general" leftSection={<IconSettings size={14} />}>
               General
             </Tabs.Tab>
@@ -155,6 +185,84 @@ export function ServiceConfigPanel({
               Docker
             </Tabs.Tab>
           </Tabs.List>
+
+          {/* Entities Tab */}
+          <Tabs.Panel value="entities" pt="md">
+            <Stack gap="md">
+              <Text size="sm" c="dimmed">
+                Select which entities belong to this service. Each entity can only belong to one
+                service.
+              </Text>
+
+              {entities.length === 0 ? (
+                <Box
+                  p="xl"
+                  style={{
+                    textAlign: 'center',
+                    border: '1px dashed var(--mantine-color-gray-4)',
+                    borderRadius: 'var(--mantine-radius-md)',
+                  }}
+                >
+                  <IconCube size={32} style={{ opacity: 0.5 }} />
+                  <Text size="sm" c="dimmed" mt="sm">
+                    No entities created yet. Create entities in the Entities view first.
+                  </Text>
+                </Box>
+              ) : (
+                <ScrollArea.Autosize mah={300}>
+                  <Stack gap="xs">
+                    {entities.map((entity) => {
+                      const isAssigned = service.entityIds.includes(entity.id);
+                      const otherServiceName = getEntityServiceName(entity.id);
+
+                      return (
+                        <Box
+                          key={entity.id}
+                          p="sm"
+                          style={{
+                            border: '1px solid var(--mantine-color-default-border)',
+                            borderRadius: 'var(--mantine-radius-sm)',
+                            backgroundColor: isAssigned
+                              ? 'var(--mantine-color-blue-light)'
+                              : undefined,
+                          }}
+                        >
+                          <Group justify="space-between">
+                            <Checkbox
+                              label={
+                                <Group gap="xs">
+                                  <Text fw={500}>{entity.name}</Text>
+                                  <Badge size="xs" variant="light" color="gray">
+                                    {entity.fields.length} fields
+                                  </Badge>
+                                </Group>
+                              }
+                              checked={isAssigned}
+                              onChange={(e) =>
+                                handleEntityToggle(entity.id, e.currentTarget.checked)
+                              }
+                              description={
+                                otherServiceName
+                                  ? `Currently assigned to ${otherServiceName}`
+                                  : entity.tableName
+                                    ? `Table: ${entity.tableName}`
+                                    : undefined
+                              }
+                            />
+                          </Group>
+                        </Box>
+                      );
+                    })}
+                  </Stack>
+                </ScrollArea.Autosize>
+              )}
+
+              <Text size="xs" c="dimmed">
+                Tip: Assigning an entity to this service will automatically remove it from any other
+                service.
+              </Text>
+            </Stack>
+          </Tabs.Panel>
 
           {/* General Tab */}
           <Tabs.Panel value="general" pt="md">

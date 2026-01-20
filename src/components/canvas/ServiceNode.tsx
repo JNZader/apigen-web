@@ -15,6 +15,7 @@ import type { ServiceDesign } from '../../types';
 export interface ServiceNodeData extends Record<string, unknown> {
   service: ServiceDesign;
   entityCount: number;
+  entityNames: string[];
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onConfigure: (id: string) => void;
@@ -27,7 +28,7 @@ const MIN_WIDTH = 300;
 const MIN_HEIGHT = 200;
 
 function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
-  const { service, entityCount, onEdit, onDelete, onConfigure, isSelected } = data;
+  const { service, entityCount, entityNames, onEdit, onDelete, onConfigure, isSelected } = data;
   const isHighlighted = selected || isSelected;
 
   const handleStyle = {
@@ -165,14 +166,37 @@ function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
             >
               <IconCloud size={32} opacity={0.5} />
               <Text size="xs" c="dimmed" ta="center">
-                Drag entities here to add them to this service
+                Click Configure to assign entities to this service
               </Text>
+            </Stack>
+          )}
+
+          {/* Show assigned entities */}
+          {entityCount > 0 && (
+            <Stack gap={4} style={{ zIndex: 1 }}>
+              {entityNames.slice(0, 5).map((name) => (
+                <Badge
+                  key={name}
+                  size="sm"
+                  variant="light"
+                  color="blue"
+                  style={{ alignSelf: 'flex-start' }}
+                  leftSection={<IconDatabase size={10} />}
+                >
+                  {name}
+                </Badge>
+              ))}
+              {entityNames.length > 5 && (
+                <Text size="xs" c="dimmed">
+                  +{entityNames.length - 5} more entities
+                </Text>
+              )}
             </Stack>
           )}
 
           {/* Service description */}
           {service.description && (
-            <Text size="xs" c="dimmed" lineClamp={2} style={{ zIndex: 1 }}>
+            <Text size="xs" c="dimmed" lineClamp={2} style={{ zIndex: 1, marginTop: 'auto' }}>
               {service.description}
             </Text>
           )}

@@ -224,6 +224,15 @@ export function DesignerCanvas({
     [entities],
   );
 
+  // Get entity names for a service
+  const getEntityNamesForService = useCallback(
+    (service: ServiceDesign) =>
+      service.entityIds
+        .map((id) => entities.find((e) => e.id === id)?.name)
+        .filter((name): name is string => name !== undefined),
+    [entities],
+  );
+
   // Sync nodes based on canvas view
   useEffect(() => {
     if (canvasView === 'entities') {
@@ -250,6 +259,7 @@ export function DesignerCanvas({
           data: {
             service,
             entityCount: getEntityCountForService(service),
+            entityNames: getEntityNamesForService(service),
             onEdit: (id: string) => onEditService?.(id),
             onDelete: (id: string) => handleDeleteService(id, service.name),
             onConfigure: (id: string) => onConfigureService?.(id),
@@ -270,6 +280,7 @@ export function DesignerCanvas({
     handleDeleteEntity,
     handleDeleteService,
     getEntityCountForService,
+    getEntityNamesForService,
     setNodes,
   ]);
 
