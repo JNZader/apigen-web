@@ -100,8 +100,8 @@ function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
         radius="md"
         withBorder
         style={{
-          width: service.width,
-          height: service.height,
+          width: '100%',
+          height: '100%',
           borderColor: isDropTarget
             ? 'var(--mantine-color-green-6)'
             : isHighlighted

@@ -264,6 +264,10 @@ export function DesignerCanvas({
       id: service.id,
       type: 'service' as const,
       position: service.position,
+      // Set initial dimensions from service
+      width: service.width,
+      height: service.height,
+      style: { width: service.width, height: service.height },
       zIndex: 1, // Services as background containers
       data: {
         service,
@@ -394,6 +398,16 @@ export function DesignerCanvas({
     100,
   );
 
+  // Debounced callback to update service dimensions after resize
+  const debouncedServiceDimensionsUpdate = useDebouncedCallback(
+    (dimensions: Array<{ id: string; width: number; height: number }>) => {
+      dimensions.forEach(({ id, width, height }) => {
+        updateService(id, { width, height });
+      });
+    },
+    100,
+  );
+
   // Collect position changes during drag
   const pendingPositions = useRef<Map<string, { x: number; y: number }>>(new Map());
 
@@ -424,6 +438,7 @@ export function DesignerCanvas({
       // Collect position changes
       const entityPositions: Array<{ id: string; position: { x: number; y: number } }> = [];
       const servicePositions: Array<{ id: string; position: { x: number; y: number } }> = [];
+      const serviceDimensions: Array<{ id: string; width: number; height: number }> = [];
       const additionalEntityMoves: Array<{ id: string; position: { x: number; y: number } }> = [];
 
       for (const change of changes) {
@@ -464,6 +479,18 @@ export function DesignerCanvas({
             previousServicePositions.current.set(service.id, change.position);
           }
         }
+
+        // Capture dimension changes (from NodeResizer)
+        if (change.type === 'dimensions' && change.dimensions) {
+          const isService = services.some((s) => s.id === change.id);
+          if (isService && change.dimensions.width && change.dimensions.height) {
+            serviceDimensions.push({
+              id: change.id,
+              width: change.dimensions.width,
+              height: change.dimensions.height,
+            });
+          }
+        }
       }
 
       // Apply the original changes
@@ -491,6 +518,9 @@ export function DesignerCanvas({
       if (servicePositions.length > 0) {
         debouncedServicePositionUpdate(servicePositions);
       }
+      if (serviceDimensions.length > 0) {
+        debouncedServiceDimensionsUpdate(serviceDimensions);
+      }
     },
     [
       onNodesChange,
@@ -500,6 +530,7 @@ export function DesignerCanvas({
       canvasView,
       debouncedEntityPositionUpdate,
       debouncedServicePositionUpdate,
+      debouncedServiceDimensionsUpdate,
     ],
   );
 
