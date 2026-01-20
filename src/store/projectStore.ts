@@ -20,7 +20,7 @@ import type { RelationDesign } from '../types/relation';
 import { validateProjectImport } from '../utils/validation';
 
 type LayoutPreset = 'compact' | 'horizontal' | 'vertical' | 'spacious';
-type CanvasView = 'entities' | 'services';
+type CanvasView = 'entities' | 'services' | 'both';
 
 // ============================================================================
 // Helper functions to reduce nesting depth

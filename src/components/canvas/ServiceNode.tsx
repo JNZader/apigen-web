@@ -20,6 +20,7 @@ export interface ServiceNodeData extends Record<string, unknown> {
   onDelete: (id: string) => void;
   onConfigure: (id: string) => void;
   isSelected: boolean;
+  isDropTarget?: boolean;
 }
 
 export type ServiceNodeType = Node<ServiceNodeData, 'service'>;
@@ -28,8 +29,17 @@ const MIN_WIDTH = 300;
 const MIN_HEIGHT = 200;
 
 function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
-  const { service, entityCount, entityNames, onEdit, onDelete, onConfigure, isSelected } = data;
-  const isHighlighted = selected || isSelected;
+  const {
+    service,
+    entityCount,
+    entityNames,
+    onEdit,
+    onDelete,
+    onConfigure,
+    isSelected,
+    isDropTarget,
+  } = data;
+  const isHighlighted = selected || isSelected || isDropTarget;
 
   const handleStyle = {
     width: 14,
@@ -92,12 +102,20 @@ function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
         style={{
           width: service.width,
           height: service.height,
-          borderColor: isHighlighted ? service.color : 'var(--mantine-color-gray-3)',
-          borderWidth: isHighlighted ? 2 : 1,
+          borderColor: isDropTarget
+            ? 'var(--mantine-color-green-6)'
+            : isHighlighted
+              ? service.color
+              : 'var(--mantine-color-gray-3)',
+          borderWidth: isDropTarget ? 3 : isHighlighted ? 2 : 1,
           cursor: 'grab',
-          backgroundColor: 'var(--mantine-color-gray-0)',
+          backgroundColor: isDropTarget
+            ? 'var(--mantine-color-green-0)'
+            : 'var(--mantine-color-gray-0)',
           display: 'flex',
           flexDirection: 'column',
+          boxShadow: isDropTarget ? '0 0 20px rgba(64, 192, 87, 0.4)' : undefined,
+          transition: 'border-color 0.15s, background-color 0.15s, box-shadow 0.15s',
         }}
       >
         {/* Service Header */}
@@ -161,12 +179,25 @@ function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
               justify="center"
               style={{
                 flex: 1,
-                color: 'var(--mantine-color-dimmed)',
+                color: isDropTarget
+                  ? 'var(--mantine-color-green-7)'
+                  : 'var(--mantine-color-dimmed)',
               }}
             >
-              <IconCloud size={32} opacity={0.5} />
-              <Text size="xs" c="dimmed" ta="center">
-                Click Configure to assign entities to this service
+              <IconCloud
+                size={32}
+                opacity={isDropTarget ? 1 : 0.5}
+                color={isDropTarget ? 'var(--mantine-color-green-6)' : undefined}
+              />
+              <Text
+                size="xs"
+                c={isDropTarget ? 'green' : 'dimmed'}
+                ta="center"
+                fw={isDropTarget ? 600 : 400}
+              >
+                {isDropTarget
+                  ? 'Drop here to assign entity'
+                  : 'Drag entities here or click Configure'}
               </Text>
             </Stack>
           )}
