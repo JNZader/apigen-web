@@ -11,7 +11,6 @@ interface UseCanvasNodesOptions {
   selectedServiceId: string | null;
   dropTargetServiceId: string | null;
   onEditEntity: (id: string) => void;
-  onEditService?: (id: string) => void;
   onConfigureService?: (id: string) => void;
   onDeleteEntity: (id: string, name: string) => void;
   onDeleteService: (id: string, name: string) => void;
@@ -24,7 +23,6 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
     selectedServiceId,
     dropTargetServiceId,
     onEditEntity,
-    onEditService,
     onConfigureService,
     onDeleteEntity,
     onDeleteService,
@@ -105,7 +103,6 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
         service,
         entityCount: getEntityCountForService(service),
         entityNames: getEntityNamesForService(service),
-        onEdit: (id: string) => onEditService?.(id),
         onDelete: (id: string) => onDeleteService(id, service.name),
         onConfigure: (id: string) => onConfigureService?.(id),
         isSelected: false, // Will be updated by separate effect
@@ -114,7 +111,6 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
     }));
   }, [
     services,
-    onEditService,
     onConfigureService,
     onDeleteService,
     getEntityCountForService,

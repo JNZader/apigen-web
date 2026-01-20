@@ -47,7 +47,6 @@ interface DesignerCanvasProps {
   readonly onSelectEntity: (id: string | null) => void;
   readonly onAddRelation: (sourceId: string, targetId: string) => void;
   readonly onAddService?: () => void;
-  readonly onEditService?: (id: string) => void;
   readonly onConfigureService?: (id: string) => void;
 }
 
@@ -57,7 +56,6 @@ export function DesignerCanvas({
   onSelectEntity,
   onAddRelation,
   onAddService,
-  onEditService,
   onConfigureService,
 }: Readonly<DesignerCanvasProps>) {
   const { colorScheme } = useMantineColorScheme();
@@ -157,7 +155,6 @@ export function DesignerCanvas({
     selectedServiceId,
     dropTargetServiceId,
     onEditEntity,
-    onEditService,
     onConfigureService,
     onDeleteEntity: handleDeleteEntity,
     onDeleteService: handleDeleteService,

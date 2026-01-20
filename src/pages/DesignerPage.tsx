@@ -125,11 +125,6 @@ export function DesignerPage() {
     });
   };
 
-  const handleEditService = (serviceId: string) => {
-    setConfigureServiceId(serviceId);
-    openServiceConfig();
-  };
-
   const handleConfigureService = (serviceId: string) => {
     setConfigureServiceId(serviceId);
     openServiceConfig();
@@ -234,7 +229,6 @@ export function DesignerPage() {
                   onSelectEntity={selectEntity}
                   onAddRelation={handleAddRelation}
                   onAddService={handleAddService}
-                  onEditService={handleEditService}
                   onConfigureService={handleConfigureService}
                 />
               </SectionErrorBoundary>

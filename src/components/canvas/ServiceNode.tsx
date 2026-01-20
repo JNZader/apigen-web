@@ -1,12 +1,5 @@
 import { ActionIcon, Badge, Card, Group, Stack, Text, Tooltip } from '@mantine/core';
-import {
-  IconCloud,
-  IconDatabase,
-  IconEdit,
-  IconServer,
-  IconSettings,
-  IconTrash,
-} from '@tabler/icons-react';
+import { IconCloud, IconDatabase, IconServer, IconSettings, IconTrash } from '@tabler/icons-react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { Handle, NodeResizer, Position } from '@xyflow/react';
 import { memo } from 'react';
@@ -17,7 +10,6 @@ export interface ServiceNodeData extends Record<string, unknown> {
   service: ServiceDesign;
   entityCount: number;
   entityNames: string[];
-  onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onConfigure: (id: string) => void;
   isSelected: boolean;
@@ -27,16 +19,8 @@ export interface ServiceNodeData extends Record<string, unknown> {
 export type ServiceNodeType = Node<ServiceNodeData, 'service'>;
 
 function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
-  const {
-    service,
-    entityCount,
-    entityNames,
-    onEdit,
-    onDelete,
-    onConfigure,
-    isSelected,
-    isDropTarget,
-  } = data;
+  const { service, entityCount, entityNames, onDelete, onConfigure, isSelected, isDropTarget } =
+    data;
   const isHighlighted = selected || isSelected || isDropTarget;
 
   const handleStyle = {
@@ -259,20 +243,6 @@ function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
                   aria-label={`Configure ${service.name} service`}
                 >
                   <IconSettings size={14} aria-hidden="true" />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label="Edit Service">
-                <ActionIcon
-                  variant="subtle"
-                  color="blue"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(service.id);
-                  }}
-                  aria-label={`Edit ${service.name} service`}
-                >
-                  <IconEdit size={14} aria-hidden="true" />
                 </ActionIcon>
               </Tooltip>
               <Tooltip label="Delete Service">
