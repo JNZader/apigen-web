@@ -4,9 +4,9 @@
  */
 
 import Dagre from '@dagrejs/dagre';
-import type { EntityDesign } from '../types';
+import type { EntityDesign, ServiceConnectionDesign, ServiceDesign } from '../types';
 import type { RelationDesign } from '../types/relation';
-import { CANVAS, ENTITY_NODE } from './canvasConstants';
+import { CANVAS, ENTITY_NODE, SERVICE_NODE } from './canvasConstants';
 
 interface LayoutOptions {
   direction: 'TB' | 'BT' | 'LR' | 'RL'; // Top-Bottom, Bottom-Top, Left-Right, Right-Left
@@ -158,3 +158,115 @@ export const LAYOUT_PRESETS = {
     rankSpacing: 250,
   },
 };
+
+// ============================================================================
+// SERVICE LAYOUT (for microservices view)
+// ============================================================================
+
+/**
+ * Calculate optimal positions for services based on their connections.
+ * Uses dagre algorithm to create a hierarchical layout that respects
+ * the communication flow between services.
+ */
+export function calculateServiceLayout(
+  services: ServiceDesign[],
+  connections: ServiceConnectionDesign[],
+  options: Partial<LayoutOptions> = {},
+): Map<string, { x: number; y: number }> {
+  const opts = { ...DEFAULT_OPTIONS, ...options };
+  const positions = new Map<string, { x: number; y: number }>();
+
+  if (services.length === 0) {
+    return positions;
+  }
+
+  // If no connections, arrange in a grid
+  if (connections.length === 0) {
+    return calculateServiceGridLayout(services);
+  }
+
+  // Create dagre graph
+  const g = new Dagre.graphlib.Graph();
+  g.setDefaultEdgeLabel(() => ({}));
+
+  // Configure the graph with more spacing for services (they're larger)
+  g.setGraph({
+    rankdir: opts.direction,
+    nodesep: opts.nodeSpacing * 1.5, // More spacing between services
+    ranksep: opts.rankSpacing * 1.2,
+    marginx: GRAPH_MARGIN,
+    marginy: GRAPH_MARGIN,
+  });
+
+  // Add service nodes with their actual dimensions
+  for (const service of services) {
+    g.setNode(service.id, {
+      width: service.width || SERVICE_NODE.DEFAULT_WIDTH,
+      height: service.height || SERVICE_NODE.DEFAULT_HEIGHT,
+    });
+  }
+
+  // Add edges (service connections)
+  for (const connection of connections) {
+    const sourceExists = services.some((s) => s.id === connection.sourceServiceId);
+    const targetExists = services.some((s) => s.id === connection.targetServiceId);
+
+    if (sourceExists && targetExists) {
+      g.setEdge(connection.sourceServiceId, connection.targetServiceId);
+    }
+  }
+
+  // Run the layout algorithm
+  Dagre.layout(g);
+
+  // Extract positions
+  for (const nodeId of g.nodes()) {
+    const node = g.node(nodeId);
+    const service = services.find((s) => s.id === nodeId);
+    if (node && service) {
+      const width = service.width || SERVICE_NODE.DEFAULT_WIDTH;
+      const height = service.height || SERVICE_NODE.DEFAULT_HEIGHT;
+      // Dagre returns center position, convert to top-left
+      positions.set(nodeId, {
+        x: node.x - width / 2,
+        y: node.y - height / 2,
+      });
+    }
+  }
+
+  return positions;
+}
+
+/**
+ * Simple grid layout for services without connections.
+ */
+function calculateServiceGridLayout(
+  services: ServiceDesign[],
+): Map<string, { x: number; y: number }> {
+  const positions = new Map<string, { x: number; y: number }>();
+  const cols = Math.ceil(Math.sqrt(services.length));
+
+  // Calculate max dimensions for uniform spacing
+  let maxWidth = SERVICE_NODE.DEFAULT_WIDTH;
+  let maxHeight = SERVICE_NODE.DEFAULT_HEIGHT;
+  for (const service of services) {
+    maxWidth = Math.max(maxWidth, service.width || SERVICE_NODE.DEFAULT_WIDTH);
+    maxHeight = Math.max(maxHeight, service.height || SERVICE_NODE.DEFAULT_HEIGHT);
+  }
+
+  const spacing = {
+    x: maxWidth + GRID_GAP * 2,
+    y: maxHeight + GRID_GAP * 2,
+  };
+
+  services.forEach((service, index) => {
+    const col = index % cols;
+    const row = Math.floor(index / cols);
+    positions.set(service.id, {
+      x: GRAPH_MARGIN + col * spacing.x,
+      y: GRAPH_MARGIN + row * spacing.y,
+    });
+  });
+
+  return positions;
+}

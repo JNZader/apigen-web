@@ -35,7 +35,7 @@ import {
 import type { EntityDesign } from '../../types';
 import type { RelationDesign } from '../../types/relation';
 import { CANVAS_VIEWS } from '../../utils/canvasConstants';
-import { calculateAutoLayout, LAYOUT_PRESETS } from '../../utils/canvasLayout';
+import { calculateAutoLayout, calculateServiceLayout, LAYOUT_PRESETS } from '../../utils/canvasLayout';
 
 interface CanvasToolbarProps {
   readonly nodes: Node[];
@@ -97,14 +97,8 @@ export function CanvasToolbar({
           return;
         }
 
-        // Simple grid layout for services
-        const servicePositions = new Map<string, { x: number; y: number }>();
-        const cols = Math.ceil(Math.sqrt(services.length));
-        services.forEach((service, index) => {
-          const col = index % cols;
-          const row = Math.floor(index / cols);
-          servicePositions.set(service.id, { x: col * 450 + 50, y: row * 350 + 50 });
-        });
+        // Layout services using dagre (respects connections and dimensions)
+        const servicePositions = calculateServiceLayout(services, serviceConnections, LAYOUT_PRESETS[preset]);
         updateServicePositions(servicePositions);
 
         // In combined view, move entities along with their assigned services
@@ -140,7 +134,7 @@ export function CanvasToolbar({
 
         notifications.show({
           title: 'Layout applied',
-          message: `Services arranged using grid layout`,
+          message: `Services arranged using ${preset} layout`,
           color: 'green',
         });
       }
@@ -150,6 +144,7 @@ export function CanvasToolbar({
       entities,
       relations,
       services,
+      serviceConnections,
       updateEntityPositions,
       updateServicePositions,
       setLayoutPreference,
