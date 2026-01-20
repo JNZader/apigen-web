@@ -13,7 +13,6 @@ import {
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { IconArrowRight } from '@tabler/icons-react';
-import { useEffect } from 'react';
 import { useProjectStore } from '../store/projectStore';
 import { toCamelCase, toSnakeCase } from '../types';
 import type { CascadeType, FetchType, RelationType } from '../types/relation';
@@ -129,6 +128,7 @@ export function RelationForm({
   const sourceEntity = getEntity(sourceEntityId);
   const targetEntity = getEntity(targetEntityId);
 
+  // Form will reset on remount via key prop at usage site
   const form = useForm<FormValues>({
     initialValues: {
       type: 'ManyToOne',
@@ -138,16 +138,6 @@ export function RelationForm({
       nullable: true,
     },
   });
-
-  // Reset form when opening
-  // Note: form is intentionally excluded from deps to avoid infinite loops
-  // (Mantine form object changes reference on every render)
-  useEffect(() => {
-    if (opened) {
-      form.reset();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opened, form.reset]);
 
   const handleSubmit = (values: FormValues) => {
     if (!sourceEntity || !targetEntity) return;

@@ -347,6 +347,7 @@ export function DesignerPage() {
       )}
 
       <EntityForm
+        key={editingEntity ?? 'new'}
         opened={entityFormOpened}
         onClose={() => {
           closeEntityForm();
@@ -356,6 +357,7 @@ export function DesignerPage() {
       />
 
       <RelationForm
+        key={`${relationSource}-${relationTarget}`}
         opened={relationFormOpened}
         onClose={closeRelationForm}
         sourceEntityId={relationSource}
@@ -399,6 +401,7 @@ export function DesignerPage() {
 
       {/* Service configuration panel */}
       <ServiceConfigPanel
+        key={configureServiceId ?? 'none'}
         serviceId={configureServiceId}
         opened={serviceConfigOpened}
         onClose={() => {

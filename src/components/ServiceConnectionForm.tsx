@@ -28,7 +28,6 @@ import {
   IconServer,
   IconSettings,
 } from '@tabler/icons-react';
-import { useEffect } from 'react';
 import { useServiceConnectionActions, useServices } from '../store/projectStore';
 import type { CommunicationType, SerializationFormat, ServiceConnectionDesign } from '../types';
 import {
@@ -149,27 +148,10 @@ export function ServiceConnectionForm({
   const sourceService = services.find((s) => s.id === sourceServiceId);
   const targetService = services.find((s) => s.id === targetServiceId);
 
+  // Initialize form with values directly - use key prop at usage site to reset
   const form = useForm<FormValues>({
-    initialValues: initialFormValues,
-    validate: {
-      topicName: (value, values) =>
-        values.communicationType === 'Kafka' && !value.trim() ? 'Topic name is required' : null,
-      exchangeName: (value, values) =>
-        values.communicationType === 'RabbitMQ' && !value.trim()
-          ? 'Exchange name is required'
-          : null,
-      grpcServiceName: (value, values) =>
-        values.communicationType === 'gRPC' && !value.trim() ? 'Service name is required' : null,
-    },
-  });
-
-  // Reset form when opening with new data
-  // biome-ignore lint/correctness/useExhaustiveDependencies: We intentionally only re-run when opened changes or connection ID changes
-  useEffect(() => {
-    if (opened) {
-      if (editingConnection) {
-        // Edit mode: populate form with existing values
-        form.setValues({
+    initialValues: editingConnection
+      ? {
           communicationType: editingConnection.communicationType,
           label: editingConnection.label || '',
           restPath: editingConnection.config.restPath || '/api/v1/',
@@ -190,13 +172,19 @@ export function ServiceConnectionForm({
           retryEnabled: editingConnection.config.retryEnabled ?? true,
           retryAttempts: editingConnection.config.retryAttempts || 3,
           circuitBreakerEnabled: editingConnection.config.circuitBreakerEnabled ?? true,
-        });
-      } else {
-        // Create mode: reset to defaults
-        form.reset();
-      }
-    }
-  }, [opened, editingConnection]);
+        }
+      : initialFormValues,
+    validate: {
+      topicName: (value, values) =>
+        values.communicationType === 'Kafka' && !value.trim() ? 'Topic name is required' : null,
+      exchangeName: (value, values) =>
+        values.communicationType === 'RabbitMQ' && !value.trim()
+          ? 'Exchange name is required'
+          : null,
+      grpcServiceName: (value, values) =>
+        values.communicationType === 'gRPC' && !value.trim() ? 'Service name is required' : null,
+    },
+  });
 
   const handleSubmit = () => {
     if (form.validate().hasErrors) return;

@@ -17,7 +17,7 @@ import {
   IconRocket,
   IconTable,
 } from '@tabler/icons-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useIsMac } from '../hooks';
 
 const ONBOARDING_STORAGE_KEY = 'apigen-studio-onboarding-completed';
@@ -28,22 +28,13 @@ interface OnboardingProps {
 }
 
 export function Onboarding({ forceShow = false, onClose }: Readonly<OnboardingProps>) {
-  const [opened, setOpened] = useState(false);
+  // Initialize opened state directly - no useEffect needed
+  const [opened, setOpened] = useState(() => {
+    if (forceShow) return true;
+    return !localStorage.getItem(ONBOARDING_STORAGE_KEY);
+  });
   const [active, setActive] = useState(0);
   const isMac = useIsMac();
-
-  // Check if user has completed onboarding
-  useEffect(() => {
-    if (forceShow) {
-      setOpened(true);
-      return;
-    }
-
-    const completed = localStorage.getItem(ONBOARDING_STORAGE_KEY);
-    if (!completed) {
-      setOpened(true);
-    }
-  }, [forceShow]);
 
   const handleComplete = () => {
     localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');

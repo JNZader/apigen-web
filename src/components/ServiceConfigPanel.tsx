@@ -25,7 +25,7 @@ import {
   IconSettings,
   IconShield,
 } from '@tabler/icons-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useEntities, useServiceActions, useServices } from '../store/projectStore';
 import type { ServiceConfig, ServiceDatabaseType, ServiceDiscoveryType } from '../types';
 
@@ -74,30 +74,24 @@ export function ServiceConfigPanel({
     [services, serviceId],
   );
 
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [config, setConfig] = useState<ServiceConfig>({
-    port: 8080,
-    contextPath: '/api',
-    databaseType: 'postgresql',
-    generateDocker: true,
-    generateDockerCompose: true,
-    enableServiceDiscovery: false,
-    serviceDiscoveryType: 'NONE',
-    enableCircuitBreaker: true,
-    enableRateLimiting: true,
-    enableTracing: true,
-    enableMetrics: true,
-  });
-
-  // Load service data when service changes
-  useEffect(() => {
-    if (service) {
-      setName(service.name);
-      setDescription(service.description || '');
-      setConfig(service.config);
-    }
-  }, [service]);
+  // Initialize state directly from service - use key prop at usage site to reset
+  const [name, setName] = useState(service?.name ?? '');
+  const [description, setDescription] = useState(service?.description ?? '');
+  const [config, setConfig] = useState<ServiceConfig>(
+    service?.config ?? {
+      port: 8080,
+      contextPath: '/api',
+      databaseType: 'postgresql',
+      generateDocker: true,
+      generateDockerCompose: true,
+      enableServiceDiscovery: false,
+      serviceDiscoveryType: 'NONE',
+      enableCircuitBreaker: true,
+      enableRateLimiting: true,
+      enableTracing: true,
+      enableMetrics: true,
+    },
+  );
 
   const handleSave = () => {
     if (serviceId && name.trim()) {

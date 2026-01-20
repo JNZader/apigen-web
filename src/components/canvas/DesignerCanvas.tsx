@@ -339,6 +339,10 @@ export function DesignerCanvas({
 
       {/* Service Connection Form for creating/editing connections */}
       <ServiceConnectionForm
+        key={
+          editingConnectionId ??
+          `${pendingConnection?.sourceServiceId}-${pendingConnection?.targetServiceId}`
+        }
         opened={connectionFormOpened}
         onClose={handleCloseConnectionForm}
         pendingConnection={pendingConnection}

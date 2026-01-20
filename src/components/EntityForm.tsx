@@ -11,7 +11,6 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
-import { useEffect } from 'react';
 import { useProjectStore } from '../store/projectStore';
 import type { EntityDesign } from '../types';
 import { toPascalCase, toSnakeCase } from '../types';
@@ -41,15 +40,16 @@ export function EntityForm({ opened, onClose, entity }: Readonly<EntityFormProps
   const updateField = useProjectStore((state) => state.updateField);
   const removeField = useProjectStore((state) => state.removeField);
 
+  // Initialize form with entity values directly - use key prop at usage site to reset
   const form = useForm<FormValues>({
     initialValues: {
-      name: '',
-      tableName: '',
-      description: '',
-      generateController: true,
-      generateService: true,
-      enableCaching: true,
-      customEndpoint: '',
+      name: entity?.name ?? '',
+      tableName: entity?.tableName ?? '',
+      description: entity?.description ?? '',
+      generateController: entity?.config.generateController ?? true,
+      generateService: entity?.config.generateService ?? true,
+      enableCaching: entity?.config.enableCaching ?? true,
+      customEndpoint: entity?.config.customEndpoint ?? '',
     },
     validate: {
       name: (value) => {
@@ -66,28 +66,6 @@ export function EntityForm({ opened, onClose, entity }: Readonly<EntityFormProps
       },
     },
   });
-
-  // Reset form when opening/closing or when entity changes
-  // Note: form is intentionally excluded from deps to avoid infinite loops
-  // (Mantine form object changes reference on every render)
-  useEffect(() => {
-    if (opened) {
-      if (entity) {
-        form.setValues({
-          name: entity.name,
-          tableName: entity.tableName,
-          description: entity.description || '',
-          generateController: entity.config.generateController,
-          generateService: entity.config.generateService,
-          enableCaching: entity.config.enableCaching,
-          customEndpoint: entity.config.customEndpoint || '',
-        });
-      } else {
-        form.reset();
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opened, entity, form.reset, form.setValues]);
 
   // Auto-generate table name from entity name
   const handleNameChange = (value: string) => {
