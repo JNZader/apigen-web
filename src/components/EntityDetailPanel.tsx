@@ -34,7 +34,7 @@ export const EntityDetailPanel = memo(function EntityDetailPanel({
     if (panelRef.current) {
       panelRef.current.focus();
     }
-  }, [entity.id]);
+  }, []);
 
   return (
     <Paper

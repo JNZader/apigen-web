@@ -146,9 +146,9 @@ describe('archiveSecurity', () => {
         value: MAX_TOTAL_SIZE_BYTES + 1,
       });
 
-      await expect(
-        addServiceToZip(targetZip, largeBlob, 'service')
-      ).rejects.toThrow('exceeds maximum size');
+      await expect(addServiceToZip(targetZip, largeBlob, 'service')).rejects.toThrow(
+        'exceeds maximum size',
+      );
     });
 
     it('should reject archives with too many files (Zip Bomb prevention)', async () => {
@@ -161,9 +161,9 @@ describe('archiveSecurity', () => {
       }
       const sourceBlob = await sourceZip.generateAsync({ type: 'blob' });
 
-      await expect(
-        addServiceToZip(targetZip, sourceBlob, 'service')
-      ).rejects.toThrow('too many files');
+      await expect(addServiceToZip(targetZip, sourceBlob, 'service')).rejects.toThrow(
+        'too many files',
+      );
     });
 
     it('should skip directory entries', async () => {
@@ -199,9 +199,9 @@ describe('archiveSecurity', () => {
 
       // The compressed blob might be small due to repetitive content
       // but extracted size will exceed limit
-      await expect(
-        addServiceToZip(targetZip, sourceBlob, 'service')
-      ).rejects.toThrow(/exceeds maximum/);
+      await expect(addServiceToZip(targetZip, sourceBlob, 'service')).rejects.toThrow(
+        /exceeds maximum/,
+      );
     });
 
     it('should reject individual files exceeding size limit', async () => {
@@ -213,9 +213,9 @@ describe('archiveSecurity', () => {
       sourceZip.file('large-file.bin', largeContent);
       const sourceBlob = await sourceZip.generateAsync({ type: 'blob' });
 
-      await expect(
-        addServiceToZip(targetZip, sourceBlob, 'service')
-      ).rejects.toThrow('exceeds maximum size');
+      await expect(addServiceToZip(targetZip, sourceBlob, 'service')).rejects.toThrow(
+        'exceeds maximum size',
+      );
     });
   });
 

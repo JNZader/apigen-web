@@ -105,7 +105,9 @@ describe('useProjectGeneration', () => {
 
       let generateResult: boolean;
       act(() => {
-        result.current.generateProject().then((r) => (generateResult = r));
+        result.current.generateProject().then((r) => {
+          generateResult = r;
+        });
       });
 
       await act(async () => {
@@ -120,7 +122,9 @@ describe('useProjectGeneration', () => {
 
       let generateResult: boolean;
       act(() => {
-        result.current.generateProject().then((r) => (generateResult = r));
+        result.current.generateProject().then((r) => {
+          generateResult = r;
+        });
       });
 
       await act(async () => {

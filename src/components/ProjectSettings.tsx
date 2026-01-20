@@ -29,8 +29,8 @@ import {
   IconBrandDocker,
   IconBrandGraphql,
   IconChartBar,
-  IconCloud,
   IconClock,
+  IconCloud,
   IconDatabase,
   IconExchange,
   IconEye,
@@ -52,7 +52,6 @@ import {
   IconWebhook,
 } from '@tabler/icons-react';
 import { useProjectStore } from '../store/projectStore';
-import { GatewayRouteDesigner } from './GatewayRouteDesigner';
 import type {
   FeatureFlag,
   ProjectConfig,
@@ -62,6 +61,7 @@ import type {
   WebhookEventType,
 } from '../types';
 import { isValidArtifactId, isValidGroupId, isValidPackageName } from '../utils/validation';
+import { GatewayRouteDesigner } from './GatewayRouteDesigner';
 
 interface ProjectSettingsProps {
   readonly opened: boolean;
@@ -147,7 +147,11 @@ export function ProjectSettings({ opened, onClose }: Readonly<ProjectSettingsPro
             </Tabs.List>
 
             <Tabs.Panel value="general" pl="md">
-              <GeneralTab form={form} onGroupIdChange={handleGroupIdChange} onArtifactIdChange={handleArtifactIdChange} />
+              <GeneralTab
+                form={form}
+                onGroupIdChange={handleGroupIdChange}
+                onArtifactIdChange={handleArtifactIdChange}
+              />
             </Tabs.Panel>
 
             <Tabs.Panel value="modules" pl="md">
@@ -241,11 +245,7 @@ function GeneralTab({ form, onGroupIdChange, onArtifactIdChange }: Readonly<Gene
           ]}
           {...form.getInputProps('javaVersion')}
         />
-        <TextInput
-          label="Spring Boot Version"
-          disabled
-          value={form.values.springBootVersion}
-        />
+        <TextInput label="Spring Boot Version" disabled value={form.values.springBootVersion} />
       </Group>
     </Stack>
   );
@@ -291,10 +291,7 @@ function ModulesTab({ form }: Readonly<TabProps>) {
           <Divider my="sm" />
           <Stack gap="sm">
             <SimpleGrid cols={2}>
-              <TextInput
-                label="GraphQL Path"
-                {...form.getInputProps('graphqlConfig.path')}
-              />
+              <TextInput label="GraphQL Path" {...form.getInputProps('graphqlConfig.path')} />
               <NumberInput
                 label="Max Query Depth"
                 min={1}
@@ -306,12 +303,16 @@ function ModulesTab({ form }: Readonly<TabProps>) {
               <Switch
                 label="Enable Tracing"
                 checked={form.values.graphqlConfig.tracingEnabled}
-                onChange={(e) => form.setFieldValue('graphqlConfig.tracingEnabled', e.currentTarget.checked)}
+                onChange={(e) =>
+                  form.setFieldValue('graphqlConfig.tracingEnabled', e.currentTarget.checked)
+                }
               />
               <Switch
                 label="Enable Introspection"
                 checked={form.values.graphqlConfig.introspectionEnabled}
-                onChange={(e) => form.setFieldValue('graphqlConfig.introspectionEnabled', e.currentTarget.checked)}
+                onChange={(e) =>
+                  form.setFieldValue('graphqlConfig.introspectionEnabled', e.currentTarget.checked)
+                }
               />
             </Group>
           </Stack>
@@ -347,12 +348,16 @@ function ModulesTab({ form }: Readonly<TabProps>) {
               <Switch
                 label="Enable Logging"
                 checked={form.values.grpcConfig.loggingEnabled}
-                onChange={(e) => form.setFieldValue('grpcConfig.loggingEnabled', e.currentTarget.checked)}
+                onChange={(e) =>
+                  form.setFieldValue('grpcConfig.loggingEnabled', e.currentTarget.checked)
+                }
               />
               <Switch
                 label="Health Check"
                 checked={form.values.grpcConfig.healthCheckEnabled}
-                onChange={(e) => form.setFieldValue('grpcConfig.healthCheckEnabled', e.currentTarget.checked)}
+                onChange={(e) =>
+                  form.setFieldValue('grpcConfig.healthCheckEnabled', e.currentTarget.checked)
+                }
               />
             </Group>
           </Stack>
@@ -388,17 +393,23 @@ function ModulesTab({ form }: Readonly<TabProps>) {
               <Switch
                 label="Enable Auth"
                 checked={form.values.gatewayConfig.authEnabled}
-                onChange={(e) => form.setFieldValue('gatewayConfig.authEnabled', e.currentTarget.checked)}
+                onChange={(e) =>
+                  form.setFieldValue('gatewayConfig.authEnabled', e.currentTarget.checked)
+                }
               />
               <Switch
                 label="Enable Logging"
                 checked={form.values.gatewayConfig.loggingEnabled}
-                onChange={(e) => form.setFieldValue('gatewayConfig.loggingEnabled', e.currentTarget.checked)}
+                onChange={(e) =>
+                  form.setFieldValue('gatewayConfig.loggingEnabled', e.currentTarget.checked)
+                }
               />
               <Switch
                 label="Circuit Breaker"
                 checked={form.values.gatewayConfig.circuitBreakerEnabled}
-                onChange={(e) => form.setFieldValue('gatewayConfig.circuitBreakerEnabled', e.currentTarget.checked)}
+                onChange={(e) =>
+                  form.setFieldValue('gatewayConfig.circuitBreakerEnabled', e.currentTarget.checked)
+                }
               />
             </Group>
 
@@ -513,7 +524,9 @@ function FeaturesTab({ form }: Readonly<TabProps>) {
 
             <Collapse in={form.values.features.caching}>
               <Paper p="sm" withBorder mt="sm">
-                <Text size="sm" fw={500} mb="xs">Cache Configuration</Text>
+                <Text size="sm" fw={500} mb="xs">
+                  Cache Configuration
+                </Text>
                 <SimpleGrid cols={2}>
                   <Select
                     label="Cache Type"
@@ -533,8 +546,14 @@ function FeaturesTab({ form }: Readonly<TabProps>) {
                 </SimpleGrid>
                 <Collapse in={form.values.cacheConfig.type === 'redis'}>
                   <SimpleGrid cols={2} mt="sm">
-                    <TextInput label="Redis Host" {...form.getInputProps('cacheConfig.redis.host')} />
-                    <NumberInput label="Redis Port" {...form.getInputProps('cacheConfig.redis.port')} />
+                    <TextInput
+                      label="Redis Host"
+                      {...form.getInputProps('cacheConfig.redis.host')}
+                    />
+                    <NumberInput
+                      label="Redis Port"
+                      {...form.getInputProps('cacheConfig.redis.port')}
+                    />
                   </SimpleGrid>
                 </Collapse>
               </Paper>
@@ -542,11 +561,28 @@ function FeaturesTab({ form }: Readonly<TabProps>) {
 
             <Collapse in={form.values.features.batchOperations}>
               <Paper p="sm" withBorder mt="sm">
-                <Text size="sm" fw={500} mb="xs">Batch Configuration</Text>
+                <Text size="sm" fw={500} mb="xs">
+                  Batch Configuration
+                </Text>
                 <SimpleGrid cols={3}>
-                  <NumberInput label="Batch Size" min={10} max={1000} {...form.getInputProps('batchConfig.defaultBatchSize')} />
-                  <NumberInput label="Max Concurrent" min={1} max={100} {...form.getInputProps('batchConfig.maxConcurrent')} />
-                  <NumberInput label="Timeout (s)" min={10} max={300} {...form.getInputProps('batchConfig.timeoutSeconds')} />
+                  <NumberInput
+                    label="Batch Size"
+                    min={10}
+                    max={1000}
+                    {...form.getInputProps('batchConfig.defaultBatchSize')}
+                  />
+                  <NumberInput
+                    label="Max Concurrent"
+                    min={1}
+                    max={100}
+                    {...form.getInputProps('batchConfig.maxConcurrent')}
+                  />
+                  <NumberInput
+                    label="Timeout (s)"
+                    min={10}
+                    max={300}
+                    {...form.getInputProps('batchConfig.timeoutSeconds')}
+                  />
                 </SimpleGrid>
               </Paper>
             </Collapse>
@@ -589,19 +625,25 @@ function FeaturesTab({ form }: Readonly<TabProps>) {
 
             <Collapse in={form.values.features.i18n}>
               <Paper p="sm" withBorder mt="sm">
-                <Text size="sm" fw={500} mb="xs">i18n Configuration</Text>
+                <Text size="sm" fw={500} mb="xs">
+                  i18n Configuration
+                </Text>
                 <SimpleGrid cols={2}>
                   <Select
                     label="Default Locale"
                     data={LOCALE_OPTIONS}
                     value={form.values.i18nConfig.defaultLocale}
-                    onChange={(v) => form.setFieldValue('i18nConfig.defaultLocale', v as SupportedLocale)}
+                    onChange={(v) =>
+                      form.setFieldValue('i18nConfig.defaultLocale', v as SupportedLocale)
+                    }
                   />
                   <MultiSelect
                     label="Supported Locales"
                     data={LOCALE_OPTIONS}
                     value={form.values.i18nConfig.supportedLocales}
-                    onChange={(v) => form.setFieldValue('i18nConfig.supportedLocales', v as SupportedLocale[])}
+                    onChange={(v) =>
+                      form.setFieldValue('i18nConfig.supportedLocales', v as SupportedLocale[])
+                    }
                   />
                 </SimpleGrid>
               </Paper>
@@ -609,17 +651,36 @@ function FeaturesTab({ form }: Readonly<TabProps>) {
 
             <Collapse in={form.values.features.webhooks}>
               <Paper p="sm" withBorder mt="sm">
-                <Text size="sm" fw={500} mb="xs">Webhook Configuration</Text>
+                <Text size="sm" fw={500} mb="xs">
+                  Webhook Configuration
+                </Text>
                 <MultiSelect
                   label="Enabled Events"
                   data={WEBHOOK_EVENT_OPTIONS}
                   value={form.values.webhooksConfig.events}
-                  onChange={(v) => form.setFieldValue('webhooksConfig.events', v as WebhookEventType[])}
+                  onChange={(v) =>
+                    form.setFieldValue('webhooksConfig.events', v as WebhookEventType[])
+                  }
                 />
                 <SimpleGrid cols={3} mt="sm">
-                  <NumberInput label="Max Retries" min={0} max={10} {...form.getInputProps('webhooksConfig.maxRetries')} />
-                  <NumberInput label="Timeout (s)" min={5} max={120} {...form.getInputProps('webhooksConfig.requestTimeoutSeconds')} />
-                  <NumberInput label="Retry Delay (s)" min={1} max={60} {...form.getInputProps('webhooksConfig.retryBaseDelaySeconds')} />
+                  <NumberInput
+                    label="Max Retries"
+                    min={0}
+                    max={10}
+                    {...form.getInputProps('webhooksConfig.maxRetries')}
+                  />
+                  <NumberInput
+                    label="Timeout (s)"
+                    min={5}
+                    max={120}
+                    {...form.getInputProps('webhooksConfig.requestTimeoutSeconds')}
+                  />
+                  <NumberInput
+                    label="Retry Delay (s)"
+                    min={1}
+                    max={60}
+                    {...form.getInputProps('webhooksConfig.retryBaseDelaySeconds')}
+                  />
                 </SimpleGrid>
               </Paper>
             </Collapse>
@@ -662,21 +723,33 @@ function FeaturesTab({ form }: Readonly<TabProps>) {
 
             <Collapse in={form.values.features.multiTenancy}>
               <Paper p="sm" withBorder mt="sm">
-                <Text size="sm" fw={500} mb="xs">Multi-Tenancy Configuration</Text>
+                <Text size="sm" fw={500} mb="xs">
+                  Multi-Tenancy Configuration
+                </Text>
                 <SimpleGrid cols={2}>
                   <MultiSelect
                     label="Resolution Strategies"
                     data={TENANT_STRATEGY_OPTIONS}
                     value={form.values.multiTenancyConfig.strategies}
-                    onChange={(v) => form.setFieldValue('multiTenancyConfig.strategies', v as TenantStrategy[])}
+                    onChange={(v) =>
+                      form.setFieldValue('multiTenancyConfig.strategies', v as TenantStrategy[])
+                    }
                   />
-                  <TextInput label="Tenant Header" {...form.getInputProps('multiTenancyConfig.tenantHeader')} />
+                  <TextInput
+                    label="Tenant Header"
+                    {...form.getInputProps('multiTenancyConfig.tenantHeader')}
+                  />
                 </SimpleGrid>
                 <Group mt="sm">
                   <Switch
                     label="Require Tenant"
                     checked={form.values.multiTenancyConfig.requireTenant}
-                    onChange={(e) => form.setFieldValue('multiTenancyConfig.requireTenant', e.currentTarget.checked)}
+                    onChange={(e) =>
+                      form.setFieldValue(
+                        'multiTenancyConfig.requireTenant',
+                        e.currentTarget.checked,
+                      )
+                    }
                   />
                 </Group>
               </Paper>
@@ -684,14 +757,24 @@ function FeaturesTab({ form }: Readonly<TabProps>) {
 
             <Collapse in={form.values.features.apiVersioning}>
               <Paper p="sm" withBorder mt="sm">
-                <Text size="sm" fw={500} mb="xs">API Versioning Configuration</Text>
+                <Text size="sm" fw={500} mb="xs">
+                  API Versioning Configuration
+                </Text>
                 <SimpleGrid cols={2}>
-                  <TextInput label="Default Version" {...form.getInputProps('apiVersioningConfig.defaultVersion')} />
+                  <TextInput
+                    label="Default Version"
+                    {...form.getInputProps('apiVersioningConfig.defaultVersion')}
+                  />
                   <MultiSelect
                     label="Strategies"
                     data={VERSIONING_STRATEGY_OPTIONS}
                     value={form.values.apiVersioningConfig.strategies}
-                    onChange={(v) => form.setFieldValue('apiVersioningConfig.strategies', v as VersioningStrategy[])}
+                    onChange={(v) =>
+                      form.setFieldValue(
+                        'apiVersioningConfig.strategies',
+                        v as VersioningStrategy[],
+                      )
+                    }
                   />
                 </SimpleGrid>
               </Paper>
@@ -699,10 +782,20 @@ function FeaturesTab({ form }: Readonly<TabProps>) {
 
             <Collapse in={form.values.features.eventSourcing}>
               <Paper p="sm" withBorder mt="sm">
-                <Text size="sm" fw={500} mb="xs">Event Sourcing Configuration</Text>
+                <Text size="sm" fw={500} mb="xs">
+                  Event Sourcing Configuration
+                </Text>
                 <SimpleGrid cols={2}>
-                  <NumberInput label="Snapshot Threshold" min={10} max={1000} {...form.getInputProps('eventSourcingConfig.snapshotThreshold')} />
-                  <TextInput label="Event Table" {...form.getInputProps('eventSourcingConfig.eventTableName')} />
+                  <NumberInput
+                    label="Snapshot Threshold"
+                    min={10}
+                    max={1000}
+                    {...form.getInputProps('eventSourcingConfig.snapshotThreshold')}
+                  />
+                  <TextInput
+                    label="Event Table"
+                    {...form.getInputProps('eventSourcingConfig.eventTableName')}
+                  />
                 </SimpleGrid>
               </Paper>
             </Collapse>
@@ -730,7 +823,9 @@ function SecurityTab({ form }: Readonly<TabProps>) {
             </ThemeIcon>
             <div>
               <Text fw={500}>Security Module</Text>
-              <Text size="xs" c="dimmed">Authentication and authorization</Text>
+              <Text size="xs" c="dimmed">
+                Authentication and authorization
+              </Text>
             </div>
           </Group>
           <Switch
@@ -751,11 +846,7 @@ function SecurityTab({ form }: Readonly<TabProps>) {
             onChange={(v) => form.setFieldValue('securityConfig.mode', v as 'jwt' | 'oauth2')}
           />
 
-          {isJwtMode ? (
-            <JwtSecurityConfig form={form} />
-          ) : (
-            <OAuth2SecurityConfig form={form} />
-          )}
+          {isJwtMode ? <JwtSecurityConfig form={form} /> : <OAuth2SecurityConfig form={form} />}
 
           <Divider my="md" label="Security Headers" labelPosition="center" />
           <SecurityHeadersConfig form={form} />
@@ -780,7 +871,9 @@ function JwtSecurityConfig({ form }: Readonly<TabProps>) {
             { value: '128', label: '128 bytes (1024 bits)' },
           ]}
           value={String(form.values.securityConfig.jwtSecretLength)}
-          onChange={(v) => form.setFieldValue('securityConfig.jwtSecretLength', Number(v) as 32 | 64 | 128)}
+          onChange={(v) =>
+            form.setFieldValue('securityConfig.jwtSecretLength', Number(v) as 32 | 64 | 128)
+          }
         />
         <NumberInput
           label="Access Token Expiration (min)"
@@ -824,22 +917,31 @@ function JwtSecurityConfig({ form }: Readonly<TabProps>) {
         <Switch
           label="Enable Refresh Token"
           checked={form.values.securityConfig.enableRefreshToken}
-          onChange={(e) => form.setFieldValue('securityConfig.enableRefreshToken', e.currentTarget.checked)}
+          onChange={(e) =>
+            form.setFieldValue('securityConfig.enableRefreshToken', e.currentTarget.checked)
+          }
         />
         <Switch
           label="Enable Token Blacklist"
           checked={form.values.securityConfig.enableTokenBlacklist}
-          onChange={(e) => form.setFieldValue('securityConfig.enableTokenBlacklist', e.currentTarget.checked)}
+          onChange={(e) =>
+            form.setFieldValue('securityConfig.enableTokenBlacklist', e.currentTarget.checked)
+          }
         />
       </Group>
 
       <Paper p="sm" withBorder>
         <Group justify="space-between" mb="sm">
-          <Text size="sm" fw={500}><IconKey size={14} style={{ marginRight: 4 }} />JWT Key Rotation</Text>
+          <Text size="sm" fw={500}>
+            <IconKey size={14} style={{ marginRight: 4 }} />
+            JWT Key Rotation
+          </Text>
           <Switch
             size="sm"
             checked={form.values.securityConfig.keyRotation.enabled}
-            onChange={(e) => form.setFieldValue('securityConfig.keyRotation.enabled', e.currentTarget.checked)}
+            onChange={(e) =>
+              form.setFieldValue('securityConfig.keyRotation.enabled', e.currentTarget.checked)
+            }
           />
         </Group>
         <Collapse in={form.values.securityConfig.keyRotation.enabled}>
@@ -853,11 +955,16 @@ function JwtSecurityConfig({ form }: Readonly<TabProps>) {
 
       <Paper p="sm" withBorder>
         <Group justify="space-between" mb="sm">
-          <Text size="sm" fw={500}><IconShieldCheck size={14} style={{ marginRight: 4 }} />PKCE (RFC 7636)</Text>
+          <Text size="sm" fw={500}>
+            <IconShieldCheck size={14} style={{ marginRight: 4 }} />
+            PKCE (RFC 7636)
+          </Text>
           <Switch
             size="sm"
             checked={form.values.securityConfig.pkce.enabled}
-            onChange={(e) => form.setFieldValue('securityConfig.pkce.enabled', e.currentTarget.checked)}
+            onChange={(e) =>
+              form.setFieldValue('securityConfig.pkce.enabled', e.currentTarget.checked)
+            }
           />
         </Group>
         <Collapse in={form.values.securityConfig.pkce.enabled}>
@@ -871,7 +978,9 @@ function JwtSecurityConfig({ form }: Readonly<TabProps>) {
             <Switch
               label="Require S256"
               checked={form.values.securityConfig.pkce.requireS256}
-              onChange={(e) => form.setFieldValue('securityConfig.pkce.requireS256', e.currentTarget.checked)}
+              onChange={(e) =>
+                form.setFieldValue('securityConfig.pkce.requireS256', e.currentTarget.checked)
+              }
               mt="lg"
             />
           </SimpleGrid>
@@ -934,17 +1043,26 @@ function SecurityHeadersConfig({ form }: Readonly<TabProps>) {
         <Switch
           label="Enable HSTS"
           checked={form.values.securityConfig.headers.hstsEnabled}
-          onChange={(e) => form.setFieldValue('securityConfig.headers.hstsEnabled', e.currentTarget.checked)}
+          onChange={(e) =>
+            form.setFieldValue('securityConfig.headers.hstsEnabled', e.currentTarget.checked)
+          }
         />
         <Switch
           label="Include Subdomains"
           checked={form.values.securityConfig.headers.hstsIncludeSubdomains}
-          onChange={(e) => form.setFieldValue('securityConfig.headers.hstsIncludeSubdomains', e.currentTarget.checked)}
+          onChange={(e) =>
+            form.setFieldValue(
+              'securityConfig.headers.hstsIncludeSubdomains',
+              e.currentTarget.checked,
+            )
+          }
         />
         <Switch
           label="HSTS Preload"
           checked={form.values.securityConfig.headers.hstsPreload}
-          onChange={(e) => form.setFieldValue('securityConfig.headers.hstsPreload', e.currentTarget.checked)}
+          onChange={(e) =>
+            form.setFieldValue('securityConfig.headers.hstsPreload', e.currentTarget.checked)
+          }
         />
       </Group>
     </Stack>
@@ -955,7 +1073,9 @@ function RateLimitingConfig({ form }: Readonly<TabProps>) {
   return (
     <Stack gap="sm">
       <Group justify="space-between">
-        <Text size="sm" fw={500}>Enable Rate Limiting</Text>
+        <Text size="sm" fw={500}>
+          Enable Rate Limiting
+        </Text>
         <Switch
           checked={form.values.features.rateLimiting}
           onChange={(e) => form.setFieldValue('features.rateLimiting', e.currentTarget.checked)}
@@ -970,7 +1090,9 @@ function RateLimitingConfig({ form }: Readonly<TabProps>) {
               { value: 'REDIS', label: 'Redis (Distributed)' },
             ]}
             value={form.values.rateLimitConfig.storageMode}
-            onChange={(v) => form.setFieldValue('rateLimitConfig.storageMode', v as 'IN_MEMORY' | 'REDIS')}
+            onChange={(v) =>
+              form.setFieldValue('rateLimitConfig.storageMode', v as 'IN_MEMORY' | 'REDIS')
+            }
           />
           <SimpleGrid cols={2}>
             <NumberInput
@@ -1004,12 +1126,16 @@ function RateLimitingConfig({ form }: Readonly<TabProps>) {
             <Switch
               label="Per User Limits"
               checked={form.values.rateLimitConfig.enablePerUser}
-              onChange={(e) => form.setFieldValue('rateLimitConfig.enablePerUser', e.currentTarget.checked)}
+              onChange={(e) =>
+                form.setFieldValue('rateLimitConfig.enablePerUser', e.currentTarget.checked)
+              }
             />
             <Switch
               label="Per Endpoint Limits"
               checked={form.values.rateLimitConfig.enablePerEndpoint}
-              onChange={(e) => form.setFieldValue('rateLimitConfig.enablePerEndpoint', e.currentTarget.checked)}
+              onChange={(e) =>
+                form.setFieldValue('rateLimitConfig.enablePerEndpoint', e.currentTarget.checked)
+              }
             />
           </Group>
         </Stack>
@@ -1097,16 +1223,26 @@ function AdvancedTab({ form }: Readonly<TabProps>) {
             <Stack gap="sm">
               <Paper p="sm" withBorder>
                 <Group justify="space-between" mb="sm">
-                  <Text size="sm" fw={500}>OpenTelemetry Tracing</Text>
+                  <Text size="sm" fw={500}>
+                    OpenTelemetry Tracing
+                  </Text>
                   <Switch
                     size="sm"
                     checked={form.values.observabilityConfig.tracing.enabled}
-                    onChange={(e) => form.setFieldValue('observabilityConfig.tracing.enabled', e.currentTarget.checked)}
+                    onChange={(e) =>
+                      form.setFieldValue(
+                        'observabilityConfig.tracing.enabled',
+                        e.currentTarget.checked,
+                      )
+                    }
                   />
                 </Group>
                 <Collapse in={form.values.observabilityConfig.tracing.enabled}>
                   <SimpleGrid cols={2}>
-                    <TextInput label="OTLP Endpoint" {...form.getInputProps('observabilityConfig.tracing.otlpEndpoint')} />
+                    <TextInput
+                      label="OTLP Endpoint"
+                      {...form.getInputProps('observabilityConfig.tracing.otlpEndpoint')}
+                    />
                     <NumberInput
                       label="Sampling Probability"
                       min={0}
@@ -1121,11 +1257,18 @@ function AdvancedTab({ form }: Readonly<TabProps>) {
 
               <Paper p="sm" withBorder>
                 <Group justify="space-between" mb="sm">
-                  <Text size="sm" fw={500}>Metrics</Text>
+                  <Text size="sm" fw={500}>
+                    Metrics
+                  </Text>
                   <Switch
                     size="sm"
                     checked={form.values.observabilityConfig.metrics.enabled}
-                    onChange={(e) => form.setFieldValue('observabilityConfig.metrics.enabled', e.currentTarget.checked)}
+                    onChange={(e) =>
+                      form.setFieldValue(
+                        'observabilityConfig.metrics.enabled',
+                        e.currentTarget.checked,
+                      )
+                    }
                   />
                 </Group>
                 <Collapse in={form.values.observabilityConfig.metrics.enabled}>
@@ -1133,12 +1276,22 @@ function AdvancedTab({ form }: Readonly<TabProps>) {
                     <Switch
                       label="HikariCP Metrics"
                       checked={form.values.observabilityConfig.metrics.exposeHikariMetrics}
-                      onChange={(e) => form.setFieldValue('observabilityConfig.metrics.exposeHikariMetrics', e.currentTarget.checked)}
+                      onChange={(e) =>
+                        form.setFieldValue(
+                          'observabilityConfig.metrics.exposeHikariMetrics',
+                          e.currentTarget.checked,
+                        )
+                      }
                     />
                     <Switch
                       label="Prometheus Endpoint"
                       checked={form.values.observabilityConfig.metrics.exposePrometheus}
-                      onChange={(e) => form.setFieldValue('observabilityConfig.metrics.exposePrometheus', e.currentTarget.checked)}
+                      onChange={(e) =>
+                        form.setFieldValue(
+                          'observabilityConfig.metrics.exposePrometheus',
+                          e.currentTarget.checked,
+                        )
+                      }
                     />
                   </Group>
                 </Collapse>
@@ -1146,23 +1299,45 @@ function AdvancedTab({ form }: Readonly<TabProps>) {
 
               <Paper p="sm" withBorder>
                 <Group justify="space-between" mb="sm">
-                  <Text size="sm" fw={500}>N+1 Query Detection</Text>
+                  <Text size="sm" fw={500}>
+                    N+1 Query Detection
+                  </Text>
                   <Switch
                     size="sm"
                     checked={form.values.observabilityConfig.queryAnalysis.enabled}
-                    onChange={(e) => form.setFieldValue('observabilityConfig.queryAnalysis.enabled', e.currentTarget.checked)}
+                    onChange={(e) =>
+                      form.setFieldValue(
+                        'observabilityConfig.queryAnalysis.enabled',
+                        e.currentTarget.checked,
+                      )
+                    }
                   />
                 </Group>
                 <Collapse in={form.values.observabilityConfig.queryAnalysis.enabled}>
                   <SimpleGrid cols={2}>
-                    <NumberInput label="Warn Threshold" min={1} max={50} {...form.getInputProps('observabilityConfig.queryAnalysis.warnThreshold')} />
-                    <NumberInput label="Error Threshold" min={5} max={100} {...form.getInputProps('observabilityConfig.queryAnalysis.errorThreshold')} />
+                    <NumberInput
+                      label="Warn Threshold"
+                      min={1}
+                      max={50}
+                      {...form.getInputProps('observabilityConfig.queryAnalysis.warnThreshold')}
+                    />
+                    <NumberInput
+                      label="Error Threshold"
+                      min={5}
+                      max={100}
+                      {...form.getInputProps('observabilityConfig.queryAnalysis.errorThreshold')}
+                    />
                   </SimpleGrid>
                   <Group mt="sm">
                     <Switch
                       label="Log Slow Queries"
                       checked={form.values.observabilityConfig.queryAnalysis.logSlowQueries}
-                      onChange={(e) => form.setFieldValue('observabilityConfig.queryAnalysis.logSlowQueries', e.currentTarget.checked)}
+                      onChange={(e) =>
+                        form.setFieldValue(
+                          'observabilityConfig.queryAnalysis.logSlowQueries',
+                          e.currentTarget.checked,
+                        )
+                      }
                     />
                   </Group>
                 </Collapse>
@@ -1177,44 +1352,96 @@ function AdvancedTab({ form }: Readonly<TabProps>) {
             <Stack gap="sm">
               <Paper p="sm" withBorder>
                 <Group justify="space-between" mb="sm">
-                  <Text size="sm" fw={500}>Circuit Breaker</Text>
+                  <Text size="sm" fw={500}>
+                    Circuit Breaker
+                  </Text>
                   <Switch
                     size="sm"
                     checked={form.values.resilienceConfig.circuitBreaker.enabled}
-                    onChange={(e) => form.setFieldValue('resilienceConfig.circuitBreaker.enabled', e.currentTarget.checked)}
+                    onChange={(e) =>
+                      form.setFieldValue(
+                        'resilienceConfig.circuitBreaker.enabled',
+                        e.currentTarget.checked,
+                      )
+                    }
                   />
                 </Group>
                 <Collapse in={form.values.resilienceConfig.circuitBreaker.enabled}>
                   <SimpleGrid cols={2}>
-                    <NumberInput label="Sliding Window Size" min={10} max={1000} {...form.getInputProps('resilienceConfig.circuitBreaker.slidingWindowSize')} />
-                    <NumberInput label="Failure Rate (%)" min={1} max={100} {...form.getInputProps('resilienceConfig.circuitBreaker.failureRateThreshold')} />
+                    <NumberInput
+                      label="Sliding Window Size"
+                      min={10}
+                      max={1000}
+                      {...form.getInputProps('resilienceConfig.circuitBreaker.slidingWindowSize')}
+                    />
+                    <NumberInput
+                      label="Failure Rate (%)"
+                      min={1}
+                      max={100}
+                      {...form.getInputProps(
+                        'resilienceConfig.circuitBreaker.failureRateThreshold',
+                      )}
+                    />
                   </SimpleGrid>
                   <SimpleGrid cols={2} mt="sm">
-                    <NumberInput label="Slow Call Threshold (%)" min={1} max={100} {...form.getInputProps('resilienceConfig.circuitBreaker.slowCallRateThreshold')} />
-                    <NumberInput label="Wait Duration (s)" min={1} max={300} {...form.getInputProps('resilienceConfig.circuitBreaker.waitDurationInOpenStateSeconds')} />
+                    <NumberInput
+                      label="Slow Call Threshold (%)"
+                      min={1}
+                      max={100}
+                      {...form.getInputProps(
+                        'resilienceConfig.circuitBreaker.slowCallRateThreshold',
+                      )}
+                    />
+                    <NumberInput
+                      label="Wait Duration (s)"
+                      min={1}
+                      max={300}
+                      {...form.getInputProps(
+                        'resilienceConfig.circuitBreaker.waitDurationInOpenStateSeconds',
+                      )}
+                    />
                   </SimpleGrid>
                 </Collapse>
               </Paper>
 
               <Paper p="sm" withBorder>
                 <Group justify="space-between" mb="sm">
-                  <Text size="sm" fw={500}>Retry</Text>
+                  <Text size="sm" fw={500}>
+                    Retry
+                  </Text>
                   <Switch
                     size="sm"
                     checked={form.values.resilienceConfig.retry.enabled}
-                    onChange={(e) => form.setFieldValue('resilienceConfig.retry.enabled', e.currentTarget.checked)}
+                    onChange={(e) =>
+                      form.setFieldValue('resilienceConfig.retry.enabled', e.currentTarget.checked)
+                    }
                   />
                 </Group>
                 <Collapse in={form.values.resilienceConfig.retry.enabled}>
                   <SimpleGrid cols={2}>
-                    <NumberInput label="Max Attempts" min={1} max={10} {...form.getInputProps('resilienceConfig.retry.maxAttempts')} />
-                    <NumberInput label="Wait Duration (ms)" min={100} max={10000} {...form.getInputProps('resilienceConfig.retry.waitDurationMs')} />
+                    <NumberInput
+                      label="Max Attempts"
+                      min={1}
+                      max={10}
+                      {...form.getInputProps('resilienceConfig.retry.maxAttempts')}
+                    />
+                    <NumberInput
+                      label="Wait Duration (ms)"
+                      min={100}
+                      max={10000}
+                      {...form.getInputProps('resilienceConfig.retry.waitDurationMs')}
+                    />
                   </SimpleGrid>
                   <Group mt="sm">
                     <Switch
                       label="Exponential Backoff"
                       checked={form.values.resilienceConfig.retry.enableExponentialBackoff}
-                      onChange={(e) => form.setFieldValue('resilienceConfig.retry.enableExponentialBackoff', e.currentTarget.checked)}
+                      onChange={(e) =>
+                        form.setFieldValue(
+                          'resilienceConfig.retry.enableExponentialBackoff',
+                          e.currentTarget.checked,
+                        )
+                      }
                     />
                   </Group>
                 </Collapse>
@@ -1224,31 +1451,43 @@ function AdvancedTab({ form }: Readonly<TabProps>) {
         </Accordion.Item>
 
         <Accordion.Item value="featureFlags">
-          <Accordion.Control icon={<IconFlag size={16} />}>Feature Flags (Togglz)</Accordion.Control>
+          <Accordion.Control icon={<IconFlag size={16} />}>
+            Feature Flags (Togglz)
+          </Accordion.Control>
           <Accordion.Panel>
             <Stack gap="sm">
               <Group justify="space-between">
-                <Text size="sm" fw={500}>Enable Runtime Feature Flags</Text>
+                <Text size="sm" fw={500}>
+                  Enable Runtime Feature Flags
+                </Text>
                 <Switch
                   checked={form.values.featureFlags.enabled}
-                  onChange={(e) => form.setFieldValue('featureFlags.enabled', e.currentTarget.checked)}
+                  onChange={(e) =>
+                    form.setFieldValue('featureFlags.enabled', e.currentTarget.checked)
+                  }
                 />
               </Group>
               <Collapse in={form.values.featureFlags.enabled}>
                 <Switch
                   label="Enable Togglz Console (/togglz-console)"
                   checked={form.values.featureFlags.consoleEnabled}
-                  onChange={(e) => form.setFieldValue('featureFlags.consoleEnabled', e.currentTarget.checked)}
+                  onChange={(e) =>
+                    form.setFieldValue('featureFlags.consoleEnabled', e.currentTarget.checked)
+                  }
                   mb="sm"
                 />
-                <Text size="sm" c="dimmed" mb="xs">Default flag states:</Text>
+                <Text size="sm" c="dimmed" mb="xs">
+                  Default flag states:
+                </Text>
                 <SimpleGrid cols={2}>
                   {FEATURE_FLAGS.map((flag) => (
                     <Checkbox
                       key={flag}
                       label={flag.replaceAll('_', ' ')}
                       checked={form.values.featureFlags.flags[flag]}
-                      onChange={(e) => form.setFieldValue(`featureFlags.flags.${flag}`, e.currentTarget.checked)}
+                      onChange={(e) =>
+                        form.setFieldValue(`featureFlags.flags.${flag}`, e.currentTarget.checked)
+                      }
                     />
                   ))}
                 </SimpleGrid>
@@ -1280,11 +1519,18 @@ function AdvancedTab({ form }: Readonly<TabProps>) {
                 onChange={(v) => form.setFieldValue('corsConfig.allowedHeaders', v)}
               />
               <SimpleGrid cols={2}>
-                <NumberInput label="Max Age (seconds)" min={0} max={86400} {...form.getInputProps('corsConfig.maxAgeSeconds')} />
+                <NumberInput
+                  label="Max Age (seconds)"
+                  min={0}
+                  max={86400}
+                  {...form.getInputProps('corsConfig.maxAgeSeconds')}
+                />
                 <Switch
                   label="Allow Credentials"
                   checked={form.values.corsConfig.allowCredentials}
-                  onChange={(e) => form.setFieldValue('corsConfig.allowCredentials', e.currentTarget.checked)}
+                  onChange={(e) =>
+                    form.setFieldValue('corsConfig.allowCredentials', e.currentTarget.checked)
+                  }
                   mt="lg"
                 />
               </SimpleGrid>
@@ -1311,7 +1557,16 @@ interface ModuleCardProps {
   children?: React.ReactNode;
 }
 
-function ModuleCard({ icon, color, name, description, required, checked, onChange, children }: Readonly<ModuleCardProps>) {
+function ModuleCard({
+  icon,
+  color,
+  name,
+  description,
+  required,
+  checked,
+  onChange,
+  children,
+}: Readonly<ModuleCardProps>) {
   return (
     <Paper p="md" withBorder>
       <Group justify="space-between">
@@ -1321,7 +1576,9 @@ function ModuleCard({ icon, color, name, description, required, checked, onChang
           </ThemeIcon>
           <div>
             <Text fw={500}>{name}</Text>
-            <Text size="xs" c="dimmed">{description}</Text>
+            <Text size="xs" c="dimmed">
+              {description}
+            </Text>
           </div>
         </Group>
         {required ? (
@@ -1343,7 +1600,13 @@ interface FeatureSwitchProps {
   readonly onChange: (checked: boolean) => void;
 }
 
-function FeatureSwitch({ icon, label, description, checked, onChange }: Readonly<FeatureSwitchProps>) {
+function FeatureSwitch({
+  icon,
+  label,
+  description,
+  checked,
+  onChange,
+}: Readonly<FeatureSwitchProps>) {
   return (
     <Paper p="sm" withBorder>
       <Group justify="space-between" wrap="nowrap">
@@ -1352,8 +1615,12 @@ function FeatureSwitch({ icon, label, description, checked, onChange }: Readonly
             {icon}
           </ThemeIcon>
           <div>
-            <Text size="sm" fw={500}>{label}</Text>
-            <Text size="xs" c="dimmed">{description}</Text>
+            <Text size="sm" fw={500}>
+              {label}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {description}
+            </Text>
           </div>
         </Group>
         <Switch checked={checked} onChange={(e) => onChange(e.currentTarget.checked)} />

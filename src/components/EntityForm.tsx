@@ -87,14 +87,14 @@ export function EntityForm({ opened, onClose, entity }: Readonly<EntityFormProps
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opened, entity]);
+  }, [opened, entity, form.reset, form.setValues]);
 
   // Auto-generate table name from entity name
   const handleNameChange = (value: string) => {
     form.setFieldValue('name', value);
     if (!entity) {
       // Only auto-generate for new entities
-      const tableName = toSnakeCase(value) + 's';
+      const tableName = `${toSnakeCase(value)}s`;
       form.setFieldValue('tableName', tableName);
     }
   };

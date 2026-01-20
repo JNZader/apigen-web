@@ -1,11 +1,5 @@
 import { ActionIcon, Badge, Group, Tooltip } from '@mantine/core';
-import {
-  IconApi,
-  IconCloud,
-  IconCode,
-  IconPlugConnected,
-  IconTrash,
-} from '@tabler/icons-react';
+import { IconApi, IconCloud, IconCode, IconPlugConnected, IconTrash } from '@tabler/icons-react';
 import type { Edge, EdgeProps } from '@xyflow/react';
 import { BaseEdge, EdgeLabelRenderer, getBezierPath } from '@xyflow/react';
 import { memo } from 'react';
@@ -85,7 +79,7 @@ function ServiceConnectionEdgeComponent({
       />
 
       {/* Arrow marker definition */}
-      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+      <svg style={{ position: 'absolute', width: 0, height: 0 }} aria-hidden="true">
         <defs>
           <marker
             id="arrow"

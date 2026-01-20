@@ -60,8 +60,12 @@ describe('useThrottledAction', () => {
       let secondResult: string | undefined;
       let thirdResult: string | undefined;
       act(() => {
-        result.current[0]().then((r) => (secondResult = r));
-        result.current[0]().then((r) => (thirdResult = r));
+        result.current[0]().then((r) => {
+          secondResult = r;
+        });
+        result.current[0]().then((r) => {
+          thirdResult = r;
+        });
       });
 
       // Resolve the first action
@@ -239,15 +243,17 @@ describe('useThrottledAction', () => {
       );
 
       // Start first call
-      let firstPromise: Promise<void | undefined>;
+      let firstPromise: Promise<undefined | undefined>;
       act(() => {
         firstPromise = result.current();
       });
 
       // Try concurrent calls
-      let secondResult: void | undefined;
+      let secondResult: undefined | undefined;
       act(() => {
-        result.current().then((r) => (secondResult = r));
+        result.current().then((r) => {
+          secondResult = r;
+        });
       });
 
       // Resolve first

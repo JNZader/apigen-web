@@ -41,7 +41,9 @@ export async function addServiceToZip(
 ): Promise<void> {
   // Validate input blob size
   if (serviceBlob.size > MAX_TOTAL_SIZE_BYTES) {
-    throw new Error(`Service archive exceeds maximum size of ${MAX_TOTAL_SIZE_BYTES / 1024 / 1024}MB`);
+    throw new Error(
+      `Service archive exceeds maximum size of ${MAX_TOTAL_SIZE_BYTES / 1024 / 1024}MB`,
+    );
   }
 
   const serviceZip = await JSZip.loadAsync(serviceBlob);
@@ -70,13 +72,17 @@ export async function addServiceToZip(
 
     // Validate individual file size
     if (content.size > MAX_SINGLE_FILE_SIZE_BYTES) {
-      throw new Error(`File ${path} exceeds maximum size of ${MAX_SINGLE_FILE_SIZE_BYTES / 1024 / 1024}MB`);
+      throw new Error(
+        `File ${path} exceeds maximum size of ${MAX_SINGLE_FILE_SIZE_BYTES / 1024 / 1024}MB`,
+      );
     }
 
     // Track total extracted size
     totalSize += content.size;
     if (totalSize > MAX_TOTAL_SIZE_BYTES) {
-      throw new Error(`Total extracted size exceeds maximum of ${MAX_TOTAL_SIZE_BYTES / 1024 / 1024}MB`);
+      throw new Error(
+        `Total extracted size exceeds maximum of ${MAX_TOTAL_SIZE_BYTES / 1024 / 1024}MB`,
+      );
     }
 
     folder.file(path, content);

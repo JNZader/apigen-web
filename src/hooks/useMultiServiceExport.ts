@@ -1,6 +1,6 @@
 import { notifications } from '@mantine/notifications';
-import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import JSZip from 'jszip';
 import { useCallback, useRef, useState } from 'react';
 import { generateProject as generateWithServer } from '../api/generatorApi';
 import { useProjectStore } from '../store/projectStore';
@@ -69,7 +69,7 @@ export function useMultiServiceExport() {
     (service: ServiceDesign): EntityDesign[] => {
       return entities.filter((entity) => service.entityIds.includes(entity.id));
     },
-    [entities]
+    [entities],
   );
 
   /**
@@ -79,10 +79,10 @@ export function useMultiServiceExport() {
     (serviceEntities: EntityDesign[]) => {
       const entityIds = new Set(serviceEntities.map((e) => e.id));
       return relations.filter(
-        (r) => entityIds.has(r.sourceEntityId) && entityIds.has(r.targetEntityId)
+        (r) => entityIds.has(r.sourceEntityId) && entityIds.has(r.targetEntityId),
       );
     },
-    [relations]
+    [relations],
   );
 
   /**
@@ -178,7 +178,7 @@ export function useMultiServiceExport() {
         };
       }
     },
-    [project, getServiceEntities, getServiceRelations]
+    [project, getServiceEntities, getServiceRelations],
   );
 
   /**
@@ -229,7 +229,7 @@ export function useMultiServiceExport() {
         setProgress(null);
       }
     },
-    [services, generateServiceProject]
+    [services, generateServiceProject],
   );
 
   /**

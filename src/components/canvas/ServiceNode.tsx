@@ -1,12 +1,4 @@
-import {
-  ActionIcon,
-  Badge,
-  Card,
-  Group,
-  Stack,
-  Text,
-  Tooltip,
-} from '@mantine/core';
+import { ActionIcon, Badge, Card, Group, Stack, Text, Tooltip } from '@mantine/core';
 import {
   IconCloud,
   IconDatabase,

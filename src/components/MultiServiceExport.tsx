@@ -27,8 +27,14 @@ import {
 import { useMultiServiceExport } from '../hooks';
 
 export function MultiServiceExport() {
-  const { exporting, progress, services, exportSingleService, exportAllServices, getServiceEntities } =
-    useMultiServiceExport();
+  const {
+    exporting,
+    progress,
+    services,
+    exportSingleService,
+    exportAllServices,
+    getServiceEntities,
+  } = useMultiServiceExport();
 
   const servicesWithEntities = services.filter((s) => s.entityIds.length > 0);
   const emptyServices = services.filter((s) => s.entityIds.length === 0);
@@ -63,11 +69,7 @@ export function MultiServiceExport() {
                 Exporting {progress.currentServiceName}... ({progress.current}/{progress.total})
               </Text>
             </Group>
-            <Progress
-              value={(progress.current / progress.total) * 100}
-              size="sm"
-              animated
-            />
+            <Progress value={(progress.current / progress.total) * 100} size="sm" animated />
           </Stack>
         </Paper>
       )}
@@ -192,8 +194,8 @@ export function MultiServiceExport() {
           <Group gap="xs">
             <IconCheck size={16} color="var(--mantine-color-green-6)" />
             <Text size="xs">
-              {servicesWithEntities.length} service{servicesWithEntities.length === 1 ? '' : 's'} ready
-              to export
+              {servicesWithEntities.length} service{servicesWithEntities.length === 1 ? '' : 's'}{' '}
+              ready to export
             </Text>
           </Group>
           <Text size="xs" c="dimmed" mt={4}>

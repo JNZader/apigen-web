@@ -73,8 +73,16 @@ const HTTP_METHODS = [
 
 const COMMON_FILTERS = [
   { value: 'RewritePath', label: 'Rewrite Path', description: 'Transform the request path' },
-  { value: 'AddRequestHeader', label: 'Add Request Header', description: 'Add headers to requests' },
-  { value: 'AddResponseHeader', label: 'Add Response Header', description: 'Add headers to responses' },
+  {
+    value: 'AddRequestHeader',
+    label: 'Add Request Header',
+    description: 'Add headers to requests',
+  },
+  {
+    value: 'AddResponseHeader',
+    label: 'Add Response Header',
+    description: 'Add headers to responses',
+  },
   { value: 'CircuitBreaker', label: 'Circuit Breaker', description: 'Enable fault tolerance' },
   { value: 'Retry', label: 'Retry', description: 'Retry failed requests' },
   { value: 'RequestRateLimiter', label: 'Rate Limiter', description: 'Limit request rate' },
@@ -86,7 +94,10 @@ function generateRouteId(): string {
   return `route-${nanoid(12)}`;
 }
 
-export function GatewayRouteDesigner({ routes, onRoutesChange }: Readonly<GatewayRouteDesignerProps>) {
+export function GatewayRouteDesigner({
+  routes,
+  onRoutesChange,
+}: Readonly<GatewayRouteDesignerProps>) {
   const [drawerOpened, { open: openDrawer, close: closeDrawer }] = useDisclosure(false);
   const [editingRouteId, setEditingRouteId] = useState<string | null>(null);
 
@@ -136,7 +147,8 @@ export function GatewayRouteDesigner({ routes, onRoutesChange }: Readonly<Gatewa
       circuitBreakerEnabled: route.circuitBreakerEnabled,
       authRequired: route.authRequired,
       method: route.predicates.find((p) => p.startsWith('Method='))?.replace('Method=', '') || '',
-      rewritePath: route.filters.find((f) => f.startsWith('RewritePath='))?.replace('RewritePath=', '') || '',
+      rewritePath:
+        route.filters.find((f) => f.startsWith('RewritePath='))?.replace('RewritePath=', '') || '',
       addRequestHeader: '',
       addResponseHeader: '',
     });
@@ -177,7 +189,9 @@ export function GatewayRouteDesigner({ routes, onRoutesChange }: Readonly<Gatewa
       filters.push('CircuitBreaker=gateway-cb');
     }
     if (form.values.rateLimitEnabled) {
-      filters.push(`RequestRateLimiter=${form.values.rateLimitRequests},${form.values.rateLimitBurst}`);
+      filters.push(
+        `RequestRateLimiter=${form.values.rateLimitRequests},${form.values.rateLimitBurst}`,
+      );
     }
 
     const routeConfig: GatewayRouteConfig = {
@@ -263,7 +277,9 @@ export function GatewayRouteDesigner({ routes, onRoutesChange }: Readonly<Gatewa
                   <Table.Td>
                     <Group gap="xs">
                       <Badge size="xs" variant="light" color="blue">
-                        {route.predicates.find((p) => p.startsWith('Method='))?.replace('Method=', '') || 'ANY'}
+                        {route.predicates
+                          .find((p) => p.startsWith('Method='))
+                          ?.replace('Method=', '') || 'ANY'}
                       </Badge>
                       <Text size="sm" fw={500}>
                         {route.path}
@@ -306,12 +322,21 @@ export function GatewayRouteDesigner({ routes, onRoutesChange }: Readonly<Gatewa
                   <Table.Td>
                     <Group gap="xs">
                       <Tooltip label="Edit route">
-                        <ActionIcon size="sm" variant="subtle" onClick={() => handleEditRoute(route)}>
+                        <ActionIcon
+                          size="sm"
+                          variant="subtle"
+                          onClick={() => handleEditRoute(route)}
+                        >
                           <IconEdit size={14} />
                         </ActionIcon>
                       </Tooltip>
                       <Tooltip label="Delete route">
-                        <ActionIcon size="sm" variant="subtle" color="red" onClick={() => handleDeleteRoute(route.id)}>
+                        <ActionIcon
+                          size="sm"
+                          variant="subtle"
+                          color="red"
+                          onClick={() => handleDeleteRoute(route.id)}
+                        >
                           <IconTrash size={14} />
                         </ActionIcon>
                       </Tooltip>
@@ -338,7 +363,12 @@ export function GatewayRouteDesigner({ routes, onRoutesChange }: Readonly<Gatewa
         size="lg"
         padding="lg"
       >
-        <form onSubmit={(e) => { e.preventDefault(); handleSaveRoute(); }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSaveRoute();
+          }}
+        >
           <Stack gap="md">
             <Tabs defaultValue="basic">
               <Tabs.List>
@@ -378,11 +408,12 @@ export function GatewayRouteDesigner({ routes, onRoutesChange }: Readonly<Gatewa
                     <Select
                       label="Target Service"
                       description="Select a service or enter a custom URI"
-                      data={[
-                        ...serviceUriOptions,
-                        { value: 'custom', label: '-- Custom URI --' },
-                      ]}
-                      value={serviceUriOptions.some((s) => s.value === form.values.uri) ? form.values.uri : 'custom'}
+                      data={[...serviceUriOptions, { value: 'custom', label: '-- Custom URI --' }]}
+                      value={
+                        serviceUriOptions.some((s) => s.value === form.values.uri)
+                          ? form.values.uri
+                          : 'custom'
+                      }
                       onChange={(value) => {
                         if (value && value !== 'custom') {
                           form.setFieldValue('uri', value);
@@ -417,7 +448,9 @@ export function GatewayRouteDesigner({ routes, onRoutesChange }: Readonly<Gatewa
 
                   <Card withBorder padding="sm">
                     <Stack gap="xs">
-                      <Text size="sm" fw={500}>Common Filters</Text>
+                      <Text size="sm" fw={500}>
+                        Common Filters
+                      </Text>
                       <Grid>
                         {COMMON_FILTERS.map((filter) => (
                           <Grid.Col span={6} key={filter.value}>
@@ -425,7 +458,11 @@ export function GatewayRouteDesigner({ routes, onRoutesChange }: Readonly<Gatewa
                               <Badge
                                 size="sm"
                                 variant="light"
-                                color={form.values.filters.some((f) => f.startsWith(filter.value)) ? 'blue' : 'gray'}
+                                color={
+                                  form.values.filters.some((f) => f.startsWith(filter.value))
+                                    ? 'blue'
+                                    : 'gray'
+                                }
                                 style={{ cursor: 'pointer' }}
                               >
                                 {filter.label}
@@ -477,7 +514,9 @@ export function GatewayRouteDesigner({ routes, onRoutesChange }: Readonly<Gatewa
                         label="Enable Circuit Breaker"
                         description="Prevent cascading failures with automatic circuit breaking"
                         checked={form.values.circuitBreakerEnabled}
-                        onChange={(e) => form.setFieldValue('circuitBreakerEnabled', e.currentTarget.checked)}
+                        onChange={(e) =>
+                          form.setFieldValue('circuitBreakerEnabled', e.currentTarget.checked)
+                        }
                       />
                     </Stack>
                   </Card>
@@ -488,7 +527,9 @@ export function GatewayRouteDesigner({ routes, onRoutesChange }: Readonly<Gatewa
                     label="Enable Rate Limiting"
                     description="Limit the number of requests per second"
                     checked={form.values.rateLimitEnabled}
-                    onChange={(e) => form.setFieldValue('rateLimitEnabled', e.currentTarget.checked)}
+                    onChange={(e) =>
+                      form.setFieldValue('rateLimitEnabled', e.currentTarget.checked)
+                    }
                   />
 
                   <Collapse in={form.values.rateLimitEnabled}>
@@ -528,9 +569,7 @@ export function GatewayRouteDesigner({ routes, onRoutesChange }: Readonly<Gatewa
               <Button variant="default" onClick={closeDrawer}>
                 Cancel
               </Button>
-              <Button type="submit">
-                {editingRouteId ? 'Update Route' : 'Create Route'}
-              </Button>
+              <Button type="submit">{editingRouteId ? 'Update Route' : 'Create Route'}</Button>
             </Group>
           </Stack>
         </form>

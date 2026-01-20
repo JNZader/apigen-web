@@ -47,7 +47,11 @@ const SERVICE_DISCOVERY_OPTIONS: Array<{ value: ServiceDiscoveryType; label: str
   { value: 'KUBERNETES', label: 'Kubernetes' },
 ];
 
-export function ServiceConfigPanel({ serviceId, opened, onClose }: Readonly<ServiceConfigPanelProps>) {
+export function ServiceConfigPanel({
+  serviceId,
+  opened,
+  onClose,
+}: Readonly<ServiceConfigPanelProps>) {
   const services = useServices();
   const { updateService } = useServiceActions();
 
@@ -206,15 +210,17 @@ export function ServiceConfigPanel({ serviceId, opened, onClose }: Readonly<Serv
               <Select
                 label="Database Type"
                 value={config.databaseType}
-                onChange={(val) => updateConfig('databaseType', (val as ServiceDatabaseType) || 'postgresql')}
+                onChange={(val) =>
+                  updateConfig('databaseType', (val as ServiceDatabaseType) || 'postgresql')
+                }
                 data={DATABASE_OPTIONS}
                 description="Database engine for this service"
               />
 
               <Text size="sm" c="dimmed">
-                Each service can have its own database type in a microservices architecture.
-                This enables polyglot persistence where each service uses the database best
-                suited for its data model.
+                Each service can have its own database type in a microservices architecture. This
+                enables polyglot persistence where each service uses the database best suited for
+                its data model.
               </Text>
             </Stack>
           </Tabs.Panel>
@@ -233,7 +239,9 @@ export function ServiceConfigPanel({ serviceId, opened, onClose }: Readonly<Serv
                 <Select
                   label="Discovery Type"
                   value={config.serviceDiscoveryType}
-                  onChange={(val) => updateConfig('serviceDiscoveryType', (val as ServiceDiscoveryType) || 'EUREKA')}
+                  onChange={(val) =>
+                    updateConfig('serviceDiscoveryType', (val as ServiceDiscoveryType) || 'EUREKA')
+                  }
                   data={SERVICE_DISCOVERY_OPTIONS}
                   description="Service registry to use"
                 />

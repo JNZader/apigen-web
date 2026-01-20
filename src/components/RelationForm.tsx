@@ -66,7 +66,7 @@ function buildManyToOnePreview(
   fetchAnnotation: string,
   nullableClause: string,
 ): string {
-  const joinColumnName = toSnakeCase(targetName) + '_id';
+  const joinColumnName = `${toSnakeCase(targetName)}_id`;
   return `@ManyToOne(${fetchAnnotation})
 @JoinColumn(name = "${joinColumnName}"${nullableClause})
 private ${targetName} ${fieldName};`;
@@ -91,7 +91,7 @@ function buildOneToOnePreview(
   cascadeAnnotation: string,
   nullableClause: string,
 ): string {
-  const joinColumnName = toSnakeCase(targetName) + '_id';
+  const joinColumnName = `${toSnakeCase(targetName)}_id`;
   return `@OneToOne(${fetchAnnotation}${cascadeAnnotation})
 @JoinColumn(name = "${joinColumnName}"${nullableClause})
 private ${targetName} ${fieldName};`;
@@ -104,9 +104,9 @@ function buildManyToManyPreview(
   fetchAnnotation: string,
   cascadeAnnotation: string,
 ): string {
-  const tableName = toSnakeCase(sourceName) + '_' + toSnakeCase(targetName);
-  const sourceJoinColumn = toSnakeCase(sourceName) + '_id';
-  const targetJoinColumn = toSnakeCase(targetName) + '_id';
+  const tableName = `${toSnakeCase(sourceName)}_${toSnakeCase(targetName)}`;
+  const sourceJoinColumn = `${toSnakeCase(sourceName)}_id`;
+  const targetJoinColumn = `${toSnakeCase(targetName)}_id`;
   return `@ManyToMany(${fetchAnnotation}${cascadeAnnotation})
 @JoinTable(
     name = "${tableName}",
@@ -147,13 +147,13 @@ export function RelationForm({
       form.reset();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opened]);
+  }, [opened, form.reset]);
 
   const handleSubmit = (values: FormValues) => {
     if (!sourceEntity || !targetEntity) return;
 
     const fieldName = toCamelCase(targetEntity.name);
-    const columnName = toSnakeCase(targetEntity.name) + '_id';
+    const columnName = `${toSnakeCase(targetEntity.name)}_id`;
 
     addRelation({
       type: values.type,
@@ -171,16 +171,16 @@ export function RelationForm({
       },
       ...(values.type === 'ManyToMany' && {
         joinTable: {
-          name: toSnakeCase(sourceEntity.name) + '_' + toSnakeCase(targetEntity.name),
-          joinColumn: toSnakeCase(sourceEntity.name) + '_id',
-          inverseJoinColumn: toSnakeCase(targetEntity.name) + '_id',
+          name: `${toSnakeCase(sourceEntity.name)}_${toSnakeCase(targetEntity.name)}`,
+          joinColumn: `${toSnakeCase(sourceEntity.name)}_id`,
+          inverseJoinColumn: `${toSnakeCase(targetEntity.name)}_id`,
         },
       }),
     });
 
     notifications.show({
       title: 'Relation Created',
-      message: sourceEntity.name + ' -> ' + targetEntity.name + ' (' + values.type + ')',
+      message: `${sourceEntity.name} -> ${targetEntity.name} (${values.type})`,
       color: 'green',
     });
 

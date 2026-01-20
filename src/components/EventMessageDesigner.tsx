@@ -38,7 +38,11 @@ import {
   IconTrash,
 } from '@tabler/icons-react';
 import { useState } from 'react';
-import { useServiceConnectionActions, useServiceConnections, useServices } from '../store/projectStore';
+import {
+  useServiceConnectionActions,
+  useServiceConnections,
+  useServices,
+} from '../store/projectStore';
 import type { SerializationFormat, ServiceConnectionDesign } from '../types';
 import { COMMUNICATION_COLORS } from '../types';
 
@@ -91,7 +95,7 @@ export function EventMessageDesigner() {
   const asyncConnections = serviceConnections.filter(
     (conn) =>
       (conn.communicationType === 'Kafka' || conn.communicationType === 'RabbitMQ') &&
-      (brokerFilter === 'all' || conn.communicationType === brokerFilter)
+      (brokerFilter === 'all' || conn.communicationType === brokerFilter),
   );
 
   const form = useForm<EventFormValues>({
@@ -114,7 +118,8 @@ export function EventMessageDesigner() {
     validate: {
       topicName: (value) =>
         editingConnectionId &&
-        serviceConnections.find((c) => c.id === editingConnectionId)?.communicationType === 'Kafka' &&
+        serviceConnections.find((c) => c.id === editingConnectionId)?.communicationType ===
+          'Kafka' &&
         !value.trim()
           ? 'Topic name is required'
           : null,
@@ -492,7 +497,9 @@ export function EventMessageDesigner() {
                         label="Durable Queue"
                         description="Queue survives broker restart"
                         checked={form.values.durableQueue}
-                        onChange={(e) => form.setFieldValue('durableQueue', e.currentTarget.checked)}
+                        onChange={(e) =>
+                          form.setFieldValue('durableQueue', e.currentTarget.checked)
+                        }
                       />
 
                       <Select

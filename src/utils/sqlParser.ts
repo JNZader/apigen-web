@@ -405,7 +405,9 @@ function collectForeignKeyColumns(table: ParsedTable): Set<string> {
   const fkColumns = new Set<string>();
 
   for (const fk of table.foreignKeys) {
-    fk.columns.forEach((c) => fkColumns.add(c.toLowerCase()));
+    for (const c of fk.columns) {
+      fkColumns.add(c.toLowerCase());
+    }
   }
 
   for (const col of table.columns) {
@@ -695,7 +697,7 @@ function processManyToManyRelations(
       id: nanoid(),
       type: 'ManyToMany',
       sourceEntityId,
-      sourceFieldName: toCamelCase(targetEntity?.name || '') + 's',
+      sourceFieldName: `${toCamelCase(targetEntity?.name || '')}s`,
       targetEntityId,
       bidirectional: false,
       fetchType: 'LAZY',

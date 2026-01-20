@@ -2,8 +2,20 @@ import { nanoid } from 'nanoid';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useShallow } from 'zustand/shallow';
-import type { EntityDesign, FieldDesign, ProjectConfig, ServiceDesign, ServiceConnectionDesign } from '../types';
-import { defaultProjectConfig, toSnakeCase, defaultServiceConfig, getNextServiceColor, defaultServiceConnectionConfig } from '../types';
+import type {
+  EntityDesign,
+  FieldDesign,
+  ProjectConfig,
+  ServiceConnectionDesign,
+  ServiceDesign,
+} from '../types';
+import {
+  defaultProjectConfig,
+  defaultServiceConfig,
+  defaultServiceConnectionConfig,
+  getNextServiceColor,
+  toSnakeCase,
+} from '../types';
 import type { RelationDesign } from '../types/relation';
 import { validateProjectImport } from '../utils/validation';
 
@@ -56,9 +68,7 @@ function updateServiceEntityIds(
   targetServiceId: string,
 ): ServiceDesign {
   const filteredIds = service.entityIds.filter((id) => id !== entityId);
-  const newEntityIds = service.id === targetServiceId
-    ? [...filteredIds, entityId]
-    : filteredIds;
+  const newEntityIds = service.id === targetServiceId ? [...filteredIds, entityId] : filteredIds;
   return { ...service, entityIds: newEntityIds };
 }
 
@@ -206,7 +216,7 @@ export const useProjectStore = create<ProjectStore>()(
         const entity: EntityDesign = {
           id: nanoid(),
           name,
-          tableName: toSnakeCase(name) + 's',
+          tableName: `${toSnakeCase(name)}s`,
           position: { x: gridX, y: gridY },
           fields: [],
           config: {
@@ -327,7 +337,9 @@ export const useProjectStore = create<ProjectStore>()(
 
       removeEntityFromService: (entityId, serviceId) =>
         set((state) => ({
-          services: state.services.map((s) => removeEntityFromServiceHelper(s, entityId, serviceId)),
+          services: state.services.map((s) =>
+            removeEntityFromServiceHelper(s, entityId, serviceId),
+          ),
         })),
 
       // Service connection actions
@@ -377,11 +389,15 @@ export const useProjectStore = create<ProjectStore>()(
       importProject: (json) => {
         const data = validateProjectImport(json);
         set({
-          project: deepMerge(defaultProjectConfig, data.project as unknown as Partial<ProjectConfig>),
+          project: deepMerge(
+            defaultProjectConfig,
+            data.project as unknown as Partial<ProjectConfig>,
+          ),
           entities: data.entities,
           relations: data.relations,
           services: (data as { services?: ServiceDesign[] }).services ?? [],
-          serviceConnections: (data as { serviceConnections?: ServiceConnectionDesign[] }).serviceConnections ?? [],
+          serviceConnections:
+            (data as { serviceConnections?: ServiceConnectionDesign[] }).serviceConnections ?? [],
           selectedEntityId: null,
           selectedServiceId: null,
           needsAutoLayout: true,

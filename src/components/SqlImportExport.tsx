@@ -52,20 +52,23 @@ export function SqlImportExport({ opened, onClose }: Readonly<SqlImportExportPro
   const exportedSql = generateSQL(entities, relations, project.name);
 
   // Apply the parsed SQL
-  const applyImport = (parsedEntities: typeof entities, parsedRelations: typeof relations) => {
-    setEntities(parsedEntities);
-    setRelations(parsedRelations);
+  const applyImport = useCallback(
+    (parsedEntities: typeof entities, parsedRelations: typeof relations) => {
+      setEntities(parsedEntities);
+      setRelations(parsedRelations);
 
-    notifications.show({
-      title: 'SQL Imported',
-      message: `Imported ${parsedEntities.length} entities and ${parsedRelations.length} relations`,
-      color: 'green',
-    });
+      notifications.show({
+        title: 'SQL Imported',
+        message: `Imported ${parsedEntities.length} entities and ${parsedRelations.length} relations`,
+        color: 'green',
+      });
 
-    setImportSql('');
-    setImportError(null);
-    onClose();
-  };
+      setImportSql('');
+      setImportError(null);
+      onClose();
+    },
+    [setEntities, setRelations, onClose],
+  );
 
   // Handle SQL import with protection against rapid clicks
   const handleImport = useCallback(() => {

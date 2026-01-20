@@ -36,8 +36,6 @@ import {
   IconTable,
 } from '@tabler/icons-react';
 import { toPng, toSvg } from 'html-to-image';
-import type { CommunicationType, ServiceDesign } from '../../types';
-import { defaultServiceConnectionConfig } from '../../types';
 import {
   useCanvasView,
   useCanvasViewActions,
@@ -55,11 +53,13 @@ import {
   useServiceConnections,
   useServices,
 } from '../../store/projectStore';
+import type { CommunicationType, ServiceDesign } from '../../types';
+import { defaultServiceConnectionConfig } from '../../types';
 import { calculateAutoLayout, LAYOUT_PRESETS } from '../../utils/canvasLayout';
 import { EntityNode } from './EntityNode';
 import { RelationEdge } from './RelationEdge';
-import { ServiceNode } from './ServiceNode';
 import { ServiceConnectionEdge } from './ServiceConnectionEdge';
+import { ServiceNode } from './ServiceNode';
 
 const nodeTypes: NodeTypes = {
   entity: EntityNode,
@@ -117,7 +117,11 @@ function buildEntityViewDescription(
 // Helper to generate services view description for accessibility
 function buildServicesViewDescription(
   services: Array<{ id: string; name: string; entityIds: string[] }>,
-  serviceConnections: Array<{ sourceServiceId: string; targetServiceId: string; communicationType: string }>,
+  serviceConnections: Array<{
+    sourceServiceId: string;
+    targetServiceId: string;
+    communicationType: string;
+  }>,
   selectedServiceId: string | null,
 ): string {
   if (services.length === 0) {
@@ -175,7 +179,8 @@ export function DesignerCanvas({
   const { updateService, removeService, selectService } = useServiceActions();
   const { addServiceConnection, removeServiceConnection } = useServiceConnectionActions();
   const { setCanvasView } = useCanvasViewActions();
-  const { updateEntityPositions, updateServicePositions, setLayoutPreference, setNeedsAutoLayout } = useLayoutActions();
+  const { updateEntityPositions, updateServicePositions, setLayoutPreference, setNeedsAutoLayout } =
+    useLayoutActions();
 
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
@@ -214,7 +219,8 @@ export function DesignerCanvas({
 
   // Calculate entity count for a service
   const getEntityCountForService = useCallback(
-    (service: ServiceDesign) => service.entityIds.filter((id) => entities.some((e) => e.id === id)).length,
+    (service: ServiceDesign) =>
+      service.entityIds.filter((id) => entities.some((e) => e.id === id)).length,
     [entities],
   );
 
@@ -317,7 +323,14 @@ export function DesignerCanvas({
         })),
       );
     }
-  }, [canvasView, relations, serviceConnections, handleRelationDelete, handleServiceConnectionDelete, setEdges]);
+  }, [
+    canvasView,
+    relations,
+    serviceConnections,
+    handleRelationDelete,
+    handleServiceConnectionDelete,
+    setEdges,
+  ]);
 
   // Auto-apply layout when needed (e.g., after importing entities)
   useEffect(() => {
@@ -474,7 +487,15 @@ export function DesignerCanvas({
         });
       }
     },
-    [canvasView, entities, relations, services, updateEntityPositions, updateServicePositions, setLayoutPreference],
+    [
+      canvasView,
+      entities,
+      relations,
+      services,
+      updateEntityPositions,
+      updateServicePositions,
+      setLayoutPreference,
+    ],
   );
 
   // Download canvas as image
@@ -559,7 +580,15 @@ export function DesignerCanvas({
     return canvasView === 'entities'
       ? buildEntityViewDescription(entities, relations, selectedEntityId)
       : buildServicesViewDescription(services, serviceConnections, selectedServiceId);
-  }, [canvasView, entities, relations, services, serviceConnections, selectedEntityId, selectedServiceId]);
+  }, [
+    canvasView,
+    entities,
+    relations,
+    services,
+    serviceConnections,
+    selectedEntityId,
+    selectedServiceId,
+  ]);
 
   return (
     <div
@@ -778,7 +807,8 @@ export function DesignerCanvas({
               <Text size="sm" c="dimmed" mb="md">
                 Click "Add Service" to create your first microservice.
                 <br />
-                Services can contain entities and connect to each other via REST, gRPC, or messaging.
+                Services can contain entities and connect to each other via REST, gRPC, or
+                messaging.
               </Text>
               <Button
                 color="teal"

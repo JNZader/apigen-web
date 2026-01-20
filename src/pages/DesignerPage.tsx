@@ -31,10 +31,10 @@ import { EntityCard } from '../components/EntityCard';
 import { EntityDetailPanel } from '../components/EntityDetailPanel';
 import { EntityForm } from '../components/EntityForm';
 import { EntityList } from '../components/EntityList';
-import { Layout } from '../components/Layout';
-import { RelationForm } from '../components/RelationForm';
 import { EventMessageDesigner } from '../components/EventMessageDesigner';
+import { Layout } from '../components/Layout';
 import { MultiServiceExport } from '../components/MultiServiceExport';
+import { RelationForm } from '../components/RelationForm';
 import { ServiceConfigPanel } from '../components/ServiceConfigPanel';
 import { useEntityDeletion, useHistory, useKeyboardShortcuts, useSelectedEntity } from '../hooks';
 import { useProjectStore, useServiceActions } from '../store/projectStore';
@@ -46,10 +46,14 @@ export function DesignerPage() {
   const [entityFormOpened, { open: openEntityForm, close: closeEntityForm }] = useDisclosure(false);
   const [relationFormOpened, { open: openRelationForm, close: closeRelationForm }] =
     useDisclosure(false);
-  const [serviceFormOpened, { open: openServiceForm, close: closeServiceForm }] = useDisclosure(false);
-  const [serviceConfigOpened, { open: openServiceConfig, close: closeServiceConfig }] = useDisclosure(false);
-  const [eventDesignerOpened, { open: openEventDesigner, close: closeEventDesigner }] = useDisclosure(false);
-  const [serviceExportOpened, { open: openServiceExport, close: closeServiceExport }] = useDisclosure(false);
+  const [serviceFormOpened, { open: openServiceForm, close: closeServiceForm }] =
+    useDisclosure(false);
+  const [serviceConfigOpened, { open: openServiceConfig, close: closeServiceConfig }] =
+    useDisclosure(false);
+  const [eventDesignerOpened, { open: openEventDesigner, close: closeEventDesigner }] =
+    useDisclosure(false);
+  const [serviceExportOpened, { open: openServiceExport, close: closeServiceExport }] =
+    useDisclosure(false);
   const [editingEntity, setEditingEntity] = useState<string | null>(null);
   const [relationSource, setRelationSource] = useState<string>('');
   const [relationTarget, setRelationTarget] = useState<string>('');
