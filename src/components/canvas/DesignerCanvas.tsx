@@ -24,7 +24,7 @@ import {
   useMantineColorScheme,
   VisuallyHidden,
 } from '@mantine/core';
-import { useDebouncedCallback } from '@mantine/hooks';
+import { useDebouncedCallback, useThrottledCallback } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
 import {
@@ -37,6 +37,7 @@ import {
 } from '@tabler/icons-react';
 import { toPng, toSvg } from 'html-to-image';
 import {
+  type CanvasView,
   useCanvasView,
   useCanvasViewActions,
   useEntities,
@@ -56,6 +57,7 @@ import {
 import type { CommunicationType, ServiceDesign } from '../../types';
 import { defaultServiceConnectionConfig } from '../../types';
 import { calculateAutoLayout, LAYOUT_PRESETS } from '../../utils/canvasLayout';
+import { CANVAS, CANVAS_VIEWS, ENTITY_NODE } from '../../utils/canvasConstants';
 import { EntityNode } from './EntityNode';
 import { RelationEdge } from './RelationEdge';
 import { ServiceConnectionEdge } from './ServiceConnectionEdge';
@@ -174,7 +176,7 @@ export function DesignerCanvas({
   const needsAutoLayout = useNeedsAutoLayout();
 
   // Use action selectors for stable references
-  const { updateEntity, removeEntity } = useEntityActions();
+  const { removeEntity } = useEntityActions();
   const { removeRelation } = useRelationActions();
   const {
     updateService,
@@ -320,9 +322,9 @@ export function DesignerCanvas({
       return;
     }
 
-    if (canvasView === 'entities') {
+    if (canvasView === CANVAS_VIEWS.ENTITIES) {
       setNodes(buildEntityNodes());
-    } else if (canvasView === 'services') {
+    } else if (canvasView === CANVAS_VIEWS.SERVICES) {
       setNodes(buildServiceNodes());
     } else {
       // Both view - services first (background), then entities on top
@@ -441,9 +443,9 @@ export function DesignerCanvas({
 
   // Sync edges based on canvas view
   useEffect(() => {
-    if (canvasView === 'entities') {
+    if (canvasView === CANVAS_VIEWS.ENTITIES) {
       setEdges(buildRelationEdges());
-    } else if (canvasView === 'services') {
+    } else if (canvasView === CANVAS_VIEWS.SERVICES) {
       setEdges(buildServiceConnectionEdges());
     } else {
       // Both view - show both relations and service connections
@@ -468,33 +470,42 @@ export function DesignerCanvas({
   ]);
 
   // Debounced position update to avoid excessive store updates during drag
+  // Uses batch update pattern to update all positions in a single store operation
   const debouncedEntityPositionUpdate = useDebouncedCallback(
     (positions: Array<{ id: string; position: { x: number; y: number } }>) => {
-      positions.forEach(({ id, position }) => {
-        updateEntity(id, { position });
-      });
+      const positionMap = new Map(positions.map(({ id, position }) => [id, position]));
+      updateEntityPositions(positionMap);
     },
     100,
   );
 
   const debouncedServicePositionUpdate = useDebouncedCallback(
     (positions: Array<{ id: string; position: { x: number; y: number } }>) => {
-      positions.forEach(({ id, position }) => {
-        updateService(id, { position });
-      });
+      const positionMap = new Map(positions.map(({ id, position }) => [id, position]));
+      updateServicePositions(positionMap);
     },
     100,
   );
 
   // Debounced callback to update service dimensions after resize
+  // Uses batch update pattern to update all dimensions in a single operation
   const debouncedServiceDimensionsUpdate = useDebouncedCallback(
     (dimensions: Array<{ id: string; width: number; height: number }>) => {
-      dimensions.forEach(({ id, width, height }) => {
+      for (const { id, width, height } of dimensions) {
         updateService(id, { width, height });
-      });
+      }
     },
     100,
   );
+
+  // Cleanup debounced callbacks on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      debouncedEntityPositionUpdate.cancel();
+      debouncedServicePositionUpdate.cancel();
+      debouncedServiceDimensionsUpdate.cancel();
+    };
+  }, [debouncedEntityPositionUpdate, debouncedServicePositionUpdate, debouncedServiceDimensionsUpdate]);
 
   // Collect position changes during drag
   const pendingPositions = useRef<Map<string, { x: number; y: number }>>(new Map());
@@ -502,15 +513,30 @@ export function DesignerCanvas({
   // Track previous service positions to calculate movement delta
   const previousServicePositions = useRef<Map<string, { x: number; y: number }>>(new Map());
 
+  // Initialize previousServicePositions with current service positions
+  // This prevents race condition where first drag uses potentially stale store positions
+  useEffect(() => {
+    for (const service of services) {
+      if (!previousServicePositions.current.has(service.id)) {
+        previousServicePositions.current.set(service.id, service.position);
+      }
+    }
+  }, [services]);
+
   // Check if a position is inside a service's bounds
+  // Uses the center of the entity node for more intuitive detection
   const findServiceAtPosition = useCallback(
     (position: { x: number; y: number }): ServiceDesign | null => {
+      // Calculate the center of the entity node
+      const centerX = position.x + ENTITY_NODE.WIDTH / 2;
+      const centerY = position.y + ENTITY_NODE.MIN_HEIGHT / 2;
+
       for (const service of services) {
         const isInside =
-          position.x >= service.position.x &&
-          position.x <= service.position.x + service.width &&
-          position.y >= service.position.y &&
-          position.y <= service.position.y + service.height;
+          centerX >= service.position.x &&
+          centerX <= service.position.x + service.width &&
+          centerY >= service.position.y &&
+          centerY <= service.position.y + service.height;
         if (isInside) {
           return service;
         }
@@ -554,7 +580,7 @@ export function DesignerCanvas({
             servicePositions.push({ id: change.id, position: change.position });
 
             // When a service moves in 'both' view, move its assigned entities too
-            if (canvasView === 'both' && service.entityIds.length > 0) {
+            if (canvasView === CANVAS_VIEWS.BOTH && service.entityIds.length > 0) {
               const prevPos = previousServicePositions.current.get(service.id) || service.position;
               const deltaX = change.position.x - prevPos.x;
               const deltaY = change.position.y - prevPos.y;
@@ -582,7 +608,11 @@ export function DesignerCanvas({
         // Capture dimension changes (from NodeResizer)
         if (change.type === 'dimensions' && change.dimensions) {
           const isService = services.some((s) => s.id === change.id);
-          if (isService && change.dimensions.width && change.dimensions.height) {
+          if (
+            isService &&
+            change.dimensions.width !== undefined &&
+            change.dimensions.height !== undefined
+          ) {
             serviceDimensions.push({
               id: change.id,
               width: change.dimensions.width,
@@ -633,22 +663,27 @@ export function DesignerCanvas({
     ],
   );
 
-  // Handle entity drag - update drop target for visual feedback
+  // Throttled drop target update to reduce re-renders during drag (every 50ms)
+  const throttledSetDropTarget = useThrottledCallback((serviceId: string | null) => {
+    setDropTargetServiceId(serviceId);
+  }, 50);
+
+  // Handle entity drag - update drop target for visual feedback (throttled)
   const handleNodeDrag = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       // Only track drop target in 'both' view for entities
-      if (canvasView !== 'both') return;
+      if (canvasView !== CANVAS_VIEWS.BOTH) return;
 
       const isEntity = entities.some((e) => e.id === node.id);
       if (!isEntity) {
-        setDropTargetServiceId(null);
+        throttledSetDropTarget(null);
         return;
       }
 
       const targetService = findServiceAtPosition(node.position);
-      setDropTargetServiceId(targetService?.id ?? null);
+      throttledSetDropTarget(targetService?.id ?? null);
     },
-    [canvasView, entities, findServiceAtPosition],
+    [canvasView, entities, findServiceAtPosition, throttledSetDropTarget],
   );
 
   // Handle entity drag stop - check if dropped inside a service
@@ -664,7 +699,7 @@ export function DesignerCanvas({
       previousServicePositions.current.clear();
 
       // Only check for entity-to-service assignment in 'both' view
-      if (canvasView !== 'both') return;
+      if (canvasView !== CANVAS_VIEWS.BOTH) return;
 
       // Check if the dragged node is an entity
       const isEntity = entities.some((e) => e.id === node.id);
@@ -761,7 +796,7 @@ export function DesignerCanvas({
   // Auto-layout with dagre algorithm
   const handleAutoLayout = useCallback(
     (preset: keyof typeof LAYOUT_PRESETS = 'horizontal') => {
-      if (canvasView === 'entities') {
+      if (canvasView === CANVAS_VIEWS.ENTITIES) {
         if (entities.length === 0) {
           notifications.show({
             title: 'No entities',
@@ -801,7 +836,7 @@ export function DesignerCanvas({
         updateServicePositions(servicePositions);
 
         // In combined view, move entities along with their assigned services
-        if (canvasView === 'both') {
+        if (canvasView === CANVAS_VIEWS.BOTH) {
           const entityPositions = new Map<string, { x: number; y: number }>();
 
           services.forEach((service) => {
@@ -928,7 +963,7 @@ export function DesignerCanvas({
 
   // Accessible description of canvas contents for screen readers
   const canvasDescription = useMemo(() => {
-    return canvasView === 'entities'
+    return canvasView === CANVAS_VIEWS.ENTITIES
       ? buildEntityViewDescription(entities, relations, selectedEntityId)
       : buildServicesViewDescription(services, serviceConnections, selectedServiceId);
   }, [
@@ -972,9 +1007,9 @@ export function DesignerCanvas({
         minZoom={0.05}
         maxZoom={2}
         snapToGrid
-        snapGrid={[15, 15]}
+        snapGrid={[CANVAS.SNAP_GRID, CANVAS.SNAP_GRID]}
         defaultEdgeOptions={{
-          type: canvasView === 'entities' ? 'relation' : 'service-connection',
+          type: canvasView === CANVAS_VIEWS.ENTITIES ? 'relation' : 'service-connection',
         }}
         connectionLineStyle={{
           stroke: 'var(--mantine-color-blue-5)',
@@ -1015,7 +1050,7 @@ export function DesignerCanvas({
               <SegmentedControl
                 size="xs"
                 value={canvasView}
-                onChange={(value) => setCanvasView(value as 'entities' | 'services' | 'both')}
+                onChange={(value) => setCanvasView(value as CanvasView)}
                 data={[
                   {
                     label: (
@@ -1024,7 +1059,7 @@ export function DesignerCanvas({
                         <span>Entities</span>
                       </Group>
                     ),
-                    value: 'entities',
+                    value: CANVAS_VIEWS.ENTITIES,
                   },
                   {
                     label: (
@@ -1033,7 +1068,7 @@ export function DesignerCanvas({
                         <span>Services</span>
                       </Group>
                     ),
-                    value: 'services',
+                    value: CANVAS_VIEWS.SERVICES,
                   },
                   {
                     label: (
@@ -1043,13 +1078,13 @@ export function DesignerCanvas({
                         <span>Both</span>
                       </Group>
                     ),
-                    value: 'both',
+                    value: CANVAS_VIEWS.BOTH,
                   },
                 ]}
               />
 
               {/* Add buttons based on view */}
-              {(canvasView === 'entities' || canvasView === 'both') && (
+              {(canvasView === CANVAS_VIEWS.ENTITIES || canvasView === CANVAS_VIEWS.BOTH) && (
                 <Button
                   size="xs"
                   leftSection={<IconPlus size={14} aria-hidden="true" />}
@@ -1058,7 +1093,7 @@ export function DesignerCanvas({
                   Add Entity
                 </Button>
               )}
-              {(canvasView === 'services' || canvasView === 'both') && (
+              {(canvasView === CANVAS_VIEWS.SERVICES || canvasView === CANVAS_VIEWS.BOTH) && (
                 <Button
                   size="xs"
                   color="teal"
@@ -1120,11 +1155,11 @@ export function DesignerCanvas({
               </Menu>
 
               <Text component="output" size="xs" c="dimmed" aria-live="polite">
-                {canvasView === 'entities' &&
+                {canvasView === CANVAS_VIEWS.ENTITIES &&
                   `${entities.length} entities · ${relations.length} relations`}
-                {canvasView === 'services' &&
+                {canvasView === CANVAS_VIEWS.SERVICES &&
                   `${services.length} services · ${serviceConnections.length} connections`}
-                {canvasView === 'both' &&
+                {canvasView === CANVAS_VIEWS.BOTH &&
                   `${entities.length} entities · ${services.length} services`}
               </Text>
             </Group>
@@ -1132,7 +1167,7 @@ export function DesignerCanvas({
         </Panel>
 
         {/* Empty state for entities view */}
-        {canvasView === 'entities' && entities.length === 0 && (
+        {canvasView === CANVAS_VIEWS.ENTITIES && entities.length === 0 && (
           <Panel position="top-center" style={{ top: '40%' }}>
             <Paper
               p="xl"
@@ -1158,7 +1193,7 @@ export function DesignerCanvas({
         )}
 
         {/* Empty state for services view */}
-        {canvasView === 'services' && services.length === 0 && (
+        {canvasView === CANVAS_VIEWS.SERVICES && services.length === 0 && (
           <Panel position="top-center" style={{ top: '40%' }}>
             <Paper
               p="xl"
@@ -1189,7 +1224,7 @@ export function DesignerCanvas({
         )}
 
         {/* Help tip for 'both' view */}
-        {canvasView === 'both' && services.length > 0 && entities.length > 0 && (
+        {canvasView === CANVAS_VIEWS.BOTH && services.length > 0 && entities.length > 0 && (
           <Panel position="bottom-center">
             <Paper p="xs" withBorder shadow="sm" style={{ opacity: 0.9 }}>
               <Text size="xs" c="dimmed">
@@ -1200,7 +1235,7 @@ export function DesignerCanvas({
         )}
 
         {/* Empty state for 'both' view when nothing exists */}
-        {canvasView === 'both' && entities.length === 0 && services.length === 0 && (
+        {canvasView === CANVAS_VIEWS.BOTH && entities.length === 0 && services.length === 0 && (
           <Panel position="top-center" style={{ top: '40%' }}>
             <Paper
               p="xl"

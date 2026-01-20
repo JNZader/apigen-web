@@ -49,6 +49,9 @@ function ServiceConnectionEdgeComponent({
   const color = selected ? COMMUNICATION_COLORS[communicationType] : 'var(--mantine-color-gray-5)';
   const Icon = COMMUNICATION_ICONS[communicationType];
 
+  // Use unique marker ID per edge to avoid conflicts
+  const markerId = `arrow-${id}`;
+
   // Determine line style based on communication type
   const getStrokeStyle = () => {
     switch (communicationType) {
@@ -75,14 +78,14 @@ function ServiceConnectionEdgeComponent({
           strokeWidth: selected ? 3 : 2,
           ...getStrokeStyle(),
         }}
-        markerEnd="url(#arrow)"
+        markerEnd={`url(#${markerId})`}
       />
 
-      {/* Arrow marker definition */}
+      {/* Arrow marker definition with unique ID per edge */}
       <svg style={{ position: 'absolute', width: 0, height: 0 }} aria-hidden="true">
         <defs>
           <marker
-            id="arrow"
+            id={markerId}
             viewBox="0 0 10 10"
             refX="9"
             refY="5"

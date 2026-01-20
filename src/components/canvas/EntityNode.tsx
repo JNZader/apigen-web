@@ -8,6 +8,7 @@ import {
   Text,
   Tooltip,
   UnstyledButton,
+  useMantineTheme,
 } from '@mantine/core';
 import {
   IconChevronDown,
@@ -19,9 +20,10 @@ import {
 } from '@tabler/icons-react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { Handle, Position } from '@xyflow/react';
-import { memo, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import type { EntityDesign, FieldDesign } from '../../types';
 import { TYPE_COLORS } from '../../types';
+import { ENTITY_NODE } from '../../utils/canvasConstants';
 
 export interface EntityNodeData extends Record<string, unknown> {
   entity: EntityDesign;
@@ -34,9 +36,13 @@ export type EntityNodeType = Node<EntityNodeData, 'entity'>;
 
 const COLLAPSED_FIELD_LIMIT = 5;
 
+// Static Set to persist expanded state across node reconstructions
+const expandedEntities = new Set<string>();
+
 function EntityNodeComponent({ data, selected }: NodeProps<EntityNodeType>) {
   const { entity, onEdit, onDelete, isSelected } = data;
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(() => expandedEntities.has(entity.id));
+  const theme = useMantineTheme();
 
   const hasMoreFields = entity.fields.length > COLLAPSED_FIELD_LIMIT;
   const displayedFields = isExpanded
@@ -44,24 +50,49 @@ function EntityNodeComponent({ data, selected }: NodeProps<EntityNodeType>) {
     : entity.fields.slice(0, COLLAPSED_FIELD_LIMIT);
   const hiddenFieldsCount = entity.fields.length - COLLAPSED_FIELD_LIMIT;
 
-  const toggleExpanded = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsExpanded(!isExpanded);
+  const toggleExpanded = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setIsExpanded((prev) => {
+        const newValue = !prev;
+        if (newValue) {
+          expandedEntities.add(entity.id);
+        } else {
+          expandedEntities.delete(entity.id);
+        }
+        return newValue;
+      });
+    },
+    [entity.id],
+  );
+
+  const handleEdit = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onEdit(entity.id);
+    },
+    [onEdit, entity.id],
+  );
+
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onDelete(entity.id);
+    },
+    [onDelete, entity.id],
+  );
+
+  const handleStyle = {
+    width: 12,
+    height: 12,
+    background: theme.colors.blue[6],
+    border: '2px solid white',
   };
 
   return (
     <>
       {/* Target handle for incoming relations */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        style={{
-          width: 12,
-          height: 12,
-          background: '#228be6',
-          border: '2px solid white',
-        }}
-      />
+      <Handle type="target" position={Position.Left} style={handleStyle} />
 
       <Card
         shadow={selected || isSelected ? 'lg' : 'sm'}
@@ -69,7 +100,7 @@ function EntityNodeComponent({ data, selected }: NodeProps<EntityNodeType>) {
         radius="md"
         withBorder
         style={{
-          width: 220,
+          width: ENTITY_NODE.WIDTH,
           borderColor: selected || isSelected ? 'var(--mantine-color-blue-5)' : undefined,
           borderWidth: selected || isSelected ? 2 : 1,
           cursor: 'grab',
@@ -106,25 +137,32 @@ function EntityNodeComponent({ data, selected }: NodeProps<EntityNodeType>) {
           {entity.fields.length > 0 && <Divider my={2} />}
 
           {/* Entity fields */}
-          {displayedFields.map((field: FieldDesign) => (
-            <Group key={field.id} justify="space-between" wrap="nowrap">
-              <Text size="xs" truncate style={{ maxWidth: 120 }}>
-                {field.name}
-                {!field.nullable && (
-                  <Text component="span" c="red" size="xs">
-                    *
-                  </Text>
-                )}
-              </Text>
-              <Badge size="xs" variant="light" color={TYPE_COLORS[field.type] || 'gray'}>
-                {field.type}
-              </Badge>
-            </Group>
-          ))}
+          <div id={`entity-fields-${entity.id}`}>
+            {displayedFields.map((field: FieldDesign) => (
+              <Group key={field.id} justify="space-between" wrap="nowrap">
+                <Text size="xs" truncate style={{ maxWidth: 120 }}>
+                  {field.name}
+                  {!field.nullable && (
+                    <Text component="span" c="red" size="xs">
+                      *
+                    </Text>
+                  )}
+                </Text>
+                <Badge size="xs" variant="light" color={TYPE_COLORS[field.type] || 'gray'}>
+                  {field.type}
+                </Badge>
+              </Group>
+            ))}
+          </div>
 
           {/* Expand/Collapse button */}
           {hasMoreFields && (
-            <UnstyledButton onClick={toggleExpanded} style={{ width: '100%' }}>
+            <UnstyledButton
+              onClick={toggleExpanded}
+              style={{ width: '100%' }}
+              aria-expanded={isExpanded}
+              aria-controls={`entity-fields-${entity.id}`}
+            >
               <Group justify="center" gap={4} py={2}>
                 {isExpanded ? (
                   <>
@@ -160,10 +198,7 @@ function EntityNodeComponent({ data, selected }: NodeProps<EntityNodeType>) {
               variant="subtle"
               color="blue"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(entity.id);
-              }}
+              onClick={handleEdit}
               aria-label={`Edit ${entity.name} entity`}
             >
               <IconEdit size={14} aria-hidden="true" />
@@ -174,10 +209,7 @@ function EntityNodeComponent({ data, selected }: NodeProps<EntityNodeType>) {
               variant="subtle"
               color="red"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(entity.id);
-              }}
+              onClick={handleDelete}
               aria-label={`Delete ${entity.name} entity`}
             >
               <IconTrash size={14} aria-hidden="true" />
@@ -187,16 +219,7 @@ function EntityNodeComponent({ data, selected }: NodeProps<EntityNodeType>) {
       </Card>
 
       {/* Source handle for outgoing relations */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        style={{
-          width: 12,
-          height: 12,
-          background: '#228be6',
-          border: '2px solid white',
-        }}
-      />
+      <Handle type="source" position={Position.Right} style={handleStyle} />
     </>
   );
 }

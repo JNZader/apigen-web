@@ -11,6 +11,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Handle, NodeResizer, Position } from '@xyflow/react';
 import { memo } from 'react';
 import type { ServiceDesign } from '../../types';
+import { SERVICE_NODE } from '../../utils/canvasConstants';
 
 export interface ServiceNodeData extends Record<string, unknown> {
   service: ServiceDesign;
@@ -24,9 +25,6 @@ export interface ServiceNodeData extends Record<string, unknown> {
 }
 
 export type ServiceNodeType = Node<ServiceNodeData, 'service'>;
-
-const MIN_WIDTH = 300;
-const MIN_HEIGHT = 200;
 
 function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
   const {
@@ -53,8 +51,8 @@ function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
     <>
       {/* Node Resizer for adjusting size */}
       <NodeResizer
-        minWidth={MIN_WIDTH}
-        minHeight={MIN_HEIGHT}
+        minWidth={SERVICE_NODE.MIN_WIDTH}
+        minHeight={SERVICE_NODE.MIN_HEIGHT}
         isVisible={isHighlighted}
         lineStyle={{
           border: `2px dashed ${service.color}`,
@@ -205,9 +203,9 @@ function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
           {/* Show assigned entities */}
           {entityCount > 0 && (
             <Stack gap={4} style={{ zIndex: 1 }}>
-              {entityNames.slice(0, 5).map((name) => (
+              {entityNames.slice(0, 5).map((name, index) => (
                 <Badge
-                  key={name}
+                  key={`${name}-${index}`}
                   size="sm"
                   variant="light"
                   color="blue"

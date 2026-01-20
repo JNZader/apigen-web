@@ -6,6 +6,7 @@
 import Dagre from '@dagrejs/dagre';
 import type { EntityDesign } from '../types';
 import type { RelationDesign } from '../types/relation';
+import { CANVAS, ENTITY_NODE } from './canvasConstants';
 
 interface LayoutOptions {
   direction: 'TB' | 'BT' | 'LR' | 'RL'; // Top-Bottom, Bottom-Top, Left-Right, Right-Left
@@ -20,20 +21,20 @@ const DEFAULT_OPTIONS: LayoutOptions = {
 };
 
 // ============================================================================
-// Layout Constants (avoids magic numbers throughout the file)
+// Layout Constants (derived from shared canvas constants)
 // ============================================================================
 
 // Node dimensions (should match EntityNode actual size)
-const NODE_WIDTH = 280;
-const NODE_HEIGHT = 200;
+const NODE_WIDTH = ENTITY_NODE.WIDTH;
+const NODE_HEIGHT = 200; // Default height for layout calculation
 
 // Dynamic height calculation constants
-const NODE_BASE_HEIGHT = 100; // Minimum content height
-const FIELD_HEIGHT = 28; // Height per field row
+const NODE_BASE_HEIGHT = ENTITY_NODE.MIN_HEIGHT;
+const FIELD_HEIGHT = ENTITY_NODE.FIELD_HEIGHT;
 
 // Graph margins and spacing
-const GRAPH_MARGIN = 50; // Margin around the graph
-const GRID_GAP = 60; // Gap between nodes in grid layout
+const GRAPH_MARGIN = CANVAS.GRAPH_MARGIN;
+const GRID_GAP = CANVAS.GRID_GAP;
 
 /**
  * Calculate optimal positions for entities based on their relationships.

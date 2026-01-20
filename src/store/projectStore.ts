@@ -17,10 +17,13 @@ import {
   toSnakeCase,
 } from '../types';
 import type { RelationDesign } from '../types/relation';
+import { type CanvasView, CANVAS_VIEWS } from '../utils/canvasConstants';
 import { validateProjectImport } from '../utils/validation';
 
 type LayoutPreset = 'compact' | 'horizontal' | 'vertical' | 'spacious';
-type CanvasView = 'entities' | 'services' | 'both';
+
+// Re-export CanvasView type from canvasConstants
+export type { CanvasView };
 
 // ============================================================================
 // Helper functions to reduce nesting depth
@@ -170,7 +173,7 @@ interface ProjectStore {
   setNeedsAutoLayout: (needs: boolean) => void;
 }
 
-export type { LayoutPreset, CanvasView };
+export type { LayoutPreset };
 
 export const useProjectStore = create<ProjectStore>()(
   persist(
@@ -183,7 +186,7 @@ export const useProjectStore = create<ProjectStore>()(
       serviceConnections: [],
       selectedEntityId: null,
       selectedServiceId: null,
-      canvasView: 'entities' as CanvasView,
+      canvasView: CANVAS_VIEWS.ENTITIES,
       layoutPreference: 'compact',
       needsAutoLayout: false,
 
@@ -202,7 +205,7 @@ export const useProjectStore = create<ProjectStore>()(
           serviceConnections: [],
           selectedEntityId: null,
           selectedServiceId: null,
-          canvasView: 'entities' as CanvasView,
+          canvasView: CANVAS_VIEWS.ENTITIES,
           needsAutoLayout: false,
         }),
 
@@ -479,11 +482,13 @@ export const useEntityById = (id: string) =>
 export const useServiceById = (id: string) =>
   useProjectStore((state) => state.services.find((s) => s.id === id));
 
+// Optimized selector using Set for O(n) instead of O(n*m)
 export const useEntitiesForService = (serviceId: string) =>
   useProjectStore((state) => {
     const service = state.services.find((s) => s.id === serviceId);
     if (!service) return [];
-    return state.entities.filter((e) => service.entityIds.includes(e.id));
+    const entityIdSet = new Set(service.entityIds);
+    return state.entities.filter((e) => entityIdSet.has(e.id));
   });
 
 export const useEntityCount = () => useProjectStore((state) => state.entities.length);
