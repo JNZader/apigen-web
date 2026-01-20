@@ -242,6 +242,18 @@ export function DesignerCanvas({
     [entities],
   );
 
+  // Create structural fingerprints that exclude positions/dimensions
+  // This prevents node reconstruction on every position change
+  const entityStructureKey = useMemo(
+    () => entities.map((e) => `${e.id}:${e.name}:${e.fields.length}`).join(','),
+    [entities],
+  );
+
+  const serviceStructureKey = useMemo(
+    () => services.map((s) => `${s.id}:${s.name}:${s.entityIds.join('-')}`).join(','),
+    [services],
+  );
+
   // Build entity nodes
   const buildEntityNodes = useCallback(() => {
     return entities.map((entity) => ({
@@ -292,6 +304,7 @@ export function DesignerCanvas({
   ]);
 
   // Sync nodes based on canvas view
+  // Only rebuild when structure changes (not on position/dimension changes)
   useEffect(() => {
     if (canvasView === 'entities') {
       setNodes(buildEntityNodes());
@@ -301,7 +314,9 @@ export function DesignerCanvas({
       // Both view - services first (background), then entities on top
       setNodes([...buildServiceNodes(), ...buildEntityNodes()]);
     }
-  }, [canvasView, buildEntityNodes, buildServiceNodes, setNodes]);
+    // Use structural keys to avoid rebuilding on position changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasView, entityStructureKey, serviceStructureKey, selectedEntityId, selectedServiceId, dropTargetServiceId, setNodes]);
 
   // Memoized relation delete handler
   const handleRelationDelete = useCallback(
@@ -686,14 +701,44 @@ export function DesignerCanvas({
         }
 
         // Simple grid layout for services
-        const positions = new Map<string, { x: number; y: number }>();
+        const servicePositions = new Map<string, { x: number; y: number }>();
         const cols = Math.ceil(Math.sqrt(services.length));
         services.forEach((service, index) => {
           const col = index % cols;
           const row = Math.floor(index / cols);
-          positions.set(service.id, { x: col * 450 + 50, y: row * 350 + 50 });
+          servicePositions.set(service.id, { x: col * 450 + 50, y: row * 350 + 50 });
         });
-        updateServicePositions(positions);
+        updateServicePositions(servicePositions);
+
+        // In combined view, move entities along with their assigned services
+        if (canvasView === 'both') {
+          const entityPositions = new Map<string, { x: number; y: number }>();
+
+          services.forEach((service) => {
+            const newServicePos = servicePositions.get(service.id);
+            if (!newServicePos) return;
+
+            // Calculate how much the service moved
+            const deltaX = newServicePos.x - service.position.x;
+            const deltaY = newServicePos.y - service.position.y;
+
+            // Move all entities assigned to this service by the same delta
+            for (const entityId of service.entityIds) {
+              const entity = entities.find((e) => e.id === entityId);
+              if (entity) {
+                entityPositions.set(entityId, {
+                  x: entity.position.x + deltaX,
+                  y: entity.position.y + deltaY,
+                });
+              }
+            }
+          });
+
+          if (entityPositions.size > 0) {
+            updateEntityPositions(entityPositions);
+          }
+        }
+
         setLayoutPreference(preset);
 
         notifications.show({
