@@ -196,6 +196,9 @@ export function DesignerCanvas({
   // Track which service is being hovered during entity drag (for visual feedback)
   const [dropTargetServiceId, setDropTargetServiceId] = useState<string | null>(null);
 
+  // Track if a drag operation is in progress to prevent node reconstruction
+  const isDraggingRef = useRef(false);
+
   // Memoize delete handler to avoid recreation on every render
   const handleDeleteEntity = useCallback(
     (id: string, entityName: string) => {
@@ -242,15 +245,23 @@ export function DesignerCanvas({
     [entities],
   );
 
-  // Create structural fingerprints that exclude positions/dimensions
-  // This prevents node reconstruction on every position change
+  // Create structural fingerprints that exclude positions/dimensions AND entityIds
+  // This prevents node reconstruction on every position change or entity assignment
   const entityStructureKey = useMemo(
     () => entities.map((e) => `${e.id}:${e.name}:${e.fields.length}`).join(','),
     [entities],
   );
 
+  // Exclude entityIds from service structure key to prevent rebuilds during drag
+  // entityIds changes are handled separately in the selection effect
   const serviceStructureKey = useMemo(
-    () => services.map((s) => `${s.id}:${s.name}:${s.entityIds.join('-')}`).join(','),
+    () => services.map((s) => `${s.id}:${s.name}`).join(','),
+    [services],
+  );
+
+  // Track entityIds separately to update service node data without full rebuild
+  const serviceEntityIdsKey = useMemo(
+    () => services.map((s) => `${s.id}:${s.entityIds.join('-')}`).join(','),
     [services],
   );
 
@@ -302,8 +313,13 @@ export function DesignerCanvas({
   ]);
 
   // Sync nodes based on canvas view
-  // Only rebuild when structure changes (not on position/dimension changes)
+  // Only rebuild when structure changes (not on position/dimension changes or entityIds)
   useEffect(() => {
+    // Skip rebuild during drag operations to prevent visual glitches
+    if (isDraggingRef.current) {
+      return;
+    }
+
     if (canvasView === 'entities') {
       setNodes(buildEntityNodes());
     } else if (canvasView === 'services') {
@@ -315,6 +331,39 @@ export function DesignerCanvas({
     // Use structural keys to avoid rebuilding on position changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvasView, entityStructureKey, serviceStructureKey, setNodes]);
+
+  // Update service entity counts and names when entityIds change (without full rebuild)
+  useEffect(() => {
+    // Skip during drag operations
+    if (isDraggingRef.current) {
+      return;
+    }
+
+    setNodes((currentNodes) =>
+      currentNodes.map((node) => {
+        const service = services.find((s) => s.id === node.id);
+        if (service && node.type === 'service') {
+          const newEntityCount = getEntityCountForService(service);
+          const newEntityNames = getEntityNamesForService(service);
+          if (
+            node.data.entityCount !== newEntityCount ||
+            JSON.stringify(node.data.entityNames) !== JSON.stringify(newEntityNames)
+          ) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                service,
+                entityCount: newEntityCount,
+                entityNames: newEntityNames,
+              },
+            };
+          }
+        }
+        return node;
+      }),
+    );
+  }, [serviceEntityIdsKey, services, getEntityCountForService, getEntityNamesForService, setNodes]);
 
   // Update selection and drop target state without rebuilding nodes
   // This preserves node positions during drag operations
@@ -480,6 +529,17 @@ export function DesignerCanvas({
       const serviceDimensions: Array<{ id: string; width: number; height: number }> = [];
       const additionalEntityMoves: Array<{ id: string; position: { x: number; y: number } }> = [];
 
+      // Check if any change is a drag start or drag end
+      for (const change of changes) {
+        if (change.type === 'position') {
+          if (change.dragging === true) {
+            isDraggingRef.current = true;
+          } else if (change.dragging === false) {
+            // Drag ended - will be handled in handleNodeDragStop
+          }
+        }
+      }
+
       for (const change of changes) {
         if (change.type === 'position' && change.position) {
           pendingPositions.current.set(change.id, change.position);
@@ -594,8 +654,14 @@ export function DesignerCanvas({
   // Handle entity drag stop - check if dropped inside a service
   const handleNodeDragStop = useCallback(
     (_event: React.MouseEvent, node: Node) => {
+      // Mark drag as ended
+      isDraggingRef.current = false;
+
       // Clear drop target visual feedback
       setDropTargetServiceId(null);
+
+      // Clear previous positions tracking
+      previousServicePositions.current.clear();
 
       // Only check for entity-to-service assignment in 'both' view
       if (canvasView !== 'both') return;
