@@ -45,6 +45,7 @@ interface ServiceState {
   selectService: (id: string | null) => void;
   assignEntityToService: (entityId: string, serviceId: string) => void;
   removeEntityFromService: (entityId: string, serviceId: string) => void;
+  clearServices: () => void;
 
   // Layout
   updateServicePositions: (positions: Map<string, { x: number; y: number }>) => void;
@@ -119,6 +120,15 @@ export const useServiceStore = create<ServiceState>()(
           ),
         })),
 
+      clearServices: () => {
+        const { _onServiceRemove, services } = get();
+        // Notify connection store to remove connections for each service
+        for (const service of services) {
+          _onServiceRemove?.(service.id);
+        }
+        set({ services: [], selectedServiceId: null });
+      },
+
       // Layout
       updateServicePositions: (positions) =>
         set((state) => ({
@@ -190,5 +200,6 @@ export const useServiceActions = () =>
       selectService: state.selectService,
       assignEntityToService: state.assignEntityToService,
       removeEntityFromService: state.removeEntityFromService,
+      clearServices: state.clearServices,
     })),
   );

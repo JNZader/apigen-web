@@ -49,12 +49,15 @@ interface EntityState {
   // State
   entities: EntityDesign[];
   selectedEntityId: string | null;
+  selectedEntityIds: string[]; // Multi-selection for Ctrl+Click
 
   // Entity actions
   addEntity: (name: string) => EntityDesign;
   updateEntity: (id: string, updates: Partial<EntityDesign>) => void;
   removeEntity: (id: string) => void;
   selectEntity: (id: string | null) => void;
+  toggleEntitySelection: (id: string) => void; // Ctrl+Click toggle
+  clearEntitySelection: () => void;
   getEntity: (id: string) => EntityDesign | undefined;
   setEntities: (entities: EntityDesign[]) => void;
 
@@ -85,6 +88,7 @@ export const useEntityStore = create<EntityState>()(
       // Initial state
       entities: [],
       selectedEntityId: null,
+      selectedEntityIds: [],
 
       // Entity actions
       addEntity: (name) => {
@@ -121,18 +125,39 @@ export const useEntityStore = create<EntityState>()(
         set((state) => ({
           entities: state.entities.filter((e) => e.id !== id),
           selectedEntityId: state.selectedEntityId === id ? null : state.selectedEntityId,
+          selectedEntityIds: state.selectedEntityIds.filter((eid) => eid !== id),
         }));
         // Notify relation store to remove related relations
         _onEntityRemove?.(id);
       },
 
-      selectEntity: (id) => set({ selectedEntityId: id }),
+      selectEntity: (id) => set({ selectedEntityId: id, selectedEntityIds: [] }),
+
+      toggleEntitySelection: (id) =>
+        set((state) => {
+          const isAlreadySelected = state.selectedEntityIds.includes(id);
+          if (isAlreadySelected) {
+            // Remove from multi-selection
+            return {
+              selectedEntityIds: state.selectedEntityIds.filter((eid) => eid !== id),
+              // If this was also the primary selection, clear it
+              selectedEntityId: state.selectedEntityId === id ? null : state.selectedEntityId,
+            };
+          }
+          // Add to multi-selection
+          return {
+            selectedEntityIds: [...state.selectedEntityIds, id],
+            selectedEntityId: id, // Also set as primary for detail panel
+          };
+        }),
+
+      clearEntitySelection: () => set({ selectedEntityIds: [], selectedEntityId: null }),
 
       getEntity: (id) => get().entities.find((e) => e.id === id),
 
       setEntities: (entities) => {
         const { _onSetEntities } = get();
-        set({ entities, selectedEntityId: null });
+        set({ entities, selectedEntityId: null, selectedEntityIds: [] });
         _onSetEntities?.();
       },
 
@@ -187,6 +212,7 @@ export const useEntityStore = create<EntityState>()(
 
 export const useEntities = () => useEntityStore((state) => state.entities);
 export const useSelectedEntityId = () => useEntityStore((state) => state.selectedEntityId);
+export const useSelectedEntityIds = () => useEntityStore((state) => state.selectedEntityIds);
 
 // Derived selectors
 export const useSelectedEntity = () =>
@@ -212,6 +238,8 @@ export const useEntityActions = () =>
       updateEntity: state.updateEntity,
       removeEntity: state.removeEntity,
       selectEntity: state.selectEntity,
+      toggleEntitySelection: state.toggleEntitySelection,
+      clearEntitySelection: state.clearEntitySelection,
       getEntity: state.getEntity,
       setEntities: state.setEntities,
     })),

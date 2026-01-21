@@ -21,7 +21,7 @@ import {
 } from '@tabler/icons-react';
 import type { ProjectTemplate } from '../data/templates';
 import { applyTemplate, PROJECT_TEMPLATES } from '../data/templates';
-import { useEntities, useEntityActions, useRelationActions } from '../store';
+import { useEntities, useEntityActions, useRelationActions, useServiceActions } from '../store';
 
 interface TemplateSelectorProps {
   readonly opened: boolean;
@@ -48,8 +48,12 @@ export function TemplateSelector({ opened, onClose }: Readonly<TemplateSelectorP
   const entities = useEntities();
   const { setEntities } = useEntityActions();
   const { setRelations } = useRelationActions();
+  const { clearServices } = useServiceActions();
 
   const applySelectedTemplate = (template: ProjectTemplate) => {
+    // Clear services and their connections when applying any template
+    clearServices();
+
     if (template.id === 'blank') {
       setEntities([]);
       setRelations([]);

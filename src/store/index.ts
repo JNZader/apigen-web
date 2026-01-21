@@ -32,6 +32,7 @@ export {
   useFieldActions,
   useSelectedEntity,
   useSelectedEntityId,
+  useSelectedEntityIds,
 } from './entityStore';
 
 // ============================================================================

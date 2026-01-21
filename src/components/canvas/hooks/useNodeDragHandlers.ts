@@ -10,6 +10,7 @@ interface UseNodeDragHandlersOptions {
   canvasView: CanvasView;
   entities: EntityDesign[];
   services: ServiceDesign[];
+  selectedEntityIds: string[];
   isDraggingRef: MutableRefObject<boolean>;
   setNodes: (updater: Node[] | ((nodes: Node[]) => Node[])) => void;
   onNodesChange: (changes: NodeChange[]) => void;
@@ -21,6 +22,7 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
     canvasView,
     entities,
     services,
+    selectedEntityIds,
     isDraggingRef,
     setNodes,
     onNodesChange,
@@ -254,6 +256,8 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
   );
 
   // Handle entity drag stop - check if dropped inside a service
+  // Supports multi-selection: if the dragged entity is part of a selection,
+  // all selected entities are assigned/removed together
   const handleNodeDragStop = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       // Mark drag as ended
@@ -275,24 +279,44 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
       const entityPosition = node.position;
       const targetService = findServiceAtPosition(entityPosition);
 
+      // Determine which entities to process:
+      // If dragged entity is part of multi-selection, process all selected
+      // Otherwise, just process the dragged entity
+      const isPartOfMultiSelection = selectedEntityIds.includes(node.id);
+      const entitiesToProcess = isPartOfMultiSelection && selectedEntityIds.length > 0
+        ? selectedEntityIds
+        : [node.id];
+
       if (targetService) {
-        // Check if entity is already in this service
-        if (!targetService.entityIds.includes(node.id)) {
-          assignEntityToService(node.id, targetService.id);
+        // Assign all entities to the target service
+        let assignedCount = 0;
+        for (const entityId of entitiesToProcess) {
+          if (!targetService.entityIds.includes(entityId)) {
+            assignEntityToService(entityId, targetService.id);
+            assignedCount++;
+          }
+        }
+        if (assignedCount > 0) {
           notifications.show({
-            title: 'Entity assigned',
-            message: `Entity added to ${targetService.name}`,
+            title: 'Entities assigned',
+            message: `${assignedCount} ${assignedCount === 1 ? 'entity' : 'entities'} added to ${targetService.name}`,
             color: 'green',
           });
         }
       } else {
-        // Entity was dragged outside all services - remove from any service
-        const currentService = services.find((s) => s.entityIds.includes(node.id));
-        if (currentService) {
-          removeEntityFromService(node.id, currentService.id);
+        // Entities were dragged outside all services - remove from any service
+        let removedCount = 0;
+        for (const entityId of entitiesToProcess) {
+          const currentService = services.find((s) => s.entityIds.includes(entityId));
+          if (currentService) {
+            removeEntityFromService(entityId, currentService.id);
+            removedCount++;
+          }
+        }
+        if (removedCount > 0) {
           notifications.show({
-            title: 'Entity removed',
-            message: `Entity removed from ${currentService.name}`,
+            title: 'Entities removed',
+            message: `${removedCount} ${removedCount === 1 ? 'entity' : 'entities'} removed from service`,
             color: 'blue',
           });
         }
@@ -302,6 +326,7 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
       canvasView,
       entities,
       services,
+      selectedEntityIds,
       isDraggingRef,
       setDropTargetServiceId,
       findServiceAtPosition,

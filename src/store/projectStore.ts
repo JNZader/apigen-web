@@ -407,6 +407,7 @@ export {
   useFieldActions,
   useSelectedEntity,
   useSelectedEntityId,
+  useSelectedEntityIds,
 } from './entityStore';
 // Re-export from layoutStore
 export {

@@ -13,6 +13,7 @@ import {
   useNeedsAutoLayout,
   useRelations,
   useSelectedEntityId,
+  useSelectedEntityIds,
   useSelectedServiceId,
   useServiceActions,
   useServiceConnections,
@@ -66,13 +67,14 @@ export function DesignerCanvas({
   const services = useServices();
   const serviceConnections = useServiceConnections();
   const selectedEntityId = useSelectedEntityId();
+  const selectedEntityIds = useSelectedEntityIds();
   const selectedServiceId = useSelectedServiceId();
   const canvasView = useCanvasView();
   const layoutPreference = useLayoutPreference();
   const needsAutoLayout = useNeedsAutoLayout();
 
   // Use action selectors for stable references
-  const { removeEntity } = useEntityActions();
+  const { removeEntity, toggleEntitySelection, clearEntitySelection } = useEntityActions();
   const { removeService, selectService } = useServiceActions();
   const { updateEntityPositions, setNeedsAutoLayout } = useLayoutActions();
 
@@ -152,6 +154,7 @@ export function DesignerCanvas({
   const { nodes, setNodes, onNodesChange, isDraggingRef } = useCanvasNodes({
     canvasView,
     selectedEntityId,
+    selectedEntityIds,
     selectedServiceId,
     dropTargetServiceId,
     onEditEntity,
@@ -170,6 +173,7 @@ export function DesignerCanvas({
     canvasView,
     entities,
     services,
+    selectedEntityIds,
     isDraggingRef,
     setNodes,
     onNodesChange,
@@ -200,28 +204,37 @@ export function DesignerCanvas({
     setNeedsAutoLayout,
   ]);
 
-  // Handle node selection
+  // Handle node selection (supports Ctrl+Click for multi-select)
   const onNodeClick = useCallback(
-    (_event: React.MouseEvent, node: Node) => {
+    (event: React.MouseEvent, node: Node) => {
       const isEntity = entities.some((e) => e.id === node.id);
       const isService = services.some((s) => s.id === node.id);
 
       if (isEntity) {
-        onSelectEntity(node.id);
-        selectService(null);
+        if (event.ctrlKey || event.metaKey) {
+          // Ctrl+Click: Toggle multi-selection
+          toggleEntitySelection(node.id);
+          selectService(null);
+        } else {
+          // Normal click: Single selection (clears multi-selection)
+          onSelectEntity(node.id);
+          selectService(null);
+        }
       } else if (isService) {
         selectService(node.id);
         onSelectEntity(null);
+        clearEntitySelection();
       }
     },
-    [entities, services, onSelectEntity, selectService],
+    [entities, services, onSelectEntity, selectService, toggleEntitySelection, clearEntitySelection],
   );
 
   // Handle canvas click (deselect)
   const onPaneClick = useCallback(() => {
     onSelectEntity(null);
     selectService(null);
-  }, [onSelectEntity, selectService]);
+    clearEntitySelection();
+  }, [onSelectEntity, selectService, clearEntitySelection]);
 
   // Memoized nodeColor callback for MiniMap
   const getNodeColor = useCallback(

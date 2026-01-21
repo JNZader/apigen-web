@@ -8,6 +8,7 @@ import { CANVAS_VIEWS, type CanvasView } from '../../../utils/canvasConstants';
 interface UseCanvasNodesOptions {
   canvasView: CanvasView;
   selectedEntityId: string | null;
+  selectedEntityIds: string[];
   selectedServiceId: string | null;
   dropTargetServiceId: string | null;
   onEditEntity: (id: string) => void;
@@ -20,6 +21,7 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
   const {
     canvasView,
     selectedEntityId,
+    selectedEntityIds,
     selectedServiceId,
     dropTargetServiceId,
     onEditEntity,
@@ -179,24 +181,35 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
 
   // Update selection and drop target state without rebuilding nodes
   // This preserves node positions during drag operations
+  // Note: We set both `selected` (for ReactFlow's native features like NodeResizer)
+  // and `data.isSelected` (for our custom styling)
+  // Entity selection considers both single selection AND multi-selection (Ctrl+Click)
   useEffect(() => {
     setNodes((currentNodes) =>
       currentNodes.map((node) => {
         const isEntity = entities.some((e) => e.id === node.id);
         if (isEntity) {
-          const newIsSelected = selectedEntityId === node.id;
-          if (node.data.isSelected !== newIsSelected) {
-            return { ...node, data: { ...node.data, isSelected: newIsSelected } };
+          // Entity is selected if it's the primary selection OR in multi-selection
+          const newIsSelected =
+            selectedEntityId === node.id || selectedEntityIds.includes(node.id);
+          if (node.data.isSelected !== newIsSelected || node.selected !== newIsSelected) {
+            return {
+              ...node,
+              selected: newIsSelected,
+              data: { ...node.data, isSelected: newIsSelected },
+            };
           }
         } else {
           const newIsSelected = selectedServiceId === node.id;
           const newIsDropTarget = dropTargetServiceId === node.id;
           if (
             node.data.isSelected !== newIsSelected ||
-            node.data.isDropTarget !== newIsDropTarget
+            node.data.isDropTarget !== newIsDropTarget ||
+            node.selected !== newIsSelected
           ) {
             return {
               ...node,
+              selected: newIsSelected,
               data: { ...node.data, isSelected: newIsSelected, isDropTarget: newIsDropTarget },
             };
           }
@@ -204,7 +217,7 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
         return node;
       }),
     );
-  }, [selectedEntityId, selectedServiceId, dropTargetServiceId, entities, setNodes]);
+  }, [selectedEntityId, selectedEntityIds, selectedServiceId, dropTargetServiceId, entities, setNodes]);
 
   return {
     nodes,
