@@ -5,13 +5,15 @@ import {
   Group,
   Modal,
   ScrollArea,
+  Select,
   Stack,
   Text,
   TextInput,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
-import { useProjectStore } from '../store/projectStore';
+import { useMemo } from 'react';
+import { useProjectStore, useServiceActions, useServices } from '../store/projectStore';
 import type { EntityDesign } from '../types';
 import { toPascalCase, toSnakeCase } from '../types';
 import { AddFieldForm } from './AddFieldForm';
@@ -39,6 +41,27 @@ export function EntityForm({ opened, onClose, entity }: Readonly<EntityFormProps
   const updateEntity = useProjectStore((state) => state.updateEntity);
   const updateField = useProjectStore((state) => state.updateField);
   const removeField = useProjectStore((state) => state.removeField);
+
+  // Service assignment
+  const services = useServices();
+  const { assignEntityToService, removeEntityFromService } = useServiceActions();
+
+  // Find the service this entity is currently assigned to
+  const currentServiceId = useMemo(() => {
+    if (!entity) return null;
+    const service = services.find((s) => s.entityIds.includes(entity.id));
+    return service?.id ?? null;
+  }, [entity, services]);
+
+  // Service options for the Select
+  const serviceOptions = useMemo(
+    () =>
+      services.map((s) => ({
+        value: s.id,
+        label: s.name,
+      })),
+    [services],
+  );
 
   // Initialize form with entity values directly - use key prop at usage site to reset
   const form = useForm<FormValues>({
@@ -108,6 +131,21 @@ export function EntityForm({ opened, onClose, entity }: Readonly<EntityFormProps
     onClose();
   };
 
+  // Handle service assignment change
+  const handleServiceChange = (serviceId: string | null) => {
+    if (!entity) return;
+
+    // Remove from current service if assigned
+    if (currentServiceId) {
+      removeEntityFromService(entity.id, currentServiceId);
+    }
+
+    // Assign to new service if selected
+    if (serviceId) {
+      assignEntityToService(entity.id, serviceId);
+    }
+  };
+
   return (
     <Modal
       opened={opened}
@@ -166,6 +204,21 @@ export function EntityForm({ opened, onClose, entity }: Readonly<EntityFormProps
             description="Leave empty for auto-generated endpoint"
             {...form.getInputProps('customEndpoint')}
           />
+
+          {entity && services.length > 0 && (
+            <>
+              <Divider label="Service Assignment" labelPosition="center" />
+              <Select
+                label="Assigned Service"
+                placeholder="Select a service (optional)"
+                description="Assign this entity to a service"
+                data={serviceOptions}
+                value={currentServiceId}
+                onChange={handleServiceChange}
+                clearable
+              />
+            </>
+          )}
 
           {entity && (
             <>

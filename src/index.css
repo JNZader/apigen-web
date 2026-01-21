@@ -144,3 +144,14 @@
 .react-flow__node .mantine-ActionIcon-root + .mantine-ActionIcon-root {
   margin-left: 4px;
 }
+
+/* React Flow node z-index layering - ensure entities appear above services */
+/* Service nodes should be at the base layer */
+.react-flow__node-service {
+  z-index: 1 !important;
+}
+
+/* Entity nodes should appear above service backgrounds */
+.react-flow__node-entity {
+  z-index: 1000 !important;
+}

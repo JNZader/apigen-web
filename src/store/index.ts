@@ -3,6 +3,7 @@
 // ============================================================================
 
 // Individual stores
+export { useCanvasUIStore } from './canvasUIStore';
 export { useEntityStore } from './entityStore';
 export { useHistoryStore } from './historyStore';
 export { useLayoutStore } from './layoutStore';
@@ -108,3 +109,12 @@ export {
   useCanUndo,
   useHistoryActions,
 } from './historyStore';
+
+// ============================================================================
+// Canvas UI Store Exports
+// ============================================================================
+
+export {
+  useCanvasUIActions,
+  useIsEntityExpanded,
+} from './canvasUIStore';

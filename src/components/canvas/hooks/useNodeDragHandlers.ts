@@ -1,16 +1,25 @@
-import { useDebouncedCallback, useThrottledCallback } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
+import { useDebouncedCallback } from '@mantine/hooks';
 import type { Node, NodeChange } from '@xyflow/react';
 import { type MutableRefObject, useCallback, useEffect, useRef } from 'react';
+import { useEntityStore } from '../../../store/entityStore';
 import { useLayoutActions, useServiceActions } from '../../../store/projectStore';
+import { useServiceStore } from '../../../store/serviceStore';
 import type { EntityDesign, ServiceDesign } from '../../../types';
-import { CANVAS_VIEWS, type CanvasView, ENTITY_NODE } from '../../../utils/canvasConstants';
+import { type CanvasView, ENTITY_NODE } from '../../../utils/canvasConstants';
+import {
+  type PositionUpdate,
+  adjustSelectionChanges,
+  extractServiceDimensions,
+  updateDragState,
+} from './dragHelpers';
 
 interface UseNodeDragHandlersOptions {
   canvasView: CanvasView;
   entities: EntityDesign[];
   services: ServiceDesign[];
+  selectedEntityId: string | null;
   selectedEntityIds: string[];
+  selectedServiceId: string | null;
   isDraggingRef: MutableRefObject<boolean>;
   setNodes: (updater: Node[] | ((nodes: Node[]) => Node[])) => void;
   onNodesChange: (changes: NodeChange[]) => void;
@@ -22,29 +31,47 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
     canvasView,
     entities,
     services,
-    selectedEntityIds,
+    selectedEntityId: _selectedEntityId, // Kept for interface compatibility; fresh value read from store
+    selectedEntityIds: _selectedEntityIds, // Kept for interface compatibility
+    selectedServiceId: _selectedServiceId, // Kept for interface compatibility; fresh value read from store
     isDraggingRef,
-    setNodes,
+    setNodes: _setNodes, // Kept for interface compatibility
     onNodesChange,
     setDropTargetServiceId,
   } = options;
 
-  const { updateService, assignEntityToService, removeEntityFromService } = useServiceActions();
+  const { updateService } = useServiceActions();
   const { updateEntityPositions, updateServicePositions } = useLayoutActions();
 
   // Collect position changes during drag
   const pendingPositions = useRef<Map<string, { x: number; y: number }>>(new Map());
 
-  // Track previous service positions to calculate movement delta
+  // Track previous service positions to calculate movement delta during drag
   const previousServicePositions = useRef<Map<string, { x: number; y: number }>>(new Map());
 
-  // Initialize previousServicePositions with current service positions
-  // This prevents race condition where first drag uses potentially stale store positions
+  // Track whether a drag is in progress to avoid overwriting positions during drag
+  const isDragInProgress = useRef(false);
+
+  // Sync previousServicePositions with store positions when not dragging
+  // This ensures deltas are calculated correctly after external position changes (e.g., auto-layout)
   useEffect(() => {
-    for (const service of services) {
-      if (!previousServicePositions.current.has(service.id)) {
-        previousServicePositions.current.set(service.id, service.position);
+    // Don't update during drag - we're tracking movement delta
+    if (isDragInProgress.current) {
+      return;
+    }
+
+    const currentServiceIds = new Set(services.map((s) => s.id));
+
+    // Remove positions for deleted services (prevents memory leak)
+    for (const id of previousServicePositions.current.keys()) {
+      if (!currentServiceIds.has(id)) {
+        previousServicePositions.current.delete(id);
       }
+    }
+
+    // Update all service positions from store
+    for (const service of services) {
+      previousServicePositions.current.set(service.id, { ...service.position });
     }
   }, [services]);
 
@@ -114,101 +141,52 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
   ]);
 
   // Handle node position changes with debouncing
+  // Refactored to use helper functions for clarity and testability
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
-      // Collect position changes
-      const entityPositions: Array<{ id: string; position: { x: number; y: number } }> = [];
-      const servicePositions: Array<{ id: string; position: { x: number; y: number } }> = [];
-      const serviceDimensions: Array<{ id: string; width: number; height: number }> = [];
-      const additionalEntityMoves: Array<{ id: string; position: { x: number; y: number } }> = [];
+      // Track drag state
+      updateDragState(changes, isDraggingRef, isDragInProgress);
 
-      // Check if any change is a drag start or drag end
+      // Collect position updates
+      const entityPositions: PositionUpdate[] = [];
+      const servicePositions: PositionUpdate[] = [];
+
+      // Process position changes
       for (const change of changes) {
-        if (change.type === 'position') {
-          if (change.dragging === true) {
-            isDraggingRef.current = true;
-          } else if (change.dragging === false) {
-            // Drag ended - will be handled in handleNodeDragStop
-          }
+        if (change.type !== 'position' || !change.position) continue;
+
+        pendingPositions.current.set(change.id, change.position);
+
+        const isEntity = entities.some((e) => e.id === change.id);
+        const service = services.find((s) => s.id === change.id);
+
+        if (isEntity) {
+          // Entity positions are always absolute (no parent-child relationship)
+          entityPositions.push({ id: change.id, position: change.position });
+        } else if (service) {
+          servicePositions.push({ id: change.id, position: change.position });
         }
       }
 
-      for (const change of changes) {
-        if (change.type === 'position' && change.position) {
-          pendingPositions.current.set(change.id, change.position);
+      // Extract dimension changes from resize operations
+      const serviceDimensions = extractServiceDimensions(changes, services);
 
-          // Determine if this is an entity or service
-          const isEntity = entities.some((e) => e.id === change.id);
-          const service = services.find((s) => s.id === change.id);
+      // Adjust selection changes to prevent unwanted deselection
+      const entityState = useEntityStore.getState();
+      const serviceState = useServiceStore.getState();
 
-          if (isEntity) {
-            entityPositions.push({ id: change.id, position: change.position });
-          } else if (service) {
-            servicePositions.push({ id: change.id, position: change.position });
+      const adjustedChanges = adjustSelectionChanges(
+        changes,
+        entityState.selectedEntityId,
+        entityState.selectedEntityIds,
+        serviceState.selectedServiceId,
+        services,
+      );
 
-            // When a service moves in 'both' view, move its assigned entities too
-            if (canvasView === CANVAS_VIEWS.BOTH && service.entityIds.length > 0) {
-              const prevPos = previousServicePositions.current.get(service.id) || service.position;
-              const deltaX = change.position.x - prevPos.x;
-              const deltaY = change.position.y - prevPos.y;
+      // Apply the adjusted changes to ReactFlow
+      onNodesChange(adjustedChanges);
 
-              // Move all entities assigned to this service
-              for (const entityId of service.entityIds) {
-                const entity = entities.find((e) => e.id === entityId);
-                if (entity) {
-                  const currentEntityPos =
-                    pendingPositions.current.get(entityId) || entity.position;
-                  const newEntityPos = {
-                    x: currentEntityPos.x + deltaX,
-                    y: currentEntityPos.y + deltaY,
-                  };
-                  pendingPositions.current.set(entityId, newEntityPos);
-                  additionalEntityMoves.push({ id: entityId, position: newEntityPos });
-                }
-              }
-            }
-
-            // Update previous position for next delta calculation
-            previousServicePositions.current.set(service.id, change.position);
-          }
-        }
-
-        // Capture dimension changes (from NodeResizer)
-        if (change.type === 'dimensions' && change.dimensions) {
-          const isService = services.some((s) => s.id === change.id);
-          if (
-            isService &&
-            change.dimensions.width !== undefined &&
-            change.dimensions.height !== undefined
-          ) {
-            serviceDimensions.push({
-              id: change.id,
-              width: change.dimensions.width,
-              height: change.dimensions.height,
-            });
-          }
-        }
-      }
-
-      // Apply the original changes
-      onNodesChange(changes);
-
-      // If we have additional entity moves from service dragging, update those nodes too
-      if (additionalEntityMoves.length > 0) {
-        setNodes((currentNodes) =>
-          currentNodes.map((node) => {
-            const move = additionalEntityMoves.find((m) => m.id === node.id);
-            if (move) {
-              return { ...node, position: move.position };
-            }
-            return node;
-          }),
-        );
-        // Also update the store
-        debouncedEntityPositionUpdate(additionalEntityMoves);
-      }
-
-      // Debounce the store updates
+      // Debounce store updates
       if (entityPositions.length > 0) {
         debouncedEntityPositionUpdate(entityPositions);
       }
@@ -221,7 +199,6 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
     },
     [
       onNodesChange,
-      setNodes,
       entities,
       services,
       canvasView,
@@ -232,107 +209,26 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
     ],
   );
 
-  // Throttled drop target update to reduce re-renders during drag (every 50ms)
-  const throttledSetDropTarget = useThrottledCallback((serviceId: string | null) => {
-    setDropTargetServiceId(serviceId);
-  }, 50);
-
-  // Handle entity drag - update drop target for visual feedback (throttled)
+  // Handle entity drag - no-op now that BOTH view is removed
   const handleNodeDrag = useCallback(
-    (_event: React.MouseEvent, node: Node) => {
-      // Only track drop target in 'both' view for entities
-      if (canvasView !== CANVAS_VIEWS.BOTH) return;
-
-      const isEntity = entities.some((e) => e.id === node.id);
-      if (!isEntity) {
-        throttledSetDropTarget(null);
-        return;
-      }
-
-      const targetService = findServiceAtPosition(node.position);
-      throttledSetDropTarget(targetService?.id ?? null);
+    (_event: React.MouseEvent, _node: Node) => {
+      // No-op - drag-to-assign was only available in BOTH view which has been removed
     },
-    [canvasView, entities, findServiceAtPosition, throttledSetDropTarget],
+    [],
   );
 
-  // Handle entity drag stop - check if dropped inside a service
-  // Supports multi-selection: if the dragged entity is part of a selection,
-  // all selected entities are assigned/removed together
+  // Handle entity drag stop - just mark drag as ended
+  // Service assignment is now done via context menu instead of drag-and-drop
   const handleNodeDragStop = useCallback(
-    (_event: React.MouseEvent, node: Node) => {
+    (_event: React.MouseEvent, _node: Node) => {
       // Mark drag as ended
       isDraggingRef.current = false;
+      isDragInProgress.current = false;
 
       // Clear drop target visual feedback
       setDropTargetServiceId(null);
-
-      // Clear previous positions tracking
-      previousServicePositions.current.clear();
-
-      // Only check for entity-to-service assignment in 'both' view
-      if (canvasView !== CANVAS_VIEWS.BOTH) return;
-
-      // Check if the dragged node is an entity
-      const isEntity = entities.some((e) => e.id === node.id);
-      if (!isEntity) return;
-
-      const entityPosition = node.position;
-      const targetService = findServiceAtPosition(entityPosition);
-
-      // Determine which entities to process:
-      // If dragged entity is part of multi-selection, process all selected
-      // Otherwise, just process the dragged entity
-      const isPartOfMultiSelection = selectedEntityIds.includes(node.id);
-      const entitiesToProcess = isPartOfMultiSelection && selectedEntityIds.length > 0
-        ? selectedEntityIds
-        : [node.id];
-
-      if (targetService) {
-        // Assign all entities to the target service
-        let assignedCount = 0;
-        for (const entityId of entitiesToProcess) {
-          if (!targetService.entityIds.includes(entityId)) {
-            assignEntityToService(entityId, targetService.id);
-            assignedCount++;
-          }
-        }
-        if (assignedCount > 0) {
-          notifications.show({
-            title: 'Entities assigned',
-            message: `${assignedCount} ${assignedCount === 1 ? 'entity' : 'entities'} added to ${targetService.name}`,
-            color: 'green',
-          });
-        }
-      } else {
-        // Entities were dragged outside all services - remove from any service
-        let removedCount = 0;
-        for (const entityId of entitiesToProcess) {
-          const currentService = services.find((s) => s.entityIds.includes(entityId));
-          if (currentService) {
-            removeEntityFromService(entityId, currentService.id);
-            removedCount++;
-          }
-        }
-        if (removedCount > 0) {
-          notifications.show({
-            title: 'Entities removed',
-            message: `${removedCount} ${removedCount === 1 ? 'entity' : 'entities'} removed from service`,
-            color: 'blue',
-          });
-        }
-      }
     },
-    [
-      canvasView,
-      entities,
-      services,
-      selectedEntityIds,
-      isDraggingRef,
-      setDropTargetServiceId,
-      findServiceAtPosition,
-      assignEntityToService,
-      removeEntityFromService,
-    ],
+    [isDraggingRef, setDropTargetServiceId],
   );
 
   return {

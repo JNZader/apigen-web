@@ -77,11 +77,8 @@ export function useCanvasEdges(options: UseCanvasEdgesOptions) {
   useEffect(() => {
     if (canvasView === CANVAS_VIEWS.ENTITIES) {
       setEdges(buildRelationEdges());
-    } else if (canvasView === CANVAS_VIEWS.SERVICES) {
-      setEdges(buildServiceConnectionEdges());
     } else {
-      // Both view - show both relations and service connections
-      setEdges([...buildRelationEdges(), ...buildServiceConnectionEdges()]);
+      setEdges(buildServiceConnectionEdges());
     }
   }, [canvasView, buildRelationEdges, buildServiceConnectionEdges, setEdges]);
 

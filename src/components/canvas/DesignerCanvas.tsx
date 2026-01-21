@@ -4,10 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import '@xyflow/react/dist/style.css';
 import { useMantineColorScheme, VisuallyHidden } from '@mantine/core';
 import { modals } from '@mantine/modals';
+import { useCanvasUIStore } from '../../store/canvasUIStore';
 import {
   useCanvasView,
   useEntities,
   useEntityActions,
+  useEntityServiceFilter,
   useLayoutActions,
   useLayoutPreference,
   useNeedsAutoLayout,
@@ -70,6 +72,7 @@ export function DesignerCanvas({
   const selectedEntityIds = useSelectedEntityIds();
   const selectedServiceId = useSelectedServiceId();
   const canvasView = useCanvasView();
+  const entityServiceFilter = useEntityServiceFilter();
   const layoutPreference = useLayoutPreference();
   const needsAutoLayout = useNeedsAutoLayout();
 
@@ -153,6 +156,7 @@ export function DesignerCanvas({
   // Use custom hooks for nodes and edges
   const { nodes, setNodes, onNodesChange, isDraggingRef } = useCanvasNodes({
     canvasView,
+    entityServiceFilter,
     selectedEntityId,
     selectedEntityIds,
     selectedServiceId,
@@ -173,7 +177,9 @@ export function DesignerCanvas({
     canvasView,
     entities,
     services,
+    selectedEntityId,
     selectedEntityIds,
+    selectedServiceId,
     isDraggingRef,
     setNodes,
     onNodesChange,
@@ -203,6 +209,13 @@ export function DesignerCanvas({
     updateEntityPositions,
     setNeedsAutoLayout,
   ]);
+
+  // Cleanup expanded state for deleted entities (prevents memory leaks)
+  const cleanupDeletedEntities = useCanvasUIStore((state) => state.cleanupDeletedEntities);
+  useEffect(() => {
+    const entityIds = entities.map((e) => e.id);
+    cleanupDeletedEntities(entityIds);
+  }, [entities, cleanupDeletedEntities]);
 
   // Handle node selection (supports Ctrl+Click for multi-select)
   const onNodeClick = useCallback(
@@ -291,6 +304,7 @@ export function DesignerCanvas({
         maxZoom={2}
         snapToGrid
         snapGrid={[CANVAS.SNAP_GRID, CANVAS.SNAP_GRID]}
+        elevateNodesOnSelect={false} // Prevent services from covering entities when selected
         defaultEdgeOptions={{
           type: canvasView === CANVAS_VIEWS.ENTITIES ? 'relation' : 'service-connection',
         }}

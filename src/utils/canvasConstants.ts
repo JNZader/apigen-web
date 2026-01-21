@@ -30,7 +30,6 @@ export const CANVAS = {
 export const CANVAS_VIEWS = {
   ENTITIES: 'entities',
   SERVICES: 'services',
-  BOTH: 'both',
 } as const;
 
 export type CanvasView = (typeof CANVAS_VIEWS)[keyof typeof CANVAS_VIEWS];

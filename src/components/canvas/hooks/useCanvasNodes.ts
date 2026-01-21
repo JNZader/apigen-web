@@ -1,12 +1,14 @@
-import type { Node } from '@xyflow/react';
+import type { Node, NodeChange } from '@xyflow/react';
 import { useNodesState } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import type { EntityServiceFilter } from '../../../store/layoutStore';
 import { useEntities, useServices } from '../../../store/projectStore';
 import type { ServiceDesign } from '../../../types';
 import { CANVAS_VIEWS, type CanvasView } from '../../../utils/canvasConstants';
 
 interface UseCanvasNodesOptions {
   canvasView: CanvasView;
+  entityServiceFilter: EntityServiceFilter;
   selectedEntityId: string | null;
   selectedEntityIds: string[];
   selectedServiceId: string | null;
@@ -17,9 +19,14 @@ interface UseCanvasNodesOptions {
   onDeleteService: (id: string, name: string) => void;
 }
 
+import { useServiceActions } from '../../../store/projectStore';
+
+// ... existing code ...
+
 export function useCanvasNodes(options: UseCanvasNodesOptions) {
   const {
     canvasView,
+    entityServiceFilter,
     selectedEntityId,
     selectedEntityIds,
     selectedServiceId,
@@ -30,13 +37,61 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
     onDeleteService,
   } = options;
 
-  const entities = useEntities();
+  const allEntities = useEntities();
   const services = useServices();
+  const { updateServiceDimensions } = useServiceActions();
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  // Filter entities based on entityServiceFilter (only in entities view)
+  const entities = useMemo(() => {
+    if (canvasView !== CANVAS_VIEWS.ENTITIES || entityServiceFilter === 'all') {
+      return allEntities;
+    }
+
+    if (entityServiceFilter === 'unassigned') {
+      // Get all entity IDs that are assigned to any service
+      const assignedEntityIds = new Set(services.flatMap((s) => s.entityIds));
+      return allEntities.filter((e) => !assignedEntityIds.has(e.id));
+    }
+
+    // Filter by specific service ID
+    const service = services.find((s) => s.id === entityServiceFilter);
+    if (!service) {
+      return allEntities; // Service not found, show all
+    }
+    const serviceEntityIds = new Set(service.entityIds);
+    return allEntities.filter((e) => serviceEntityIds.has(e.id));
+  }, [allEntities, services, entityServiceFilter, canvasView]);
+
+  const [nodes, setNodes, onNodesChangeOriginal] = useNodesState<Node>([]);
+
+  // Intercept onNodesChange to handle resizing persistence
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      onNodesChangeOriginal(changes);
+
+      // Check for dimension updates on service nodes and persist them
+      for (const change of changes) {
+        if (change.type === 'dimensions' && change.dimensions) {
+          const service = services.find((s) => s.id === change.id);
+          if (service) {
+            updateServiceDimensions(
+              change.id,
+              change.dimensions.width,
+              change.dimensions.height,
+            );
+          }
+        }
+      }
+    },
+    [onNodesChangeOriginal, services, updateServiceDimensions],
+  );
 
   // Track if a drag operation is in progress to prevent node reconstruction
   const isDraggingRef = useRef(false);
+
+  // Track if initial nodes have been set to avoid premature updates
+  // This prevents "node not initialized" warnings from React Flow
+  const isInitializedRef = useRef(false);
 
   // Calculate entity count for a service
   const getEntityCountForService = useCallback(
@@ -55,52 +110,79 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
   );
 
   // Create structural fingerprints that exclude positions/dimensions AND entityIds
+  // Uses JSON.stringify for robust serialization (handles special characters in names)
   // This prevents node reconstruction on every position change or entity assignment
   const entityStructureKey = useMemo(
-    () => entities.map((e) => `${e.id}:${e.name}:${e.fields.length}`).join(','),
+    () =>
+      JSON.stringify(
+        entities.map((e) => ({
+          id: e.id,
+          name: e.name,
+          fieldCount: e.fields.length,
+        })),
+      ),
     [entities],
   );
 
   // Exclude entityIds from service structure key to prevent rebuilds during drag
   // entityIds changes are handled separately in the selection effect
   const serviceStructureKey = useMemo(
-    () => services.map((s) => `${s.id}:${s.name}`).join(','),
+    () =>
+      JSON.stringify(
+        services.map((s) => ({
+          id: s.id,
+          name: s.name,
+        })),
+      ),
     [services],
   );
 
   // Track entityIds separately to update service node data without full rebuild
   const serviceEntityIdsKey = useMemo(
-    () => services.map((s) => `${s.id}:${s.entityIds.join('-')}`).join(','),
+    () =>
+      JSON.stringify(
+        services.map((s) => ({
+          id: s.id,
+          entityIds: s.entityIds,
+        })),
+      ),
     [services],
   );
 
   // Build entity nodes
+  // Using absolute positioning for all entities (no parent-child relationship)
+  // This avoids React Flow's parent-child initialization issues and ensures visibility
+  // z-index is handled via CSS (.react-flow__node-entity) for reliability
   const buildEntityNodes = useCallback(() => {
     return entities.map((entity) => ({
       id: entity.id,
       type: 'entity' as const,
-      position: entity.position,
-      zIndex: 10, // Entities above services
+      position: entity.position, // Always use absolute position
+      selectable: true,
+      selected: false,
+      draggable: true,
       data: {
         entity,
         onEdit: onEditEntity,
         onDelete: (id: string) => onDeleteEntity(id, entity.name),
-        isSelected: false, // Will be updated by separate effect
+        isSelected: false,
       },
     }));
   }, [entities, onEditEntity, onDeleteEntity]);
 
   // Build service nodes
+  // z-index is handled via CSS (.react-flow__node-service) for reliability
   const buildServiceNodes = useCallback(() => {
     return services.map((service) => ({
       id: service.id,
       type: 'service' as const,
       position: service.position,
-      // Set initial dimensions from service
+      // Set dimensions - React Flow uses these for NodeResizer and parent-child positioning
+      // Don't use style.width/height as it conflicts with NodeResizer
       width: service.width,
       height: service.height,
-      style: { width: service.width, height: service.height },
-      zIndex: 1, // Services as background containers
+      selectable: true, // Enable selection for NodeResizer
+      selected: false, // Initialize to false, will be updated by separate effect
       data: {
         service,
         entityCount: getEntityCountForService(service),
@@ -130,15 +212,22 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
 
     if (canvasView === CANVAS_VIEWS.ENTITIES) {
       setNodes(buildEntityNodes());
-    } else if (canvasView === CANVAS_VIEWS.SERVICES) {
-      setNodes(buildServiceNodes());
     } else {
-      // Both view - services first (background), then entities on top
-      setNodes([...buildServiceNodes(), ...buildEntityNodes()]);
+      setNodes(buildServiceNodes());
+    }
+
+    // Mark as initialized after first render
+    // This allows subsequent effects to run safely
+    if (!isInitializedRef.current) {
+      // Use requestAnimationFrame to ensure React Flow has time to measure nodes
+      requestAnimationFrame(() => {
+        isInitializedRef.current = true;
+      });
     }
   }, [
     canvasView,
     entityStructureKey,
+    entityServiceFilter,
     serviceStructureKey,
     setNodes,
     buildEntityNodes,
@@ -148,8 +237,8 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
   // Update service entity counts and names when entityIds change (without full rebuild)
   // biome-ignore lint/correctness/useExhaustiveDependencies: Using serviceEntityIdsKey to trigger updates when entity assignments change
   useEffect(() => {
-    // Skip during drag operations
-    if (isDraggingRef.current) {
+    // Skip during drag operations or before nodes are initialized
+    if (isDraggingRef.current || !isInitializedRef.current) {
       return;
     }
 
@@ -184,7 +273,14 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
   // Note: We set both `selected` (for ReactFlow's native features like NodeResizer)
   // and `data.isSelected` (for our custom styling)
   // Entity selection considers both single selection AND multi-selection (Ctrl+Click)
+  // We include structure keys in dependencies to ensure selection state is reapplied after node rebuilds
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Structure keys are intentionally included to trigger selection reapplication after node rebuilds
   useEffect(() => {
+    // Skip before nodes are initialized to prevent "node not initialized" warnings
+    if (!isInitializedRef.current) {
+      return;
+    }
+
     setNodes((currentNodes) =>
       currentNodes.map((node) => {
         const isEntity = entities.some((e) => e.id === node.id);
@@ -192,32 +288,35 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
           // Entity is selected if it's the primary selection OR in multi-selection
           const newIsSelected =
             selectedEntityId === node.id || selectedEntityIds.includes(node.id);
-          if (node.data.isSelected !== newIsSelected || node.selected !== newIsSelected) {
-            return {
-              ...node,
-              selected: newIsSelected,
-              data: { ...node.data, isSelected: newIsSelected },
-            };
-          }
-        } else {
-          const newIsSelected = selectedServiceId === node.id;
-          const newIsDropTarget = dropTargetServiceId === node.id;
-          if (
-            node.data.isSelected !== newIsSelected ||
-            node.data.isDropTarget !== newIsDropTarget ||
-            node.selected !== newIsSelected
-          ) {
-            return {
-              ...node,
-              selected: newIsSelected,
-              data: { ...node.data, isSelected: newIsSelected, isDropTarget: newIsDropTarget },
-            };
-          }
+          // Always return updated node to ensure selection state is consistent
+          return {
+            ...node,
+            selected: newIsSelected,
+            data: { ...node.data, isSelected: newIsSelected },
+          };
         }
-        return node;
+        // Service node
+        const newIsSelected = selectedServiceId === node.id;
+        const newIsDropTarget = dropTargetServiceId === node.id;
+        // Always return updated node to ensure selection state is consistent
+        return {
+          ...node,
+          selected: newIsSelected,
+          data: { ...node.data, isSelected: newIsSelected, isDropTarget: newIsDropTarget },
+        };
       }),
     );
-  }, [selectedEntityId, selectedEntityIds, selectedServiceId, dropTargetServiceId, entities, setNodes]);
+  }, [
+    selectedEntityId,
+    selectedEntityIds,
+    selectedServiceId,
+    dropTargetServiceId,
+    entities,
+    setNodes,
+    // Include structure keys to reapply selection after node rebuilds
+    entityStructureKey,
+    serviceStructureKey,
+  ]);
 
   return {
     nodes,
@@ -225,6 +324,7 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
     onNodesChange,
     isDraggingRef,
     entities,
+    allEntities,
     services,
   };
 }

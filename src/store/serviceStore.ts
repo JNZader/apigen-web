@@ -44,6 +44,7 @@ interface ServiceState {
   removeService: (id: string) => void;
   selectService: (id: string | null) => void;
   assignEntityToService: (entityId: string, serviceId: string) => void;
+  assignEntitiesToService: (entityIds: string[], serviceId: string) => void;
   removeEntityFromService: (entityId: string, serviceId: string) => void;
   clearServices: () => void;
 
@@ -111,6 +112,20 @@ export const useServiceStore = create<ServiceState>()(
       assignEntityToService: (entityId, serviceId) =>
         set((state) => ({
           services: state.services.map((s) => updateServiceEntityIds(s, entityId, serviceId)),
+        })),
+
+      assignEntitiesToService: (entityIds, serviceId) =>
+        set((state) => ({
+          services: state.services.map((service) => {
+            // Remove all entityIds from other services, add to target service
+            const filteredIds = service.entityIds.filter((id) => !entityIds.includes(id));
+            if (service.id === serviceId) {
+              // Add entities that aren't already in this service
+              const newIds = entityIds.filter((id) => !service.entityIds.includes(id));
+              return { ...service, entityIds: [...filteredIds, ...newIds] };
+            }
+            return { ...service, entityIds: filteredIds };
+          }),
         })),
 
       removeEntityFromService: (entityId, serviceId) =>
@@ -199,7 +214,9 @@ export const useServiceActions = () =>
       removeService: state.removeService,
       selectService: state.selectService,
       assignEntityToService: state.assignEntityToService,
+      assignEntitiesToService: state.assignEntitiesToService,
       removeEntityFromService: state.removeEntityFromService,
       clearServices: state.clearServices,
+      updateServiceDimensions: state.updateServiceDimensions,
     })),
   );

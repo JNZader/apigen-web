@@ -1,4 +1,4 @@
-import { Button, Group, Paper, Text } from '@mantine/core';
+import { Button, Paper, Text } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import { Panel } from '@xyflow/react';
 import type { CanvasView } from '../../store/projectStore';
@@ -77,40 +77,6 @@ export function CanvasEmptyStates({
         </Panel>
       )}
 
-      {/* Empty state for 'both' view when nothing exists */}
-      {canvasView === CANVAS_VIEWS.BOTH && entitiesCount === 0 && servicesCount === 0 && (
-        <Panel position="top-center" style={{ top: '40%' }}>
-          <Paper
-            p="xl"
-            withBorder
-            shadow="md"
-            style={{ textAlign: 'center' }}
-            role="region"
-            aria-label="Getting started"
-          >
-            <Text size="lg" fw={500} mb="xs">
-              Combined View
-            </Text>
-            <Text size="sm" c="dimmed" mb="md">
-              Create entities and services to see them together.
-              <br />
-              Drag entities inside services to assign them.
-            </Text>
-            <Group justify="center" gap="sm">
-              <Button leftSection={<IconPlus size={16} aria-hidden="true" />} onClick={onAddEntity}>
-                Add Entity
-              </Button>
-              <Button
-                color="teal"
-                leftSection={<IconPlus size={16} aria-hidden="true" />}
-                onClick={onAddService}
-              >
-                Add Service
-              </Button>
-            </Group>
-          </Paper>
-        </Panel>
-      )}
     </>
   );
 }
@@ -122,13 +88,13 @@ interface CanvasHelpTipProps {
 }
 
 export function CanvasHelpTip({ canvasView, entitiesCount, servicesCount }: CanvasHelpTipProps) {
-  // Help tip for 'both' view
-  if (canvasView === CANVAS_VIEWS.BOTH && servicesCount > 0 && entitiesCount > 0) {
+  // Help tip for entities view when there are services
+  if (canvasView === CANVAS_VIEWS.ENTITIES && servicesCount > 0 && entitiesCount > 0) {
     return (
       <Panel position="bottom-center">
         <Paper p="xs" withBorder shadow="sm" style={{ opacity: 0.9 }}>
           <Text size="xs" c="dimmed">
-            Drag entities inside a service to assign them. Drag outside to unassign.
+            Right-click on an entity to assign it to a service.
           </Text>
         </Paper>
       </Panel>

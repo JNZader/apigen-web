@@ -27,6 +27,7 @@ import {
   useCanvasView,
   useCanvasViewActions,
   useEntities,
+  useEntityServiceFilter,
   useLayoutActions,
   useRelations,
   useServiceConnections,
@@ -36,6 +37,7 @@ import type { EntityDesign } from '../../types';
 import type { RelationDesign } from '../../types/relation';
 import { CANVAS_VIEWS } from '../../utils/canvasConstants';
 import { calculateAutoLayout, calculateServiceLayout, LAYOUT_PRESETS } from '../../utils/canvasLayout';
+import { EntityServiceTabs } from './EntityServiceTabs';
 
 interface CanvasToolbarProps {
   readonly nodes: Node[];
@@ -57,6 +59,7 @@ export function CanvasToolbar({
   const services = useServices();
   const serviceConnections = useServiceConnections();
   const canvasView = useCanvasView();
+  const entityServiceFilter = useEntityServiceFilter();
 
   const { setCanvasView } = useCanvasViewActions();
   const { updateEntityPositions, updateServicePositions, setLayoutPreference } = useLayoutActions();
@@ -100,35 +103,6 @@ export function CanvasToolbar({
         // Layout services using dagre (respects connections and dimensions)
         const servicePositions = calculateServiceLayout(services, serviceConnections, LAYOUT_PRESETS[preset]);
         updateServicePositions(servicePositions);
-
-        // In combined view, move entities along with their assigned services
-        if (canvasView === CANVAS_VIEWS.BOTH) {
-          const entityPositions = new Map<string, { x: number; y: number }>();
-
-          services.forEach((service) => {
-            const newServicePos = servicePositions.get(service.id);
-            if (!newServicePos) return;
-
-            // Calculate how much the service moved
-            const deltaX = newServicePos.x - service.position.x;
-            const deltaY = newServicePos.y - service.position.y;
-
-            // Move all entities assigned to this service by the same delta
-            for (const entityId of service.entityIds) {
-              const entity = entities.find((e) => e.id === entityId);
-              if (entity) {
-                entityPositions.set(entityId, {
-                  x: entity.position.x + deltaX,
-                  y: entity.position.y + deltaY,
-                });
-              }
-            }
-          });
-
-          if (entityPositions.size > 0) {
-            updateEntityPositions(entityPositions);
-          }
-        }
 
         setLayoutPreference(preset);
 
@@ -246,21 +220,16 @@ export function CanvasToolbar({
               ),
               value: CANVAS_VIEWS.SERVICES,
             },
-            {
-              label: (
-                <Group gap={4} wrap="nowrap">
-                  <IconTable size={14} />
-                  <IconServer size={14} />
-                  <span>Both</span>
-                </Group>
-              ),
-              value: CANVAS_VIEWS.BOTH,
-            },
           ]}
         />
 
+        {/* Service filter tabs - only in entities view with services */}
+        {canvasView === CANVAS_VIEWS.ENTITIES && services.length > 0 && (
+          <EntityServiceTabs entityServiceFilter={entityServiceFilter} />
+        )}
+
         {/* Add buttons based on view */}
-        {(canvasView === CANVAS_VIEWS.ENTITIES || canvasView === CANVAS_VIEWS.BOTH) && (
+        {canvasView === CANVAS_VIEWS.ENTITIES && (
           <Button
             size="xs"
             leftSection={<IconPlus size={14} aria-hidden="true" />}
@@ -269,7 +238,7 @@ export function CanvasToolbar({
             Add Entity
           </Button>
         )}
-        {(canvasView === CANVAS_VIEWS.SERVICES || canvasView === CANVAS_VIEWS.BOTH) && (
+        {canvasView === CANVAS_VIEWS.SERVICES && (
           <Button
             size="xs"
             color="teal"
@@ -333,8 +302,6 @@ export function CanvasToolbar({
             `${entities.length} entities \u00B7 ${relations.length} relations`}
           {canvasView === CANVAS_VIEWS.SERVICES &&
             `${services.length} services \u00B7 ${serviceConnections.length} connections`}
-          {canvasView === CANVAS_VIEWS.BOTH &&
-            `${entities.length} entities \u00B7 ${services.length} services`}
         </Text>
       </Group>
     </Paper>

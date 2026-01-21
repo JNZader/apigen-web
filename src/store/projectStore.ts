@@ -200,6 +200,7 @@ export const useProjectStore = Object.assign(
       removeService: serviceState.removeService,
       selectService: serviceState.selectService,
       assignEntityToService: serviceState.assignEntityToService,
+      assignEntitiesToService: serviceState.assignEntitiesToService,
       removeEntityFromService: serviceState.removeEntityFromService,
 
       // Service connection state
@@ -267,6 +268,7 @@ export const useProjectStore = Object.assign(
         removeService: serviceState.removeService,
         selectService: serviceState.selectService,
         assignEntityToService: serviceState.assignEntityToService,
+        assignEntitiesToService: serviceState.assignEntitiesToService,
         removeEntityFromService: serviceState.removeEntityFromService,
 
         // Service connection state
@@ -375,6 +377,7 @@ interface CombinedProjectState {
   removeService: (id: string) => void;
   selectService: (id: string | null) => void;
   assignEntityToService: (entityId: string, serviceId: string) => void;
+  assignEntitiesToService: (entityIds: string[], serviceId: string) => void;
   removeEntityFromService: (entityId: string, serviceId: string) => void;
 
   // Service Connection
@@ -413,10 +416,12 @@ export {
 export {
   useCanvasView,
   useCanvasViewActions,
+  useEntityServiceFilter,
   useLayoutActions,
   useLayoutPreference,
   useNeedsAutoLayout,
 } from './layoutStore';
+export type { EntityServiceFilter } from './layoutStore';
 // Re-export from relationStore
 export {
   useRelationActions,

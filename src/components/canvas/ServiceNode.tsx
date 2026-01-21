@@ -18,10 +18,15 @@ export interface ServiceNodeData extends Record<string, unknown> {
 
 export type ServiceNodeType = Node<ServiceNodeData, 'service'>;
 
-function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
+function ServiceNodeComponent({ id, data, selected }: NodeProps<ServiceNodeType>) {
   const { service, entityCount, entityNames, onDelete, onConfigure, isSelected, isDropTarget } =
     data;
+  // Use both ReactFlow's selected prop (required for NodeResizer functionality)
+  // and our data.isSelected (for custom styling and state tracking)
   const isHighlighted = selected || isSelected || isDropTarget;
+
+  // Debug: log selection state
+  // console.log(`ServiceNode ${service.name}: selected=${selected}, isSelected=${isSelected}, isHighlighted=${isHighlighted}`);
 
   const handleStyle = {
     width: 14,
@@ -35,18 +40,23 @@ function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
     <>
       {/* Node Resizer for adjusting size */}
       <NodeResizer
+        nodeId={id}
         minWidth={SERVICE_NODE.MIN_WIDTH}
         minHeight={SERVICE_NODE.MIN_HEIGHT}
         isVisible={isHighlighted}
         lineStyle={{
-          border: `2px dashed ${service.color}`,
+          borderWidth: 3,
+          borderStyle: 'dashed',
+          borderColor: service.color,
+          zIndex: 10,
         }}
         handleStyle={{
-          width: 10,
-          height: 10,
+          width: 14,
+          height: 14,
           backgroundColor: service.color,
-          border: '2px solid white',
-          borderRadius: 2,
+          border: '3px solid white',
+          borderRadius: 3,
+          zIndex: 20,
         }}
       />
 
@@ -98,6 +108,7 @@ function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
           flexDirection: 'column',
           boxShadow: isDropTarget ? '0 0 20px rgba(64, 192, 87, 0.4)' : undefined,
           transition: 'border-color 0.15s, background-color 0.15s, box-shadow 0.15s',
+          position: 'relative',
         }}
       >
         {/* Service Header */}
@@ -106,7 +117,7 @@ function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
           inheritPadding
           py="xs"
           px="sm"
-          style={{ backgroundColor: service.color }}
+          style={{ backgroundColor: service.color, pointerEvents: 'all', cursor: 'grab' }} // Re-enable pointer events for header
         >
           <Group justify="space-between" wrap="nowrap">
             <Group gap={8} wrap="nowrap">
@@ -216,7 +227,7 @@ function ServiceNodeComponent({ data, selected }: NodeProps<ServiceNodeType>) {
         </Stack>
 
         {/* Service Footer with actions */}
-        <Card.Section withBorder inheritPadding py={4} px="xs" bg="white">
+        <Card.Section withBorder inheritPadding py={4} px="xs" bg="white" style={{ pointerEvents: 'all' }}>
           <Group justify="space-between" wrap="nowrap">
             <Group gap={4}>
               <Badge

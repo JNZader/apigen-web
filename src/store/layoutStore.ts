@@ -15,6 +15,14 @@ export type LayoutPreset = 'compact' | 'horizontal' | 'vertical' | 'spacious';
 export type { CanvasView };
 
 // ============================================================================
+// Entity Service Filter Types
+// ============================================================================
+
+// 'all' shows all entities, 'unassigned' shows entities not assigned to any service,
+// or a service ID to filter by that specific service
+export type EntityServiceFilter = 'all' | 'unassigned' | string;
+
+// ============================================================================
 // Store Interface
 // ============================================================================
 
@@ -23,11 +31,13 @@ interface LayoutState {
   canvasView: CanvasView;
   layoutPreference: LayoutPreset;
   needsAutoLayout: boolean;
+  entityServiceFilter: EntityServiceFilter;
 
   // Actions
   setCanvasView: (view: CanvasView) => void;
   setLayoutPreference: (preset: LayoutPreset) => void;
   setNeedsAutoLayout: (needs: boolean) => void;
+  setEntityServiceFilter: (filter: EntityServiceFilter) => void;
 
   // Layout position updates (delegated to entity/service stores)
   updateEntityPositions: (positions: Map<string, { x: number; y: number }>) => void;
@@ -45,11 +55,13 @@ export const useLayoutStore = create<LayoutState>()(
       canvasView: CANVAS_VIEWS.ENTITIES,
       layoutPreference: 'compact',
       needsAutoLayout: false,
+      entityServiceFilter: 'all',
 
       // Actions
       setCanvasView: (view) => set({ canvasView: view }),
       setLayoutPreference: (preset) => set({ layoutPreference: preset }),
       setNeedsAutoLayout: (needs) => set({ needsAutoLayout: needs }),
+      setEntityServiceFilter: (filter) => set({ entityServiceFilter: filter }),
 
       // Delegate to entity/service stores
       updateEntityPositions: (positions) => {
@@ -64,6 +76,7 @@ export const useLayoutStore = create<LayoutState>()(
       partialize: (state) => ({
         canvasView: state.canvasView,
         layoutPreference: state.layoutPreference,
+        entityServiceFilter: state.entityServiceFilter,
       }),
     },
   ),
@@ -85,6 +98,7 @@ useEntityStore.getState()._setOnSetEntities(() => {
 export const useCanvasView = () => useLayoutStore((state) => state.canvasView);
 export const useLayoutPreference = () => useLayoutStore((state) => state.layoutPreference);
 export const useNeedsAutoLayout = () => useLayoutStore((state) => state.needsAutoLayout);
+export const useEntityServiceFilter = () => useLayoutStore((state) => state.entityServiceFilter);
 
 // ============================================================================
 // Action Selectors
@@ -104,5 +118,6 @@ export const useLayoutActions = () =>
       updateServicePositions: state.updateServicePositions,
       setLayoutPreference: state.setLayoutPreference,
       setNeedsAutoLayout: state.setNeedsAutoLayout,
+      setEntityServiceFilter: state.setEntityServiceFilter,
     })),
   );
