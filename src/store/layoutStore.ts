@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useShallow } from 'zustand/shallow';
-import { CANVAS_VIEWS, type CanvasView } from '../utils/canvasConstants';
+import { CANVAS_VIEWS } from '../utils/canvasConstants';
+import type { CanvasView } from '../utils/canvasConstants';
 import { useEntityStore } from './entityStore';
 import { useServiceStore } from './serviceStore';
 
@@ -12,15 +13,20 @@ import { useServiceStore } from './serviceStore';
 export type LayoutPreset = 'compact' | 'horizontal' | 'vertical' | 'spacious';
 
 // Re-export CanvasView type from canvasConstants
-export type { CanvasView };
+export type { CanvasView } from '../utils/canvasConstants';
 
 // ============================================================================
 // Entity Service Filter Types
 // ============================================================================
 
 // 'all' shows all entities, 'unassigned' shows entities not assigned to any service,
-// or a service ID to filter by that specific service
-export type EntityServiceFilter = 'all' | 'unassigned' | string;
+// or a service ID (nanoid format) to filter by that specific service
+// Using branded type to satisfy S6571 while preserving literal type hints
+interface ServiceIdBrand {
+  readonly __serviceId?: unique symbol;
+}
+type ServiceId = string & ServiceIdBrand;
+export type EntityServiceFilter = 'all' | 'unassigned' | ServiceId;
 
 // ============================================================================
 // Store Interface

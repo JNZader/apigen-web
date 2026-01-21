@@ -25,15 +25,19 @@ export function EntityServiceTabs({ entityServiceFilter }: EntityServiceTabsProp
 
   // Calculate entity counts for each filter option
   const counts = useMemo(() => {
+    const entityIdSet = new Set(entities.map((e) => e.id));
     const assignedEntityIds = new Set(services.flatMap((s) => s.entityIds));
     const unassignedCount = entities.filter((e) => !assignedEntityIds.has(e.id)).length;
 
-    const serviceCounts = services.map((service) => ({
-      id: service.id,
-      name: service.name,
-      color: service.color,
-      count: service.entityIds.filter((id) => entities.some((e) => e.id === id)).length,
-    }));
+    const serviceCounts = services.map((service) => {
+      const validEntityCount = service.entityIds.filter((id) => entityIdSet.has(id)).length;
+      return {
+        id: service.id,
+        name: service.name,
+        color: service.color,
+        count: validEntityCount,
+      };
+    });
 
     return {
       all: entities.length,

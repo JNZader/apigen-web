@@ -33,8 +33,6 @@ import {
   useServiceConnections,
   useServices,
 } from '../../store/projectStore';
-import type { EntityDesign } from '../../types';
-import type { RelationDesign } from '../../types/relation';
 import { CANVAS_VIEWS } from '../../utils/canvasConstants';
 import { calculateAutoLayout, calculateServiceLayout, LAYOUT_PRESETS } from '../../utils/canvasLayout';
 import { EntityServiceTabs } from './EntityServiceTabs';
@@ -78,8 +76,8 @@ export function CanvasToolbar({
         }
 
         const positions = calculateAutoLayout(
-          entities as EntityDesign[],
-          relations as RelationDesign[],
+          entities,
+          relations,
           LAYOUT_PRESETS[preset],
         );
         updateEntityPositions(positions);

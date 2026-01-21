@@ -1,20 +1,28 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useShallow } from 'zustand/shallow';
-import type { ProjectConfig, ServiceConnectionDesign, ServiceDesign } from '../types';
-import { defaultProjectConfig } from '../types';
+import {
+  defaultProjectConfig,
+  type EntityDesign,
+  type FieldDesign,
+  type ProjectConfig,
+  type ServiceConnectionDesign,
+  type ServiceDesign,
+} from '../types';
+import type { RelationDesign } from '../types/relation';
 import { CANVAS_VIEWS } from '../utils/canvasConstants';
 import { validateProjectImport } from '../utils/validation';
 
 // Import individual stores for cross-store operations
 import { useEntityStore } from './entityStore';
-import { type CanvasView, type LayoutPreset, useLayoutStore } from './layoutStore';
+import type { CanvasView, LayoutPreset } from './layoutStore';
+import { useLayoutStore } from './layoutStore';
 import { useRelationStore } from './relationStore';
 import { useServiceConnectionStore } from './serviceConnectionStore';
 import { useServiceStore } from './serviceStore';
 
 // Re-export types for backward compatibility
-export type { LayoutPreset, CanvasView };
+export type { CanvasView, LayoutPreset } from './layoutStore';
 
 // ============================================================================
 // Helper function for deep merge
@@ -337,9 +345,6 @@ export const useProjectStore = Object.assign(
 // ============================================================================
 // Combined State Type (for backward compatibility)
 // ============================================================================
-
-import type { EntityDesign, FieldDesign } from '../types';
-import type { RelationDesign } from '../types/relation';
 
 interface CombinedProjectState {
   // Project

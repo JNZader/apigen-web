@@ -29,6 +29,22 @@ function removeEntityFromServiceHelper(
   return { ...service, entityIds: service.entityIds.filter((id) => id !== entityId) };
 }
 
+function assignEntitiesToServiceHelper(
+  service: ServiceDesign,
+  entityIds: string[],
+  targetServiceId: string,
+): ServiceDesign {
+  const entityIdSet = new Set(entityIds);
+  const filteredIds = service.entityIds.filter((id) => !entityIdSet.has(id));
+
+  if (service.id === targetServiceId) {
+    const existingIds = new Set(service.entityIds);
+    const newIds = entityIds.filter((id) => !existingIds.has(id));
+    return { ...service, entityIds: [...filteredIds, ...newIds] };
+  }
+  return { ...service, entityIds: filteredIds };
+}
+
 // ============================================================================
 // Store Interface
 // ============================================================================
@@ -116,16 +132,9 @@ export const useServiceStore = create<ServiceState>()(
 
       assignEntitiesToService: (entityIds, serviceId) =>
         set((state) => ({
-          services: state.services.map((service) => {
-            // Remove all entityIds from other services, add to target service
-            const filteredIds = service.entityIds.filter((id) => !entityIds.includes(id));
-            if (service.id === serviceId) {
-              // Add entities that aren't already in this service
-              const newIds = entityIds.filter((id) => !service.entityIds.includes(id));
-              return { ...service, entityIds: [...filteredIds, ...newIds] };
-            }
-            return { ...service, entityIds: filteredIds };
-          }),
+          services: state.services.map((s) =>
+            assignEntitiesToServiceHelper(s, entityIds, serviceId),
+          ),
         })),
 
       removeEntityFromService: (entityId, serviceId) =>

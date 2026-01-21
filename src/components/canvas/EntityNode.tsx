@@ -122,6 +122,17 @@ function EntityNodeComponent({ data, selected }: NodeProps<EntityNodeType>) {
     setMenuOpened(true);
   }, []);
 
+  // Keyboard support for context menu (Shift+F10 or ContextMenu key)
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if ((e.shiftKey && e.key === 'F10') || e.key === 'ContextMenu') {
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = e.currentTarget.getBoundingClientRect();
+      setMenuPosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+      setMenuOpened(true);
+    }
+  }, []);
+
   const handleAssignAndClose = useCallback(
     (serviceId: string) => {
       if (isPartOfMultiSelect) {
@@ -161,7 +172,18 @@ function EntityNodeComponent({ data, selected }: NodeProps<EntityNodeType>) {
 
   return (
     <>
-      <div onContextMenu={handleContextMenu}>
+      <button
+        type="button"
+        onContextMenu={handleContextMenu}
+        onKeyDown={handleKeyDown}
+        aria-haspopup="menu"
+        aria-expanded={menuOpened}
+        style={{
+          all: 'unset',
+          display: 'block',
+          cursor: 'inherit',
+        }}
+      >
         {/* Target handle for incoming relations */}
         <Handle type="target" position={Position.Left} style={handleStyle} />
 
@@ -309,7 +331,7 @@ function EntityNodeComponent({ data, selected }: NodeProps<EntityNodeType>) {
 
         {/* Source handle for outgoing relations */}
         <Handle type="source" position={Position.Right} style={handleStyle} />
-      </div>
+      </button>
 
       {/* Context menu for service assignment - using Portal for correct positioning */}
       {menuOpened && (

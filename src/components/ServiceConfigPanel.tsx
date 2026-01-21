@@ -50,6 +50,20 @@ const SERVICE_DISCOVERY_OPTIONS: Array<{ value: ServiceDiscoveryType; label: str
   { value: 'KUBERNETES', label: 'Kubernetes' },
 ];
 
+// Helper function to get entity description (avoids nested ternary)
+function getEntityDescription(
+  otherServiceName: string | null,
+  tableName: string | undefined,
+): string | undefined {
+  if (otherServiceName) {
+    return `Currently assigned to ${otherServiceName}`;
+  }
+  if (tableName) {
+    return `Table: ${tableName}`;
+  }
+  return undefined;
+}
+
 export function ServiceConfigPanel({
   serviceId,
   opened,
@@ -235,13 +249,7 @@ export function ServiceConfigPanel({
                               onChange={(e) =>
                                 handleEntityToggle(entity.id, e.currentTarget.checked)
                               }
-                              description={
-                                otherServiceName
-                                  ? `Currently assigned to ${otherServiceName}`
-                                  : entity.tableName
-                                    ? `Table: ${entity.tableName}`
-                                    : undefined
-                              }
+                              description={getEntityDescription(otherServiceName, entity.tableName)}
                             />
                           </Group>
                         </Box>

@@ -1,4 +1,4 @@
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 import type { NodeChange, NodePositionChange } from '@xyflow/react';
 import type { EntityDesign, ServiceDesign } from '../../../types';
 
@@ -26,8 +26,8 @@ export interface DimensionUpdate {
  */
 export function updateDragState(
   changes: NodeChange[],
-  isDraggingRef: MutableRefObject<boolean>,
-  isDragInProgress: MutableRefObject<boolean>,
+  isDraggingRef: RefObject<boolean>,
+  isDragInProgress: RefObject<boolean>,
 ): void {
   for (const change of changes) {
     if (change.type === 'position') {

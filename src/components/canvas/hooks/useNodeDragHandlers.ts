@@ -1,6 +1,6 @@
 import { useDebouncedCallback } from '@mantine/hooks';
 import type { Node, NodeChange } from '@xyflow/react';
-import { type MutableRefObject, useCallback, useEffect, useRef } from 'react';
+import { type RefObject, useCallback, useEffect, useRef } from 'react';
 import { useEntityStore } from '../../../store/entityStore';
 import { useLayoutActions, useServiceActions } from '../../../store/projectStore';
 import { useServiceStore } from '../../../store/serviceStore';
@@ -20,7 +20,7 @@ interface UseNodeDragHandlersOptions {
   selectedEntityId: string | null;
   selectedEntityIds: string[];
   selectedServiceId: string | null;
-  isDraggingRef: MutableRefObject<boolean>;
+  isDraggingRef: RefObject<boolean>;
   setNodes: (updater: Node[] | ((nodes: Node[]) => Node[])) => void;
   onNodesChange: (changes: NodeChange[]) => void;
   setDropTargetServiceId: (id: string | null) => void;

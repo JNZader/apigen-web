@@ -18,15 +18,29 @@ export interface ServiceNodeData extends Record<string, unknown> {
 
 export type ServiceNodeType = Node<ServiceNodeData, 'service'>;
 
+// Helper functions to reduce cognitive complexity
+function getBorderColor(
+  isDropTarget: boolean,
+  isHighlighted: boolean,
+  serviceColor: string,
+): string {
+  if (isDropTarget) return 'var(--mantine-color-green-6)';
+  if (isHighlighted) return serviceColor;
+  return 'var(--mantine-color-gray-3)';
+}
+
+function getBorderWidth(isDropTarget: boolean, isHighlighted: boolean): number {
+  if (isDropTarget) return 3;
+  if (isHighlighted) return 2;
+  return 1;
+}
+
 function ServiceNodeComponent({ id, data, selected }: NodeProps<ServiceNodeType>) {
   const { service, entityCount, entityNames, onDelete, onConfigure, isSelected, isDropTarget } =
     data;
   // Use both ReactFlow's selected prop (required for NodeResizer functionality)
   // and our data.isSelected (for custom styling and state tracking)
-  const isHighlighted = selected || isSelected || isDropTarget;
-
-  // Debug: log selection state
-  // console.log(`ServiceNode ${service.name}: selected=${selected}, isSelected=${isSelected}, isHighlighted=${isHighlighted}`);
+  const isHighlighted = !!(selected || isSelected || isDropTarget);
 
   const handleStyle = {
     width: 14,
@@ -35,6 +49,10 @@ function ServiceNodeComponent({ id, data, selected }: NodeProps<ServiceNodeType>
     border: '2px solid white',
     boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
   };
+
+  const backgroundColor = isDropTarget
+    ? 'var(--mantine-color-green-0)'
+    : 'var(--mantine-color-gray-0)';
 
   return (
     <>
@@ -94,16 +112,10 @@ function ServiceNodeComponent({ id, data, selected }: NodeProps<ServiceNodeType>
         style={{
           width: '100%',
           height: '100%',
-          borderColor: isDropTarget
-            ? 'var(--mantine-color-green-6)'
-            : isHighlighted
-              ? service.color
-              : 'var(--mantine-color-gray-3)',
-          borderWidth: isDropTarget ? 3 : isHighlighted ? 2 : 1,
+          borderColor: getBorderColor(isDropTarget ?? false, isHighlighted, service.color),
+          borderWidth: getBorderWidth(isDropTarget ?? false, isHighlighted),
           cursor: 'grab',
-          backgroundColor: isDropTarget
-            ? 'var(--mantine-color-green-0)'
-            : 'var(--mantine-color-gray-0)',
+          backgroundColor,
           display: 'flex',
           flexDirection: 'column',
           boxShadow: isDropTarget ? '0 0 20px rgba(64, 192, 87, 0.4)' : undefined,

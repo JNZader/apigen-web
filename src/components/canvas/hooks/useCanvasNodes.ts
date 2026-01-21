@@ -2,7 +2,7 @@ import type { Node, NodeChange } from '@xyflow/react';
 import { useNodesState } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { EntityServiceFilter } from '../../../store/layoutStore';
-import { useEntities, useServices } from '../../../store/projectStore';
+import { useEntities, useServiceActions, useServices } from '../../../store/projectStore';
 import type { ServiceDesign } from '../../../types';
 import { CANVAS_VIEWS, type CanvasView } from '../../../utils/canvasConstants';
 
@@ -18,10 +18,6 @@ interface UseCanvasNodesOptions {
   onDeleteEntity: (id: string, name: string) => void;
   onDeleteService: (id: string, name: string) => void;
 }
-
-import { useServiceActions } from '../../../store/projectStore';
-
-// ... existing code ...
 
 export function useCanvasNodes(options: UseCanvasNodesOptions) {
   const {
@@ -242,9 +238,12 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
       return;
     }
 
+    // Pre-compute service map for O(1) lookups (avoids nested functions in map callback)
+    const serviceMap = new Map(services.map((s) => [s.id, s]));
+
     setNodes((currentNodes) =>
       currentNodes.map((node) => {
-        const service = services.find((s) => s.id === node.id);
+        const service = serviceMap.get(node.id);
         if (service && node.type === 'service') {
           const newEntityCount = getEntityCountForService(service);
           const newEntityNames = getEntityNamesForService(service);
@@ -281,13 +280,17 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
       return;
     }
 
+    // Pre-compute entity ID set for O(1) lookups (avoids nested functions in map callback)
+    const entityIdSet = new Set(entities.map((e) => e.id));
+    const selectedEntityIdSet = new Set(selectedEntityIds);
+
     setNodes((currentNodes) =>
       currentNodes.map((node) => {
-        const isEntity = entities.some((e) => e.id === node.id);
+        const isEntity = entityIdSet.has(node.id);
         if (isEntity) {
           // Entity is selected if it's the primary selection OR in multi-selection
           const newIsSelected =
-            selectedEntityId === node.id || selectedEntityIds.includes(node.id);
+            selectedEntityId === node.id || selectedEntityIdSet.has(node.id);
           // Always return updated node to ensure selection state is consistent
           return {
             ...node,
