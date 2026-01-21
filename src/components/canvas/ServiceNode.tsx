@@ -202,7 +202,7 @@ function ServiceNodeComponent({ id, data, selected }: NodeProps<ServiceNodeType>
               >
                 {isDropTarget
                   ? 'Drop here to assign entity'
-                  : 'Drag entities here or click Configure'}
+                  : 'Click Configure to assign entities'}
               </Text>
             </Stack>
           )}
