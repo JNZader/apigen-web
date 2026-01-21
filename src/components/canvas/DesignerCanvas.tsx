@@ -21,15 +21,21 @@ import {
   useServiceConnections,
   useServices,
 } from '../../store/projectStore';
-import type { ServiceConnectionDesign } from '../../types';
 import { CANVAS, CANVAS_VIEWS } from '../../utils/canvasConstants';
-import { calculateAutoLayout, LAYOUT_PRESETS } from '../../utils/canvasLayout';
 import { ServiceConnectionForm } from '../ServiceConnectionForm';
 import { CanvasEmptyStates, CanvasHelpTip } from './CanvasEmptyStates';
 import { CanvasToolbar } from './CanvasToolbar';
 import { buildEntityViewDescription, buildServicesViewDescription } from './canvasAccessibility';
 import { EntityNode } from './EntityNode';
-import { useCanvasConnections, useCanvasEdges, useCanvasNodes, useNodeDragHandlers } from './hooks';
+import {
+  useAutoLayout,
+  useCanvasConnections,
+  useCanvasEdges,
+  useCanvasNodes,
+  useNodeDragHandlers,
+  useNodeSelection,
+  useServiceConnectionForm,
+} from './hooks';
 import { RelationEdge } from './RelationEdge';
 import { ServiceConnectionEdge } from './ServiceConnectionEdge';
 import { ServiceNode } from './ServiceNode';
@@ -86,18 +92,15 @@ export function DesignerCanvas({
   // Track which service is being hovered during entity drag (for visual feedback)
   const [dropTargetServiceId, setDropTargetServiceId] = useState<string | null>(null);
 
-  // State for service connection form
-  const [connectionFormOpened, setConnectionFormOpened] = useState(false);
-  const [pendingConnection, setPendingConnection] = useState<{
-    sourceServiceId: string;
-    targetServiceId: string;
-  } | null>(null);
-  const [editingConnectionId, setEditingConnectionId] = useState<string | null>(null);
-
-  // Get the editing connection from store
-  const editingConnection: ServiceConnectionDesign | null = editingConnectionId
-    ? (serviceConnections.find((c) => c.id === editingConnectionId) ?? null)
-    : null;
+  // Service connection form state management
+  const {
+    connectionFormOpened,
+    pendingConnection,
+    editingConnection,
+    handlePendingServiceConnection,
+    handleEditServiceConnection,
+    handleCloseConnectionForm,
+  } = useServiceConnectionForm({ serviceConnections });
 
   // Memoize delete handler to avoid recreation on every render
   const handleDeleteEntity = useCallback(
@@ -128,30 +131,6 @@ export function DesignerCanvas({
     },
     [removeService],
   );
-
-  // Handler for when user drags to create a new service connection
-  const handlePendingServiceConnection = useCallback(
-    (pending: { sourceServiceId: string; targetServiceId: string }) => {
-      setPendingConnection(pending);
-      setEditingConnectionId(null);
-      setConnectionFormOpened(true);
-    },
-    [],
-  );
-
-  // Handler for editing an existing service connection
-  const handleEditServiceConnection = useCallback((connectionId: string) => {
-    setEditingConnectionId(connectionId);
-    setPendingConnection(null);
-    setConnectionFormOpened(true);
-  }, []);
-
-  // Handler for closing the connection form
-  const handleCloseConnectionForm = useCallback(() => {
-    setConnectionFormOpened(false);
-    setPendingConnection(null);
-    setEditingConnectionId(null);
-  }, []);
 
   // Use custom hooks for nodes and edges
   const { nodes, setNodes, onNodesChange, isDraggingRef } = useCanvasNodes({
@@ -194,21 +173,25 @@ export function DesignerCanvas({
     onPendingServiceConnection: handlePendingServiceConnection,
   });
 
+  // Use custom hook for node selection
+  const { onNodeClick, onPaneClick } = useNodeSelection({
+    entities,
+    services,
+    onSelectEntity,
+    selectService,
+    toggleEntitySelection,
+    clearEntitySelection,
+  });
+
   // Auto-apply layout when needed (e.g., after importing entities)
-  useEffect(() => {
-    if (needsAutoLayout && entities.length > 0) {
-      const positions = calculateAutoLayout(entities, relations, LAYOUT_PRESETS[layoutPreference]);
-      updateEntityPositions(positions);
-      setNeedsAutoLayout(false);
-    }
-  }, [
-    needsAutoLayout,
+  useAutoLayout({
     entities,
     relations,
     layoutPreference,
+    needsAutoLayout,
     updateEntityPositions,
     setNeedsAutoLayout,
-  ]);
+  });
 
   // Cleanup expanded state for deleted entities (prevents memory leaks)
   const cleanupDeletedEntities = useCanvasUIStore((state) => state.cleanupDeletedEntities);
@@ -216,38 +199,6 @@ export function DesignerCanvas({
     const entityIds = entities.map((e) => e.id);
     cleanupDeletedEntities(entityIds);
   }, [entities, cleanupDeletedEntities]);
-
-  // Handle node selection (supports Ctrl+Click for multi-select)
-  const onNodeClick = useCallback(
-    (event: React.MouseEvent, node: Node) => {
-      const isEntity = entities.some((e) => e.id === node.id);
-      const isService = services.some((s) => s.id === node.id);
-
-      if (isEntity) {
-        if (event.ctrlKey || event.metaKey) {
-          // Ctrl+Click: Toggle multi-selection
-          toggleEntitySelection(node.id);
-          selectService(null);
-        } else {
-          // Normal click: Single selection (clears multi-selection)
-          onSelectEntity(node.id);
-          selectService(null);
-        }
-      } else if (isService) {
-        selectService(node.id);
-        onSelectEntity(null);
-        clearEntitySelection();
-      }
-    },
-    [entities, services, onSelectEntity, selectService, toggleEntitySelection, clearEntitySelection],
-  );
-
-  // Handle canvas click (deselect)
-  const onPaneClick = useCallback(() => {
-    onSelectEntity(null);
-    selectService(null);
-    clearEntitySelection();
-  }, [onSelectEntity, selectService, clearEntitySelection]);
 
   // Memoized nodeColor callback for MiniMap
   const getNodeColor = useCallback(
@@ -367,7 +318,7 @@ export function DesignerCanvas({
       {/* Service Connection Form for creating/editing connections */}
       <ServiceConnectionForm
         key={
-          editingConnectionId ??
+          editingConnection?.id ??
           `${pendingConnection?.sourceServiceId}-${pendingConnection?.targetServiceId}`
         }
         opened={connectionFormOpened}
