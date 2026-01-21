@@ -27,6 +27,7 @@
     "@mantine/modals": "^8.3.12",
     "@mantine/notifications": "^8.3.12",
     "@tabler/icons-react": "^3.36.1",
+    "@vercel/analytics": "^1.6.1",
     "@xyflow/react": "^12.10.0",
     "file-saver": "^2.0.5",
     "html-to-image": "^1.11.13",
