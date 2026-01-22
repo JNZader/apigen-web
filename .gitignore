@@ -41,6 +41,10 @@ dist-ssr
 # Test coverage
 coverage/
 
+# Playwright
+playwright-report/
+test-results/
+
 # Misc
 cookies.txt
 nul
