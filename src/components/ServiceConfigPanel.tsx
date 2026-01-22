@@ -8,7 +8,6 @@ import {
   Grid,
   Group,
   NumberInput,
-  ScrollArea,
   Select,
   Stack,
   Tabs,
@@ -25,9 +24,15 @@ import {
   IconSettings,
   IconShield,
 } from '@tabler/icons-react';
-import { useCallback, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { useCallback, useRef, useState } from 'react';
 import { useEntities, useServiceActions, useServices } from '../store/projectStore';
 import type { ServiceConfig, ServiceDatabaseType, ServiceDiscoveryType } from '../types';
+
+// Estimated row height for entity checkbox items
+const ENTITY_ROW_HEIGHT = 72;
+// Threshold for enabling virtualization
+const VIRTUALIZATION_THRESHOLD = 15;
 
 interface ServiceConfigPanelProps {
   serviceId: string | null;
@@ -88,6 +93,9 @@ export function ServiceConfigPanel({
     [services, serviceId],
   );
 
+  // Ref for the scrollable container (virtualization)
+  const parentRef = useRef<HTMLDivElement>(null);
+
   // Initialize state directly from service - use key prop at usage site to reset
   const [name, setName] = useState(service?.name ?? '');
   const [description, setDescription] = useState(service?.description ?? '');
@@ -131,6 +139,20 @@ export function ServiceConfigPanel({
       removeEntityFromService(entityId, serviceId);
     }
   };
+
+  // Only use virtualization for large entity lists
+  const shouldVirtualize = entities.length > VIRTUALIZATION_THRESHOLD;
+
+  // Virtual list configuration for entity checkboxes
+  const virtualizer = useVirtualizer({
+    count: entities.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => ENTITY_ROW_HEIGHT,
+    overscan: 3,
+    enabled: shouldVirtualize,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
 
   if (!service) return null;
 
@@ -217,46 +239,119 @@ export function ServiceConfigPanel({
                   </Text>
                 </Box>
               ) : (
-                <ScrollArea.Autosize mah={300}>
-                  <Stack gap="xs">
-                    {entities.map((entity) => {
-                      const isAssigned = service.entityIds.includes(entity.id);
-                      const otherServiceName = getEntityServiceName(entity.id);
+                /* Scrollable container for entity list */
+                <div
+                  ref={parentRef}
+                  style={{
+                    maxHeight: 300,
+                    overflow: 'auto',
+                    contain: 'strict',
+                  }}
+                >
+                  {/* Non-virtualized rendering for small lists */}
+                  {!shouldVirtualize && (
+                    <Stack gap="xs">
+                      {entities.map((entity) => {
+                        const isAssigned = service.entityIds.includes(entity.id);
+                        const otherServiceName = getEntityServiceName(entity.id);
 
-                      return (
-                        <Box
-                          key={entity.id}
-                          p="sm"
-                          style={{
-                            border: '1px solid var(--mantine-color-default-border)',
-                            borderRadius: 'var(--mantine-radius-sm)',
-                            backgroundColor: isAssigned
-                              ? 'var(--mantine-color-blue-light)'
-                              : undefined,
-                          }}
-                        >
-                          <Group justify="space-between">
-                            <Checkbox
-                              label={
-                                <Group gap="xs">
-                                  <Text fw={500}>{entity.name}</Text>
-                                  <Badge size="xs" variant="light" color="gray">
-                                    {entity.fields.length} fields
-                                  </Badge>
-                                </Group>
-                              }
-                              checked={isAssigned}
-                              onChange={(e) =>
-                                handleEntityToggle(entity.id, e.currentTarget.checked)
-                              }
-                              description={getEntityDescription(otherServiceName, entity.tableName)}
-                            />
-                          </Group>
-                        </Box>
-                      );
-                    })}
-                  </Stack>
-                </ScrollArea.Autosize>
+                        return (
+                          <Box
+                            key={entity.id}
+                            p="sm"
+                            style={{
+                              border: '1px solid var(--mantine-color-default-border)',
+                              borderRadius: 'var(--mantine-radius-sm)',
+                              backgroundColor: isAssigned
+                                ? 'var(--mantine-color-blue-light)'
+                                : undefined,
+                            }}
+                          >
+                            <Group justify="space-between">
+                              <Checkbox
+                                label={
+                                  <Group gap="xs">
+                                    <Text fw={500}>{entity.name}</Text>
+                                    <Badge size="xs" variant="light" color="gray">
+                                      {entity.fields.length} fields
+                                    </Badge>
+                                  </Group>
+                                }
+                                checked={isAssigned}
+                                onChange={(e) =>
+                                  handleEntityToggle(entity.id, e.currentTarget.checked)
+                                }
+                                description={getEntityDescription(otherServiceName, entity.tableName)}
+                              />
+                            </Group>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  )}
+
+                  {/* Virtualized rendering for large lists */}
+                  {shouldVirtualize && (
+                    <div
+                      style={{
+                        height: virtualizer.getTotalSize(),
+                        width: '100%',
+                        position: 'relative',
+                      }}
+                    >
+                      {virtualItems.map((virtualRow) => {
+                        const entity = entities[virtualRow.index];
+                        const isAssigned = service.entityIds.includes(entity.id);
+                        const otherServiceName = getEntityServiceName(entity.id);
+
+                        return (
+                          <div
+                            key={entity.id}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: `${virtualRow.size}px`,
+                              transform: `translateY(${virtualRow.start}px)`,
+                            }}
+                          >
+                            <Box
+                              p="sm"
+                              style={{
+                                border: '1px solid var(--mantine-color-default-border)',
+                                borderRadius: 'var(--mantine-radius-sm)',
+                                backgroundColor: isAssigned
+                                  ? 'var(--mantine-color-blue-light)'
+                                  : undefined,
+                                height: '100%',
+                                boxSizing: 'border-box',
+                              }}
+                            >
+                              <Group justify="space-between">
+                                <Checkbox
+                                  label={
+                                    <Group gap="xs">
+                                      <Text fw={500}>{entity.name}</Text>
+                                      <Badge size="xs" variant="light" color="gray">
+                                        {entity.fields.length} fields
+                                      </Badge>
+                                    </Group>
+                                  }
+                                  checked={isAssigned}
+                                  onChange={(e) =>
+                                    handleEntityToggle(entity.id, e.currentTarget.checked)
+                                  }
+                                  description={getEntityDescription(otherServiceName, entity.tableName)}
+                                />
+                              </Group>
+                            </Box>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               )}
 
               <Text size="xs" c="dimmed">
