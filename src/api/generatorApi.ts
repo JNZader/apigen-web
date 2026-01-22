@@ -1,5 +1,6 @@
 /**
  * API client for the APiGen Server.
+ * Uses centralized API client with AbortController, retry, and Zod validation.
  */
 import type {
   ApiVersioningConfig,
@@ -23,9 +24,26 @@ import type {
   SecurityConfig,
   WebhooksConfig,
 } from '../types';
+import { createApiClient, type ApiClient } from './apiClient';
+import {
+  GenerateResponseSchema,
+  HealthResponseSchema,
+  type GenerateResponse,
+  type HealthResponse,
+} from './schemas';
 
 // Default to localhost:8081, can be overridden via environment variable
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+// Create the API client instance
+const apiClient: ApiClient = createApiClient({
+  baseUrl: API_BASE_URL,
+  timeoutMs: 60000, // 60 seconds for generation requests
+  maxRetries: 2,
+  defaultHeaders: {
+    Accept: 'application/json',
+  },
+});
 
 export interface ProjectConfig {
   name: string;
@@ -60,95 +78,67 @@ export interface GenerateRequest {
   sql: string;
 }
 
-export interface GenerationStats {
-  tablesProcessed: number;
-  entitiesGenerated: number;
-  filesGenerated: number;
-  generationTimeMs: number;
-}
-
-export interface GenerateResponse {
-  success: boolean;
-  message: string;
-  generatedFiles: string[];
-  warnings: string[];
-  errors: string[];
-  stats?: GenerationStats;
-}
-
-export interface HealthResponse {
-  status: string;
-  message: string;
-}
+// Re-export types from schemas for backwards compatibility
+export type { GenerateResponse, HealthResponse } from './schemas';
+export type { GenerationStats } from './schemas';
 
 /**
  * Check if the APiGen Server is available.
+ * Uses Zod validation to ensure response structure.
  */
-export async function checkHealth(): Promise<HealthResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/health`, {
-    method: 'GET',
+export async function checkHealth(signal?: AbortSignal): Promise<HealthResponse> {
+  const response = await apiClient.get<HealthResponse>('/api/health', {
+    schema: HealthResponseSchema,
+    signal,
+    timeoutMs: 10000, // 10 second timeout for health checks
+    maxRetries: 1,
   });
 
-  if (!response.ok) {
-    throw new Error(`Health check failed: ${response.status}`);
-  }
-
-  return response.json();
+  return response.data;
 }
 
 /**
  * Validate SQL schema without generating code.
+ * Uses Zod validation to ensure response structure.
  */
-export async function validateSchema(request: GenerateRequest): Promise<GenerateResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/validate`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(request),
+export async function validateSchema(
+  request: GenerateRequest,
+  signal?: AbortSignal,
+): Promise<GenerateResponse> {
+  const response = await apiClient.post<GenerateResponse>('/api/validate', request, {
+    schema: GenerateResponseSchema,
+    signal,
   });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || 'Validation failed');
-  }
-
-  return response.json();
+  return response.data;
 }
 
 /**
  * Generate a Spring Boot project and download as ZIP.
+ * Returns raw blob (no Zod validation for binary data).
  */
-export async function generateProject(request: GenerateRequest): Promise<Blob> {
-  const response = await fetch(`${API_BASE_URL}/api/generate`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(request),
+export async function generateProject(request: GenerateRequest, signal?: AbortSignal): Promise<Blob> {
+  const response = await apiClient.post<Blob>('/api/generate', request, {
+    responseType: 'blob',
+    signal,
+    timeoutMs: 120000, // 2 minute timeout for generation
+    skipRetry: true, // Don't retry generation requests (could cause duplicate work)
   });
 
-  if (!response.ok) {
-    // Try to get error message from response body
-    const contentType = response.headers.get('content-type');
-    if (contentType?.includes('application/json')) {
-      const error = await response.json();
-      throw new Error(error.message || error.errors?.join(', ') || 'Generation failed');
-    }
-    throw new Error(`Generation failed: ${response.status} ${response.statusText}`);
-  }
-
-  return response.blob();
+  return response.data;
 }
 
 /**
  * Check if the server is available.
  */
-export async function isServerAvailable(): Promise<boolean> {
+export async function isServerAvailable(signal?: AbortSignal): Promise<boolean> {
   try {
-    await checkHealth();
+    await checkHealth(signal);
     return true;
   } catch {
     return false;
   }
 }
+
+// Export error types for use in components
+export { ApiError, TimeoutError } from './apiClient';
