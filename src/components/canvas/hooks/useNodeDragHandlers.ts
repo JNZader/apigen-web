@@ -28,7 +28,7 @@ interface UseNodeDragHandlersOptions {
 
 export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
   const {
-    canvasView: _canvasView, // Not used after BOTH view removal
+    canvasView: _canvasView, // No longer used after BOTH view removal
     entities,
     services,
     selectedEntityId: _selectedEntityId, // Kept for interface compatibility; fresh value read from store
@@ -37,7 +37,7 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
     isDraggingRef,
     setNodes: _setNodes, // Kept for interface compatibility
     onNodesChange,
-    setDropTargetServiceId,
+    setDropTargetServiceId: _setDropTargetServiceId, // No longer used after BOTH view removal
   } = options;
 
   const { updateService } = useServiceActions();
@@ -76,10 +76,11 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
   }, [services]);
 
   // Check if a position is inside a service's bounds
-  // Uses the center of the entity node for more intuitive detection
-  const findServiceAtPosition = useCallback(
+  // Uses center of entity node for more intuitive detection
+  // Note: Currently unused after BOTH view removal, but kept for potential future use
+  const _findServiceAtPosition = useCallback(
     (position: { x: number; y: number }): ServiceDesign | null => {
-      // Calculate the center of the entity node
+      // Calculate center of entity node
       const centerX = position.x + ENTITY_NODE.WIDTH / 2;
       const centerY = position.y + ENTITY_NODE.MIN_HEIGHT / 2;
 
@@ -183,7 +184,7 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
         services,
       );
 
-      // Apply the adjusted changes to ReactFlow
+      // Apply adjusted changes to ReactFlow
       onNodesChange(adjustedChanges);
 
       // Debounce store updates
@@ -220,17 +221,14 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
       // Mark drag as ended
       isDraggingRef.current = false;
       isDragInProgress.current = false;
-
-      // Clear drop target visual feedback
-      setDropTargetServiceId(null);
     },
-    [isDraggingRef, setDropTargetServiceId],
+    [isDraggingRef],
   );
 
   return {
     handleNodesChange,
     handleNodeDrag,
     handleNodeDragStop,
-    findServiceAtPosition,
+    findServiceAtPosition: _findServiceAtPosition,
   };
 }
