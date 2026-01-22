@@ -1,5 +1,8 @@
 import {
+  Alert,
   Button,
+  Collapse,
+  Divider,
   Group,
   Modal,
   NumberInput,
@@ -11,6 +14,7 @@ import {
   TagsInput,
   Text,
   TextInput,
+  Title,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
@@ -21,6 +25,7 @@ import {
   IconEye,
   IconFileText,
   IconGlobe,
+  IconInfoCircle,
   IconNetwork,
   IconRefresh,
   IconRocket,
@@ -88,20 +93,17 @@ function BasicSettingsForm({ form }: { form: ReturnType<typeof useForm<ProjectCo
       <Select
         label="Java Version"
         data={[
-          { value: '17', label: 'Java 17' },
           { value: '21', label: 'Java 21 (LTS)' },
+          { value: '25', label: 'Java 25' },
         ]}
         {...form.getInputProps('javaVersion')}
       />
 
-      <Select
-        label="Spring Boot Version"
-        data={[
-          { value: '3.2.0', label: '3.2.0' },
-          { value: '3.1.0', label: '3.1.0' },
-        ]}
-        {...form.getInputProps('springBootVersion')}
-      />
+      <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+        <Text size="sm">
+          Spring Boot version is determined by APiGen Core (currently 4.0.0)
+        </Text>
+      </Alert>
     </Stack>
   );
 }
@@ -115,39 +117,55 @@ function DatabaseSettingsForm({ form }: { form: ReturnType<typeof useForm<Projec
       <Select
         label="Database Type"
         data={[
-          { value: 'POSTGRESQL', label: 'PostgreSQL' },
-          { value: 'MYSQL', label: 'MySQL' },
-          { value: 'H2', label: 'H2 (Embedded)' },
+          { value: 'postgresql', label: 'PostgreSQL' },
+          { value: 'mysql', label: 'MySQL' },
+          { value: 'mariadb', label: 'MariaDB' },
+          { value: 'h2', label: 'H2 (Embedded)' },
+          { value: 'oracle', label: 'Oracle' },
+          { value: 'sqlserver', label: 'SQL Server' },
+          { value: 'mongodb', label: 'MongoDB' },
         ]}
         {...form.getInputProps('database.type')}
       />
 
-      <TextInput
-        label="Database Name"
-        placeholder="myapp"
-        {...form.getInputProps('database.name')}
-      />
-
-      <TextInput
-        label="Username"
-        placeholder="postgres"
-        {...form.getInputProps('database.username')}
-      />
-
-      <TextInput
-        label="Password"
-        placeholder="password"
-        type="password"
-        {...form.getInputProps('database.password')}
-      />
-
-      <TextInput label="Host" placeholder="localhost" {...form.getInputProps('database.host')} />
-
-      <NumberInput label="Port" placeholder="5432" {...form.getInputProps('database.port')} />
-
       <Switch
-        label="Enable Flyway migrations"
-        {...form.getInputProps('database.enableFlyway', { type: 'checkbox' })}
+        label="Generate Migrations"
+        description="Generate Flyway/Liquibase migrations"
+        {...form.getInputProps('database.generateMigrations', { type: 'checkbox' })}
+      />
+
+      <Divider label="Connection Pool (HikariCP)" labelPosition="left" mt="md" />
+
+      <NumberInput
+        label="Maximum Pool Size"
+        description="Maximum number of connections in the pool"
+        min={1}
+        max={100}
+        {...form.getInputProps('database.hikari.maximumPoolSize')}
+      />
+
+      <NumberInput
+        label="Minimum Idle"
+        description="Minimum number of idle connections to maintain"
+        min={0}
+        max={50}
+        {...form.getInputProps('database.hikari.minimumIdle')}
+      />
+
+      <NumberInput
+        label="Connection Timeout (ms)"
+        description="Maximum time to wait for a connection"
+        min={1000}
+        step={1000}
+        {...form.getInputProps('database.hikari.connectionTimeoutMs')}
+      />
+
+      <NumberInput
+        label="Idle Timeout (ms)"
+        description="Maximum time a connection can remain idle"
+        min={10000}
+        step={1000}
+        {...form.getInputProps('database.hikari.idleTimeoutMs')}
       />
     </Stack>
   );
@@ -160,35 +178,181 @@ function SecuritySettingsForm({ form }: { form: ReturnType<typeof useForm<Projec
   return (
     <Stack>
       <Switch
-        label="Enable JWT Authentication"
-        {...form.getInputProps('securityConfig.jwt.enabled', { type: 'checkbox' })}
+        label="Enable Security Module"
+        description="Enable authentication and authorization"
+        {...form.getInputProps('modules.security', { type: 'checkbox' })}
       />
 
-      <TextInput
-        label="JWT Secret"
-        placeholder="your-secret-key-here"
-        {...form.getInputProps('securityConfig.jwt.secret')}
-      />
+      <Collapse in={form.values.modules.security}>
+        <Stack mt="md">
+          <Select
+            label="Security Mode"
+            description="Authentication/authorization approach"
+            data={[
+              { value: 'jwt', label: 'JWT (JSON Web Tokens)' },
+              { value: 'oauth2', label: 'OAuth2 / OpenID Connect' },
+            ]}
+            {...form.getInputProps('securityConfig.mode')}
+          />
 
-      <NumberInput
-        label="Token Expiration (minutes)"
-        {...form.getInputProps('securityConfig.jwt.expirationMinutes')}
-      />
+          <Collapse in={form.values.securityConfig.mode === 'jwt'}>
+            <Stack mt="md">
+              <Title order={6}>JWT Configuration</Title>
+              <Select
+                label="Secret Key Length"
+                data={[
+                  { value: '32', label: '32 bytes (256-bit)' },
+                  { value: '64', label: '64 bytes (512-bit)' },
+                  { value: '128', label: '128 bytes (1024-bit)' },
+                ]}
+                {...form.getInputProps('securityConfig.jwtSecretLength')}
+              />
+              <NumberInput
+                label="Access Token Expiration (minutes)"
+                min={1}
+                {...form.getInputProps('securityConfig.accessTokenExpiration')}
+              />
+              <NumberInput
+                label="Refresh Token Expiration (days)"
+                min={1}
+                {...form.getInputProps('securityConfig.refreshTokenExpiration')}
+              />
+              <Switch
+                label="Enable Refresh Token"
+                description="Allow token refresh without re-authentication"
+                {...form.getInputProps('securityConfig.enableRefreshToken', { type: 'checkbox' })}
+              />
+              <Switch
+                label="Enable Token Blacklist"
+                description="Support logout/token revocation"
+                {...form.getInputProps('securityConfig.enableTokenBlacklist', { type: 'checkbox' })}
+              />
+              <Switch
+                label="Enable Key Rotation"
+                description="Seamless key rotation without invalidating tokens"
+                {...form.getInputProps('securityConfig.keyRotation.enabled', { type: 'checkbox' })}
+              />
+            </Stack>
+          </Collapse>
 
-      <Switch
-        label="Enable OAuth2"
-        {...form.getInputProps('securityConfig.oauth2.enabled', { type: 'checkbox' })}
-      />
+          <Collapse in={form.values.securityConfig.mode === 'oauth2'}>
+            <Stack mt="md">
+              <Title order={6}>OAuth2 Configuration</Title>
+              <TextInput
+                label="Issuer URI"
+                placeholder="https://auth.example.com"
+                description="OAuth 2.0 issuer URI"
+                {...form.getInputProps('securityConfig.oauth2.issuerUri')}
+              />
+              <TextInput
+                label="Audience"
+                placeholder="api://my-api"
+                description="Expected audience claim value"
+                {...form.getInputProps('securityConfig.oauth2.audience')}
+              />
+              <TextInput
+                label="Roles Claim"
+                placeholder="permissions"
+                description="JWT claim containing user roles"
+                {...form.getInputProps('securityConfig.oauth2.rolesClaim')}
+              />
+              <TextInput
+                label="Role Prefix"
+                placeholder="ROLE_"
+                description="Prefix to add to roles"
+                {...form.getInputProps('securityConfig.oauth2.rolePrefix')}
+              />
+              <TextInput
+                label="Username Claim"
+                placeholder="sub"
+                description="JWT claim containing username"
+                {...form.getInputProps('securityConfig.oauth2.usernameClaim')}
+              />
+              <Switch
+                label="Enable PKCE"
+                description="Proof Key for Code Exchange (recommended)"
+                {...form.getInputProps('securityConfig.pkce.enabled', { type: 'checkbox' })}
+              />
+            </Stack>
+          </Collapse>
 
-      <Switch
-        label="Enable Basic Authentication"
-        {...form.getInputProps('securityConfig.basicAuth.enabled', { type: 'checkbox' })}
-      />
+          <Divider label="Password Policy" labelPosition="left" mt="md" />
 
-      <Switch
-        label="Enable API Keys"
-        {...form.getInputProps('securityConfig.apiKey.enabled', { type: 'checkbox' })}
-      />
+          <NumberInput
+            label="Minimum Password Length"
+            min={6}
+            max={128}
+            {...form.getInputProps('securityConfig.passwordMinLength')}
+          />
+
+          <NumberInput
+            label="Max Login Attempts"
+            description="Attempts before account lockout"
+            min={1}
+            max={20}
+            {...form.getInputProps('securityConfig.maxLoginAttempts')}
+          />
+
+          <NumberInput
+            label="Lockout Duration (minutes)"
+            min={1}
+            {...form.getInputProps('securityConfig.lockoutMinutes')}
+          />
+
+          <Divider label="Security Headers" labelPosition="left" mt="md" />
+
+          <Switch
+            label="Enable HSTS"
+            description="HTTP Strict Transport Security"
+            {...form.getInputProps('securityConfig.headers.hstsEnabled', { type: 'checkbox' })}
+          />
+
+          <Collapse in={form.values.securityConfig.headers.hstsEnabled}>
+            <Stack mt="sm">
+              <NumberInput
+                label="HSTS Max Age (seconds)"
+                min={0}
+                {...form.getInputProps('securityConfig.headers.hstsMaxAgeSeconds')}
+              />
+              <Switch
+                label="Include Subdomains"
+                {...form.getInputProps('securityConfig.headers.hstsIncludeSubdomains', { type: 'checkbox' })}
+              />
+              <Switch
+                label="Enable Preload"
+                {...form.getInputProps('securityConfig.headers.hstsPreload', { type: 'checkbox' })}
+              />
+            </Stack>
+          </Collapse>
+
+          <TextInput
+            label="Content Security Policy"
+            placeholder="default-src 'self'"
+            {...form.getInputProps('securityConfig.headers.contentSecurityPolicy')}
+          />
+
+          <TextInput
+            label="Permissions Policy"
+            placeholder="geolocation=(), camera=(), microphone=()"
+            {...form.getInputProps('securityConfig.headers.permissionsPolicy')}
+          />
+
+          <Select
+            label="Referrer Policy"
+            data={[
+              { value: 'no-referrer', label: 'No Referrer' },
+              { value: 'no-referrer-when-downgrade', label: 'No Referrer When Downgrade' },
+              { value: 'origin', label: 'Origin' },
+              { value: 'origin-when-cross-origin', label: 'Origin When Cross-Origin' },
+              { value: 'same-origin', label: 'Same Origin' },
+              { value: 'strict-origin', label: 'Strict Origin' },
+              { value: 'strict-origin-when-cross-origin', label: 'Strict Origin When Cross-Origin' },
+              { value: 'unsafe-url', label: 'Unsafe URL' },
+            ]}
+            {...form.getInputProps('securityConfig.headers.referrerPolicy')}
+          />
+        </Stack>
+      </Collapse>
     </Stack>
   );
 }
@@ -201,37 +365,69 @@ function RateLimitSettingsForm({ form }: { form: ReturnType<typeof useForm<Proje
     <Stack>
       <Switch
         label="Enable Rate Limiting"
-        {...form.getInputProps('rateLimitConfig.enabled', { type: 'checkbox' })}
+        {...form.getInputProps('features.rateLimiting', { type: 'checkbox' })}
       />
 
-      <NumberInput
-        label="Requests per Second"
-        description="Maximum requests per second per client"
-        {...form.getInputProps('rateLimitConfig.requestsPerSecond')}
-      />
+      <Collapse in={form.values.features.rateLimiting}>
+        <Stack mt="md">
+          <Select
+            label="Storage Mode"
+            description="Where to store rate limit counters"
+            data={[
+              { value: 'IN_MEMORY', label: 'In-Memory (single instance)' },
+              { value: 'REDIS', label: 'Redis (distributed)' },
+            ]}
+            {...form.getInputProps('rateLimitConfig.storageMode')}
+          />
 
-      <NumberInput
-        label="Requests per Minute"
-        description="Maximum requests per minute per client"
-        {...form.getInputProps('rateLimitConfig.requestsPerMinute')}
-      />
+          <NumberInput
+            label="Requests per Second"
+            description="Maximum requests per second per client"
+            min={1}
+            {...form.getInputProps('rateLimitConfig.requestsPerSecond')}
+          />
 
-      <NumberInput
-        label="Requests per Hour"
-        description="Maximum requests per hour per client"
-        {...form.getInputProps('rateLimitConfig.requestsPerHour')}
-      />
+          <NumberInput
+            label="Burst Capacity"
+            description="Maximum burst requests allowed"
+            min={1}
+            {...form.getInputProps('rateLimitConfig.burstCapacity')}
+          />
 
-      <Select
-        label="Strategy"
-        data={[
-          { value: 'FIXED_WINDOW', label: 'Fixed Window' },
-          { value: 'SLIDING_WINDOW', label: 'Sliding Window' },
-          { value: 'TOKEN_BUCKET', label: 'Token Bucket' },
-          { value: 'LEAKY_BUCKET', label: 'Leaky Bucket' },
-        ]}
-        {...form.getInputProps('rateLimitConfig.strategy')}
-      />
+          <Divider label="Authentication Endpoints" labelPosition="left" />
+
+          <NumberInput
+            label="Auth Requests per Minute"
+            description="Maximum authentication requests per minute"
+            min={1}
+            {...form.getInputProps('rateLimitConfig.authRequestsPerMinute')}
+          />
+
+          <NumberInput
+            label="Auth Burst Capacity"
+            description="Maximum auth burst requests allowed"
+            min={1}
+            {...form.getInputProps('rateLimitConfig.authBurstCapacity')}
+          />
+
+          <NumberInput
+            label="Block Duration (seconds)"
+            description="How long to block when rate limit exceeded"
+            min={1}
+            {...form.getInputProps('rateLimitConfig.blockDurationSeconds')}
+          />
+
+          <Switch
+            label="Enable Per-User Rate Limiting"
+            {...form.getInputProps('rateLimitConfig.enablePerUser', { type: 'checkbox' })}
+          />
+
+          <Switch
+            label="Enable Per-Endpoint Rate Limiting"
+            {...form.getInputProps('rateLimitConfig.enablePerEndpoint', { type: 'checkbox' })}
+          />
+        </Stack>
+      </Collapse>
     </Stack>
   );
 }
@@ -244,41 +440,82 @@ function CacheSettingsForm({ form }: { form: ReturnType<typeof useForm<ProjectCo
     <Stack>
       <Switch
         label="Enable Caching"
-        {...form.getInputProps('cacheConfig.enabled', { type: 'checkbox' })}
+        {...form.getInputProps('features.caching', { type: 'checkbox' })}
       />
 
-      <Select
-        label="Cache Provider"
-        data={[
-          { value: 'REDIS', label: 'Redis' },
-          { value: 'CAFFEINE', label: 'Caffeine (In-memory)' },
-          { value: 'EHCACHE', label: 'EhCache' },
-        ]}
-        {...form.getInputProps('cacheConfig.provider')}
-      />
+      <Collapse in={form.values.features.caching}>
+        <Stack mt="md">
+          <Select
+            label="Cache Provider"
+            data={[
+              { value: 'local', label: 'Caffeine (In-memory)' },
+              { value: 'redis', label: 'Redis' },
+            ]}
+            {...form.getInputProps('cacheConfig.type')}
+          />
 
-      <TextInput
-        label="Redis Host"
-        placeholder="localhost"
-        {...form.getInputProps('cacheConfig.redis.host')}
-      />
+          <Divider label="Entity Cache Settings" labelPosition="left" />
 
-      <NumberInput
-        label="Redis Port"
-        placeholder="6379"
-        {...form.getInputProps('cacheConfig.redis.port')}
-      />
+          <NumberInput
+            label="Entity Cache Max Size"
+            description="Maximum number of cached entries"
+            min={100}
+            {...form.getInputProps('cacheConfig.entities.maxSize')}
+          />
 
-      <TextInput
-        label="Redis Password"
-        type="password"
-        {...form.getInputProps('cacheConfig.redis.password')}
-      />
+          <NumberInput
+            label="Entity TTL (minutes)"
+            description="Time-to-live for entity cache entries"
+            min={1}
+            {...form.getInputProps('cacheConfig.entities.expireAfterWriteMinutes')}
+          />
 
-      <Switch
-        label="Enable Cache Metrics"
-        {...form.getInputProps('cacheConfig.metrics.enabled', { type: 'checkbox' })}
-      />
+          <Divider label="List Cache Settings" labelPosition="left" />
+
+          <NumberInput
+            label="List Cache Max Size"
+            description="Maximum number of cached list entries"
+            min={10}
+            {...form.getInputProps('cacheConfig.lists.maxSize')}
+          />
+
+          <NumberInput
+            label="List TTL (minutes)"
+            description="Time-to-live for list cache entries"
+            min={1}
+            {...form.getInputProps('cacheConfig.lists.expireAfterWriteMinutes')}
+          />
+
+          <Collapse in={form.values.cacheConfig.type === 'redis'}>
+            <Stack mt="md">
+              <Divider label="Redis Configuration" labelPosition="left" />
+              <TextInput
+                label="Redis Host"
+                placeholder="localhost"
+                {...form.getInputProps('cacheConfig.redis.host')}
+              />
+              <NumberInput
+                label="Redis Port"
+                min={1}
+                max={65535}
+                {...form.getInputProps('cacheConfig.redis.port')}
+              />
+              <TextInput
+                label="Key Prefix"
+                placeholder="apigen:"
+                description="Prefix for all cache keys"
+                {...form.getInputProps('cacheConfig.redis.keyPrefix')}
+              />
+              <NumberInput
+                label="Default TTL (minutes)"
+                description="Default time-to-live for cache entries"
+                min={1}
+                {...form.getInputProps('cacheConfig.redis.ttlMinutes')}
+              />
+            </Stack>
+          </Collapse>
+        </Stack>
+      </Collapse>
     </Stack>
   );
 }
@@ -289,49 +526,128 @@ function CacheSettingsForm({ form }: { form: ReturnType<typeof useForm<ProjectCo
 function FeaturesSettingsForm({ form }: { form: ReturnType<typeof useForm<ProjectConfig>> }) {
   return (
     <Stack>
+      <Title order={6}>Core Features</Title>
+
       <Switch
-        label="Enable Swagger/OpenAPI"
+        label="HATEOAS Links"
+        description="Include hypermedia links in responses"
+        {...form.getInputProps('features.hateoas', { type: 'checkbox' })}
+      />
+
+      <Switch
+        label="Swagger/OpenAPI"
+        description="Generate API documentation"
         {...form.getInputProps('features.swagger', { type: 'checkbox' })}
       />
 
       <Switch
-        label="Enable Actuator"
-        {...form.getInputProps('features.actuator', { type: 'checkbox' })}
+        label="Soft Delete"
+        description="Logical deletion instead of physical"
+        {...form.getInputProps('features.softDelete', { type: 'checkbox' })}
       />
 
       <Switch
-        label="Enable Validation"
-        {...form.getInputProps('features.validation', { type: 'checkbox' })}
+        label="Auditing"
+        description="Track createdAt, updatedAt, createdBy, updatedBy"
+        {...form.getInputProps('features.auditing', { type: 'checkbox' })}
       />
 
       <Switch
-        label="Enable Lombok"
-        {...form.getInputProps('features.lombok', { type: 'checkbox' })}
+        label="Virtual Threads"
+        description="Use Java 21+ virtual threads"
+        {...form.getInputProps('features.virtualThreads', { type: 'checkbox' })}
+      />
+
+      <Divider label="Pagination & Caching" labelPosition="left" />
+
+      <Switch
+        label="Caching"
+        description="Enable response caching"
+        {...form.getInputProps('features.caching', { type: 'checkbox' })}
       />
 
       <Switch
-        label="Enable MapStruct"
-        {...form.getInputProps('features.mapstruct', { type: 'checkbox' })}
+        label="Cursor Pagination"
+        description="Enable cursor-based pagination"
+        {...form.getInputProps('features.cursorPagination', { type: 'checkbox' })}
       />
 
       <Switch
-        label="Enable JUnit 5"
-        {...form.getInputProps('features.junit5', { type: 'checkbox' })}
+        label="ETag Support"
+        description="Enable ETags for caching"
+        {...form.getInputProps('features.etagSupport', { type: 'checkbox' })}
+      />
+
+      <Divider label="Advanced Features" labelPosition="left" />
+
+      <Switch
+        label="Rate Limiting"
+        description="Enable request rate limiting"
+        {...form.getInputProps('features.rateLimiting', { type: 'checkbox' })}
       />
 
       <Switch
-        label="Enable TestContainers"
-        {...form.getInputProps('features.testcontainers', { type: 'checkbox' })}
+        label="Internationalization (i18n)"
+        description="Multi-language support"
+        {...form.getInputProps('features.i18n', { type: 'checkbox' })}
       />
 
       <Switch
-        label="Enable Docker"
+        label="Webhooks"
+        description="Send event notifications"
+        {...form.getInputProps('features.webhooks', { type: 'checkbox' })}
+      />
+
+      <Switch
+        label="Bulk Operations"
+        description="Import/export in bulk"
+        {...form.getInputProps('features.bulkOperations', { type: 'checkbox' })}
+      />
+
+      <Switch
+        label="Batch Operations"
+        description="Batch CRUD operations"
+        {...form.getInputProps('features.batchOperations', { type: 'checkbox' })}
+      />
+
+      <Switch
+        label="Domain Events"
+        description="Publish domain events"
+        {...form.getInputProps('features.domainEvents', { type: 'checkbox' })}
+      />
+
+      <Switch
+        label="SSE Updates"
+        description="Server-Sent Events for real-time updates"
+        {...form.getInputProps('features.sseUpdates', { type: 'checkbox' })}
+      />
+
+      <Divider label="Architecture" labelPosition="left" />
+
+      <Switch
+        label="Multi-Tenancy"
+        description="Support multiple tenants"
+        {...form.getInputProps('features.multiTenancy', { type: 'checkbox' })}
+      />
+
+      <Switch
+        label="Event Sourcing"
+        description="Store events as source of truth"
+        {...form.getInputProps('features.eventSourcing', { type: 'checkbox' })}
+      />
+
+      <Switch
+        label="API Versioning"
+        description="Support multiple API versions"
+        {...form.getInputProps('features.apiVersioning', { type: 'checkbox' })}
+      />
+
+      <Divider label="Deployment" labelPosition="left" />
+
+      <Switch
+        label="Docker"
+        description="Generate Dockerfile"
         {...form.getInputProps('features.docker', { type: 'checkbox' })}
-      />
-
-      <Switch
-        label="Enable Kubernetes"
-        {...form.getInputProps('features.kubernetes', { type: 'checkbox' })}
       />
     </Stack>
   );
@@ -343,43 +659,103 @@ function FeaturesSettingsForm({ form }: { form: ReturnType<typeof useForm<Projec
 function ObservabilitySettingsForm({ form }: { form: ReturnType<typeof useForm<ProjectConfig>> }) {
   return (
     <Stack>
+      <Title order={6}>Distributed Tracing</Title>
+
       <Switch
         label="Enable Tracing"
+        description="Enable distributed tracing with OpenTelemetry"
         {...form.getInputProps('observabilityConfig.tracing.enabled', { type: 'checkbox' })}
       />
 
-      <Select
-        label="Tracing Provider"
-        data={[
-          { value: 'JAEGER', label: 'Jaeger' },
-          { value: 'ZIPKIN', label: 'Zipkin' },
-        ]}
-        {...form.getInputProps('observabilityConfig.tracing.provider')}
-      />
+      <Collapse in={form.values.observabilityConfig.tracing.enabled}>
+        <Stack mt="sm">
+          <NumberInput
+            label="Sampling Probability"
+            description="0.0 to 1.0 (1.0 = 100%)"
+            min={0}
+            max={1}
+            step={0.1}
+            decimalScale={2}
+            {...form.getInputProps('observabilityConfig.tracing.samplingProbability')}
+          />
+          <TextInput
+            label="OTLP Endpoint"
+            placeholder="http://localhost:4317"
+            description="OpenTelemetry collector endpoint"
+            {...form.getInputProps('observabilityConfig.tracing.otlpEndpoint')}
+          />
+        </Stack>
+      </Collapse>
+
+      <Divider label="Metrics" labelPosition="left" />
 
       <Switch
         label="Enable Metrics"
+        description="Enable metrics collection with Micrometer"
         {...form.getInputProps('observabilityConfig.metrics.enabled', { type: 'checkbox' })}
       />
 
-      <Select
-        label="Metrics Provider"
-        data={[
-          { value: 'MICROMETER', label: 'Micrometer' },
-          { value: 'PROMETHEUS', label: 'Prometheus' },
-        ]}
-        {...form.getInputProps('observabilityConfig.metrics.provider')}
-      />
+      <Collapse in={form.values.observabilityConfig.metrics.enabled}>
+        <Stack mt="sm">
+          <NumberInput
+            label="Slow Query Threshold (ms)"
+            description="Threshold for slow query detection"
+            min={1}
+            {...form.getInputProps('observabilityConfig.metrics.slowQueryThresholdMs')}
+          />
+          <Switch
+            label="Expose HikariCP Metrics"
+            description="Expose connection pool metrics"
+            {...form.getInputProps('observabilityConfig.metrics.exposeHikariMetrics', {
+              type: 'checkbox',
+            })}
+          />
+          <Switch
+            label="Expose Prometheus Metrics"
+            description="Expose /actuator/prometheus endpoint"
+            {...form.getInputProps('observabilityConfig.metrics.exposePrometheus', {
+              type: 'checkbox',
+            })}
+          />
+        </Stack>
+      </Collapse>
+
+      <Divider label="Query Analysis" labelPosition="left" />
 
       <Switch
-        label="Enable Health Checks"
-        {...form.getInputProps('observabilityConfig.health.enabled', { type: 'checkbox' })}
+        label="Enable Query Analysis"
+        description="Detect N+1 queries and log slow queries"
+        {...form.getInputProps('observabilityConfig.queryAnalysis.enabled', { type: 'checkbox' })}
       />
 
-      <Switch
-        label="Enable Application Info"
-        {...form.getInputProps('observabilityConfig.info.enabled', { type: 'checkbox' })}
-      />
+      <Collapse in={form.values.observabilityConfig.queryAnalysis?.enabled}>
+        <Stack mt="sm">
+          <NumberInput
+            label="Warning Threshold"
+            description="Number of queries to trigger a warning"
+            min={1}
+            {...form.getInputProps('observabilityConfig.queryAnalysis.warnThreshold')}
+          />
+          <NumberInput
+            label="Error Threshold"
+            description="Number of queries to trigger an error"
+            min={1}
+            {...form.getInputProps('observabilityConfig.queryAnalysis.errorThreshold')}
+          />
+          <Switch
+            label="Log Slow Queries"
+            description="Log queries exceeding the threshold"
+            {...form.getInputProps('observabilityConfig.queryAnalysis.logSlowQueries', {
+              type: 'checkbox',
+            })}
+          />
+          <NumberInput
+            label="Slow Query Threshold (ms)"
+            min={1}
+            {...form.getInputProps('observabilityConfig.queryAnalysis.slowQueryThresholdMs')}
+          />
+        </Stack>
+      </Collapse>
     </Stack>
   );
 }
@@ -390,51 +766,102 @@ function ObservabilitySettingsForm({ form }: { form: ReturnType<typeof useForm<P
 function ResilienceSettingsForm({ form }: { form: ReturnType<typeof useForm<ProjectConfig>> }) {
   return (
     <Stack>
+      <Title order={6}>Circuit Breaker</Title>
+
       <Switch
         label="Enable Circuit Breaker"
         {...form.getInputProps('resilienceConfig.circuitBreaker.enabled', { type: 'checkbox' })}
       />
 
-      <Select
-        label="Circuit Breaker Provider"
-        data={[
-          { value: 'RESILIENCE4J', label: 'Resilience4J' },
-          { value: 'HYSTRIX', label: 'Hystrix' },
-        ]}
-        {...form.getInputProps('resilienceConfig.circuitBreaker.provider')}
-      />
+      <Collapse in={form.values.resilienceConfig.circuitBreaker.enabled}>
+        <Stack mt="sm">
+          <NumberInput
+            label="Sliding Window Size"
+            description="Number of calls to evaluate"
+            min={1}
+            {...form.getInputProps('resilienceConfig.circuitBreaker.slidingWindowSize')}
+          />
 
-      <NumberInput
-        label="Failure Threshold"
-        description="Number of failures before opening circuit"
-        {...form.getInputProps('resilienceConfig.circuitBreaker.failureThreshold')}
-      />
+          <NumberInput
+            label="Minimum Number of Calls"
+            description="Minimum calls before circuit breaker can trip"
+            min={1}
+            {...form.getInputProps('resilienceConfig.circuitBreaker.minimumNumberOfCalls')}
+          />
 
-      <NumberInput
-        label="Recovery Timeout (seconds)"
-        description="Time to wait before trying to close circuit"
-        {...form.getInputProps('resilienceConfig.circuitBreaker.recoveryTimeoutSeconds')}
-      />
+          <NumberInput
+            label="Failure Rate Threshold (%)"
+            description="Percentage of failures to open circuit"
+            min={1}
+            max={100}
+            {...form.getInputProps('resilienceConfig.circuitBreaker.failureRateThreshold')}
+          />
+
+          <NumberInput
+            label="Slow Call Rate Threshold (%)"
+            description="Percentage of slow calls to open circuit"
+            min={1}
+            max={100}
+            {...form.getInputProps('resilienceConfig.circuitBreaker.slowCallRateThreshold')}
+          />
+
+          <NumberInput
+            label="Slow Call Duration Threshold (seconds)"
+            description="Duration threshold for slow calls"
+            min={1}
+            {...form.getInputProps('resilienceConfig.circuitBreaker.slowCallDurationThresholdSeconds')}
+          />
+
+          <NumberInput
+            label="Wait Duration in Open State (seconds)"
+            description="Time to wait before transitioning from OPEN to HALF_OPEN"
+            min={1}
+            {...form.getInputProps('resilienceConfig.circuitBreaker.waitDurationInOpenStateSeconds')}
+          />
+        </Stack>
+      </Collapse>
+
+      <Divider label="Retry" labelPosition="left" />
 
       <Switch
         label="Enable Retry"
         {...form.getInputProps('resilienceConfig.retry.enabled', { type: 'checkbox' })}
       />
 
-      <NumberInput
-        label="Max Retry Attempts"
-        {...form.getInputProps('resilienceConfig.retry.maxAttempts')}
-      />
+      <Collapse in={form.values.resilienceConfig.retry.enabled}>
+        <Stack mt="sm">
+          <NumberInput
+            label="Max Attempts"
+            min={1}
+            max={10}
+            {...form.getInputProps('resilienceConfig.retry.maxAttempts')}
+          />
 
-      <Switch
-        label="Enable Timeout"
-        {...form.getInputProps('resilienceConfig.timeout.enabled', { type: 'checkbox' })}
-      />
+          <NumberInput
+            label="Wait Duration (ms)"
+            description="Initial wait duration between retries"
+            min={100}
+            {...form.getInputProps('resilienceConfig.retry.waitDurationMs')}
+          />
 
-      <NumberInput
-        label="Timeout Duration (seconds)"
-        {...form.getInputProps('resilienceConfig.timeout.durationSeconds')}
-      />
+          <Switch
+            label="Enable Exponential Backoff"
+            {...form.getInputProps('resilienceConfig.retry.enableExponentialBackoff', { type: 'checkbox' })}
+          />
+
+          <Collapse in={form.values.resilienceConfig.retry.enableExponentialBackoff}>
+            <NumberInput
+              label="Backoff Multiplier"
+              description="Exponential backoff multiplier"
+              min={1}
+              step={0.1}
+              decimalScale={1}
+              mt="sm"
+              {...form.getInputProps('resilienceConfig.retry.exponentialBackoffMultiplier')}
+            />
+          </Collapse>
+        </Stack>
+      </Collapse>
     </Stack>
   );
 }
@@ -445,38 +872,49 @@ function ResilienceSettingsForm({ form }: { form: ReturnType<typeof useForm<Proj
 function CorsSettingsForm({ form }: { form: ReturnType<typeof useForm<ProjectConfig>> }) {
   return (
     <Stack>
-      <Switch
-        label="Enable CORS"
-        {...form.getInputProps('corsConfig.enabled', { type: 'checkbox' })}
-      />
+      <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light" mb="md">
+        <Text size="sm">
+          CORS (Cross-Origin Resource Sharing) settings control which domains can access your API.
+        </Text>
+      </Alert>
 
       <TagsInput
         label="Allowed Origins"
-        placeholder="https://example.com, https://app.example.com"
+        placeholder="Press Enter to add (e.g., https://example.com)"
+        description="Use * to allow all origins"
         {...form.getInputProps('corsConfig.allowedOrigins')}
       />
 
       <TagsInput
         label="Allowed Methods"
-        placeholder="GET, POST, PUT, DELETE"
+        placeholder="Press Enter to add (e.g., GET, POST)"
         {...form.getInputProps('corsConfig.allowedMethods')}
       />
 
       <TagsInput
         label="Allowed Headers"
-        placeholder="Content-Type, Authorization"
+        placeholder="Press Enter to add (e.g., Content-Type)"
         {...form.getInputProps('corsConfig.allowedHeaders')}
+      />
+
+      <TagsInput
+        label="Exposed Headers"
+        placeholder="Press Enter to add"
+        description="Headers that browsers are allowed to access"
+        {...form.getInputProps('corsConfig.exposedHeaders')}
       />
 
       <Switch
         label="Allow Credentials"
+        description="Allow cookies and authorization headers"
         {...form.getInputProps('corsConfig.allowCredentials', { type: 'checkbox' })}
       />
 
       <NumberInput
         label="Max Age (seconds)"
-        description="How long the browser can cache preflight response"
-        {...form.getInputProps('corsConfig.maxAge')}
+        description="How long browsers can cache preflight response"
+        min={0}
+        {...form.getInputProps('corsConfig.maxAgeSeconds')}
       />
     </Stack>
   );
@@ -489,36 +927,60 @@ function GraphQLSettingsForm({ form }: { form: ReturnType<typeof useForm<Project
   return (
     <Stack>
       <Switch
-        label="Enable GraphQL"
-        {...form.getInputProps('graphqlConfig.enabled', { type: 'checkbox' })}
+        label="Enable GraphQL Module"
+        description="Enable GraphQL API endpoint"
+        {...form.getInputProps('modules.graphql', { type: 'checkbox' })}
       />
 
-      <TextInput
-        label="GraphQL Endpoint"
-        placeholder="/graphql"
-        {...form.getInputProps('graphqlConfig.endpoint')}
-      />
+      <Collapse in={form.values.modules.graphql}>
+        <Stack mt="md">
+          <Switch
+            label="Enable GraphQL"
+            description="Activate the GraphQL endpoint"
+            {...form.getInputProps('graphqlConfig.enabled', { type: 'checkbox' })}
+          />
 
-      <Switch
-        label="Enable GraphiQL IDE"
-        {...form.getInputProps('graphqlConfig.graphiql.enabled', { type: 'checkbox' })}
-      />
+          <Collapse in={form.values.graphqlConfig.enabled}>
+            <Stack mt="sm">
+              <TextInput
+                label="GraphQL Endpoint"
+                placeholder="/graphql"
+                {...form.getInputProps('graphqlConfig.path')}
+              />
 
-      <TextInput
-        label="GraphiQL Endpoint"
-        placeholder="/graphiql"
-        {...form.getInputProps('graphqlConfig.graphiql.endpoint')}
-      />
+              <Divider label="Features" labelPosition="left" />
 
-      <Switch
-        label="Enable Voyager"
-        {...form.getInputProps('graphqlConfig.voyager.enabled', { type: 'checkbox' })}
-      />
+              <Switch
+                label="Enable Tracing"
+                description="Enable query tracing for debugging"
+                {...form.getInputProps('graphqlConfig.tracingEnabled', { type: 'checkbox' })}
+              />
 
-      <Switch
-        label="Enable Federation"
-        {...form.getInputProps('graphqlConfig.federation.enabled', { type: 'checkbox' })}
-      />
+              <Switch
+                label="Enable Introspection"
+                description="Allow schema introspection (disable in production)"
+                {...form.getInputProps('graphqlConfig.introspectionEnabled', { type: 'checkbox' })}
+              />
+
+              <Divider label="Security Limits" labelPosition="left" />
+
+              <NumberInput
+                label="Max Query Depth"
+                description="Prevent deeply nested queries"
+                min={1}
+                {...form.getInputProps('graphqlConfig.maxQueryDepth')}
+              />
+
+              <NumberInput
+                label="Max Query Complexity"
+                description="Limit query complexity score"
+                min={1}
+                {...form.getInputProps('graphqlConfig.maxQueryComplexity')}
+              />
+            </Stack>
+          </Collapse>
+        </Stack>
+      </Collapse>
     </Stack>
   );
 }
@@ -530,30 +992,70 @@ function GrpcSettingsForm({ form }: { form: ReturnType<typeof useForm<ProjectCon
   return (
     <Stack>
       <Switch
-        label="Enable gRPC"
-        {...form.getInputProps('grpcConfig.enabled', { type: 'checkbox' })}
+        label="Enable gRPC Module"
+        description="Enable gRPC service endpoint"
+        {...form.getInputProps('modules.grpc', { type: 'checkbox' })}
       />
 
-      <NumberInput
-        label="gRPC Port"
-        placeholder="9090"
-        {...form.getInputProps('grpcConfig.port')}
-      />
+      <Collapse in={form.values.modules.grpc}>
+        <Stack mt="md">
+          <Switch
+            label="Enable gRPC Server"
+            description="Activate the gRPC server"
+            {...form.getInputProps('grpcConfig.enabled', { type: 'checkbox' })}
+          />
 
-      <Switch
-        label="Enable Reflection"
-        {...form.getInputProps('grpcConfig.reflection.enabled', { type: 'checkbox' })}
-      />
+          <Collapse in={form.values.grpcConfig.enabled}>
+            <Stack mt="sm">
+              <NumberInput
+                label="Server Port"
+                placeholder="9090"
+                min={1}
+                max={65535}
+                {...form.getInputProps('grpcConfig.serverPort')}
+              />
 
-      <Switch
-        label="Enable Health Service"
-        {...form.getInputProps('grpcConfig.health.enabled', { type: 'checkbox' })}
-      />
+              <Divider label="Features" labelPosition="left" />
 
-      <Switch
-        label="Enable Metrics"
-        {...form.getInputProps('grpcConfig.metrics.enabled', { type: 'checkbox' })}
-      />
+              <Switch
+                label="Enable Logging"
+                description="Log gRPC requests and responses"
+                {...form.getInputProps('grpcConfig.loggingEnabled', { type: 'checkbox' })}
+              />
+
+              <Switch
+                label="Enable Health Check"
+                description="gRPC health checking protocol"
+                {...form.getInputProps('grpcConfig.healthCheckEnabled', { type: 'checkbox' })}
+              />
+
+              <Switch
+                label="Use Plaintext"
+                description="Disable TLS (development only)"
+                {...form.getInputProps('grpcConfig.usePlaintext', { type: 'checkbox' })}
+              />
+
+              <Divider label="Limits" labelPosition="left" />
+
+              <NumberInput
+                label="Max Inbound Message Size (MB)"
+                description="Maximum size of incoming messages"
+                min={1}
+                max={128}
+                {...form.getInputProps('grpcConfig.maxInboundMessageSizeMb')}
+              />
+
+              <NumberInput
+                label="Client Deadline (ms)"
+                description="Default timeout for client requests"
+                min={1000}
+                step={1000}
+                {...form.getInputProps('grpcConfig.clientDeadlineMs')}
+              />
+            </Stack>
+          </Collapse>
+        </Stack>
+      </Collapse>
     </Stack>
   );
 }
@@ -565,64 +1067,115 @@ function GatewaySettingsForm({ form }: { form: ReturnType<typeof useForm<Project
   return (
     <Stack>
       <Switch
-        label="Enable Gateway"
-        {...form.getInputProps('gatewayConfig.enabled', { type: 'checkbox' })}
+        label="Enable Gateway Module"
+        description="Enable API Gateway functionality"
+        {...form.getInputProps('modules.gateway', { type: 'checkbox' })}
       />
 
-      <NumberInput
-        label="Gateway Port"
-        placeholder="8080"
-        {...form.getInputProps('gatewayConfig.port')}
-      />
+      <Collapse in={form.values.modules.gateway}>
+        <Stack mt="md">
+          <Switch
+            label="Enable Gateway"
+            description="Activate the API Gateway"
+            {...form.getInputProps('gatewayConfig.enabled', { type: 'checkbox' })}
+          />
 
-      <TextInput
-        label="Gateway Path"
-        placeholder="/api/**"
-        {...form.getInputProps('gatewayConfig.path')}
-      />
+          <Collapse in={form.values.gatewayConfig.enabled}>
+            <Stack mt="sm">
+              <Divider label="Authentication" labelPosition="left" />
 
-      <Switch
-        label="Enable Load Balancing"
-        {...form.getInputProps('gatewayConfig.loadBalancing.enabled', { type: 'checkbox' })}
-      />
+              <Switch
+                label="Enable Authentication"
+                description="Require authentication for routes"
+                {...form.getInputProps('gatewayConfig.authEnabled', { type: 'checkbox' })}
+              />
 
-      <Select
-        label="Load Balancing Strategy"
-        data={[
-          { value: 'ROUND_ROBIN', label: 'Round Robin' },
-          { value: 'RANDOM', label: 'Random' },
-          { value: 'WEIGHTED', label: 'Weighted' },
-        ]}
-        {...form.getInputProps('gatewayConfig.loadBalancing.strategy')}
-      />
+              <Collapse in={form.values.gatewayConfig.authEnabled}>
+                <TagsInput
+                  label="Excluded Paths"
+                  description="Paths that don't require authentication"
+                  placeholder="Press Enter to add (e.g., /public/**)"
+                  mt="sm"
+                  {...form.getInputProps('gatewayConfig.authExcludedPaths')}
+                />
+              </Collapse>
 
-      <Switch
-        label="Enable Circuit Breaker"
-        {...form.getInputProps('gatewayConfig.circuitBreaker.enabled', { type: 'checkbox' })}
-      />
+              <Divider label="Rate Limiting" labelPosition="left" />
 
-      <Switch
-        label="Enable Rate Limiting"
-        {...form.getInputProps('gatewayConfig.rateLimit.enabled', { type: 'checkbox' })}
-      />
+              <NumberInput
+                label="Default Rate Limit (requests/second)"
+                description="Maximum requests per second per client"
+                min={1}
+                {...form.getInputProps('gatewayConfig.defaultRateLimitRequests')}
+              />
 
-      <Switch
-        label="Enable Request/Response Logging"
-        {...form.getInputProps('gatewayConfig.logging.enabled', { type: 'checkbox' })}
-      />
+              <NumberInput
+                label="Default Burst Capacity"
+                description="Maximum burst requests allowed"
+                min={1}
+                {...form.getInputProps('gatewayConfig.defaultRateLimitBurst')}
+              />
 
-      <GatewayRouteDesigner
-        routes={form.values.gatewayConfig.routes}
-        onRoutesChange={(routes: GatewayRouteConfig[]) =>
-          form.setFieldValue('gatewayConfig.routes', routes)
-        }
-      />
+              <Divider label="Circuit Breaker" labelPosition="left" />
+
+              <Switch
+                label="Enable Circuit Breaker"
+                description="Prevent cascading failures"
+                {...form.getInputProps('gatewayConfig.circuitBreakerEnabled', { type: 'checkbox' })}
+              />
+
+              <Collapse in={form.values.gatewayConfig.circuitBreakerEnabled}>
+                <NumberInput
+                  label="Circuit Breaker Timeout (seconds)"
+                  description="Time to wait before retrying"
+                  min={1}
+                  mt="sm"
+                  {...form.getInputProps('gatewayConfig.circuitBreakerTimeoutSeconds')}
+                />
+              </Collapse>
+
+              <Divider label="Logging" labelPosition="left" />
+
+              <Switch
+                label="Enable Logging"
+                description="Log gateway requests and responses"
+                {...form.getInputProps('gatewayConfig.loggingEnabled', { type: 'checkbox' })}
+              />
+
+              <Collapse in={form.values.gatewayConfig.loggingEnabled}>
+                <Stack mt="sm">
+                  <Switch
+                    label="Include Headers"
+                    description="Log request/response headers"
+                    {...form.getInputProps('gatewayConfig.loggingIncludeHeaders', { type: 'checkbox' })}
+                  />
+
+                  <Switch
+                    label="Include Body"
+                    description="Log request/response body"
+                    {...form.getInputProps('gatewayConfig.loggingIncludeBody', { type: 'checkbox' })}
+                  />
+                </Stack>
+              </Collapse>
+
+              <Divider label="Routes" labelPosition="left" />
+
+              <GatewayRouteDesigner
+                routes={form.values.gatewayConfig.routes}
+                onRoutesChange={(routes: GatewayRouteConfig[]) =>
+                  form.setFieldValue('gatewayConfig.routes', routes)
+                }
+              />
+            </Stack>
+          </Collapse>
+        </Stack>
+      </Collapse>
     </Stack>
   );
 }
 
 /**
- * Main ProjectSettings component - now much smaller and focused
+ * Main ProjectSettings component
  */
 export function ProjectSettings({ opened, onClose }: Readonly<ProjectSettingsProps>) {
   const project = useProject();
