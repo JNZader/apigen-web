@@ -10,10 +10,10 @@ function createMockConnection(
   return {
     sourceServiceId,
     targetServiceId,
-    connectionType: 'http',
+    communicationType: 'REST',
     config: {
       timeout: 30000,
-      retries: 3,
+      retryAttempts: 3,
     },
   };
 }
@@ -45,7 +45,7 @@ describe('serviceConnectionStore', () => {
       addServiceConnection({
         sourceServiceId: 'service-1',
         targetServiceId: 'service-2',
-        connectionType: 'grpc',
+        communicationType: 'gRPC',
         config: {
           timeout: 5000,
         },
@@ -88,10 +88,10 @@ describe('serviceConnectionStore', () => {
         serviceConnections: [connection],
       } = useServiceConnectionStore.getState();
 
-      updateServiceConnection(connection.id, { connectionType: 'grpc' });
+      updateServiceConnection(connection.id, { communicationType: 'gRPC' });
 
       const { serviceConnections } = useServiceConnectionStore.getState();
-      expect(serviceConnections[0].connectionType).toBe('grpc');
+      expect(serviceConnections[0].communicationType).toBe('gRPC');
     });
 
     it('should not affect other connections', () => {
@@ -102,10 +102,10 @@ describe('serviceConnectionStore', () => {
       addServiceConnection(createMockConnection('service-2', 'service-3'));
 
       const { serviceConnections } = useServiceConnectionStore.getState();
-      updateServiceConnection(serviceConnections[0].id, { connectionType: 'grpc' });
+      updateServiceConnection(serviceConnections[0].id, { communicationType: 'gRPC' });
 
       const updatedConnections = useServiceConnectionStore.getState().serviceConnections;
-      expect(updatedConnections[1].connectionType).toBe('http');
+      expect(updatedConnections[1].communicationType).toBe('REST');
     });
   });
 
@@ -153,7 +153,7 @@ describe('serviceConnectionStore', () => {
           id: 'new-connection-1',
           sourceServiceId: 'service-a',
           targetServiceId: 'service-b',
-          connectionType: 'messaging',
+          communicationType: 'Kafka',
           config: {},
         },
       ];

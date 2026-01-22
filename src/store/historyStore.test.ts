@@ -16,7 +16,7 @@ function createMockState(
       tableName: `entity_${i}`,
       fields: [],
       position: { x: i * 100, y: 0 },
-      config: { generateApi: true, generateAudit: false, softDelete: false },
+      config: { generateController: true, generateService: true, enableCaching: true },
     });
   }
 
@@ -24,11 +24,20 @@ function createMockState(
   for (let i = 0; i < relationsCount; i++) {
     relations.push({
       id: `relation-${i}`,
-      type: 'oneToMany',
+      type: 'OneToMany',
       sourceEntityId: 'entity-0',
       targetEntityId: `entity-${i + 1}`,
       sourceFieldName: 'items',
       targetFieldName: 'parent',
+      bidirectional: false,
+      fetchType: 'LAZY',
+      cascade: [],
+      foreignKey: {
+        columnName: 'parent_id',
+        nullable: true,
+        onDelete: 'NO_ACTION',
+        onUpdate: 'NO_ACTION',
+      },
     });
   }
 

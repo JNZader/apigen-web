@@ -8,11 +8,20 @@ function createMockRelation(
   targetEntityId: string,
 ): Omit<RelationDesign, 'id'> {
   return {
-    type: 'oneToMany',
+    type: 'OneToMany',
     sourceEntityId,
     targetEntityId,
     sourceFieldName: 'items',
     targetFieldName: 'parent',
+    bidirectional: false,
+    fetchType: 'LAZY',
+    cascade: [],
+    foreignKey: {
+      columnName: 'fk_id',
+      nullable: true,
+      onDelete: 'NO_ACTION',
+      onUpdate: 'NO_ACTION',
+    },
   };
 }
 
@@ -65,10 +74,10 @@ describe('relationStore', () => {
       addRelation(createMockRelation('entity-1', 'entity-2'));
       const { relations: [relation] } = useRelationStore.getState();
 
-      updateRelation(relation.id, { type: 'manyToMany', sourceFieldName: 'updatedField' });
+      updateRelation(relation.id, { type: 'ManyToMany', sourceFieldName: 'updatedField' });
 
       const { relations } = useRelationStore.getState();
-      expect(relations[0].type).toBe('manyToMany');
+      expect(relations[0].type).toBe('ManyToMany');
       expect(relations[0].sourceFieldName).toBe('updatedField');
     });
 
@@ -123,10 +132,19 @@ describe('relationStore', () => {
       const newRelations: RelationDesign[] = [
         {
           id: 'new-relation-1',
-          type: 'oneToOne',
+          type: 'OneToOne',
           sourceEntityId: 'entity-a',
           targetEntityId: 'entity-b',
           sourceFieldName: 'item',
+          bidirectional: false,
+          fetchType: 'LAZY',
+          cascade: [],
+          foreignKey: {
+            columnName: 'fk_id',
+            nullable: true,
+            onDelete: 'NO_ACTION',
+            onUpdate: 'NO_ACTION',
+          },
         },
       ];
 

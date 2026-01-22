@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { checkHealth, validateSchema, generateProject, isServerAvailable } from './generatorApi';
 import * as apiClientModule from './apiClient';
 
 // Mock the apiClient module
@@ -53,15 +52,6 @@ describe('generatorApi', () => {
 
   describe('validateSchema', () => {
     it('should accept a GenerateRequest and call validate endpoint', async () => {
-      const request = {
-        project: {
-          name: 'Test Project',
-          groupId: 'com.test',
-          artifactId: 'test-api',
-        },
-        sql: 'CREATE TABLE users (id BIGINT PRIMARY KEY);',
-      };
-
       const validateResponse = {
         success: true,
         warnings: [],
@@ -77,15 +67,6 @@ describe('generatorApi', () => {
 
   describe('generateProject', () => {
     it('should accept a GenerateRequest and return blob', async () => {
-      const request = {
-        project: {
-          name: 'Test Project',
-          groupId: 'com.test',
-          artifactId: 'test-api',
-        },
-        sql: 'CREATE TABLE users (id BIGINT PRIMARY KEY);',
-      };
-
       const blob = new Blob(['zip content'], { type: 'application/zip' });
       mockClient.post.mockResolvedValueOnce({ data: blob });
 

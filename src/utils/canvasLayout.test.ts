@@ -39,8 +39,17 @@ function createMockRelation(
     sourceEntityId,
     targetEntityId,
     type: 'OneToMany',
-    sourceField: 'id',
-    targetField: `${sourceEntityId}Id`,
+    sourceFieldName: 'id',
+    targetFieldName: `${sourceEntityId}Id`,
+    bidirectional: false,
+    fetchType: 'LAZY',
+    cascade: [],
+    foreignKey: {
+      columnName: 'fk_id',
+      nullable: true,
+      onDelete: 'NO_ACTION',
+      onUpdate: 'NO_ACTION',
+    },
   };
 }
 
@@ -80,7 +89,7 @@ function createMockConnection(
     id: `conn-${sourceServiceId}-${targetServiceId}`,
     sourceServiceId,
     targetServiceId,
-    connectionType: 'http',
+    communicationType: 'REST',
     config: {},
   };
 }
