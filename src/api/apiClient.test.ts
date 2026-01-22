@@ -123,6 +123,7 @@ describe('apiClient', () => {
 
   describe('Error handling', () => {
     it('should throw ApiError on non-ok response', async () => {
+      vi.useRealTimers(); // Use real timers for rejection tests
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
@@ -136,14 +137,14 @@ describe('apiClient', () => {
         maxRetries: 0,
       });
 
-      const promise = client.get('/missing');
-      await vi.runAllTimersAsync();
-
-      await expect(promise).rejects.toThrow(ApiError);
-      await expect(promise).rejects.toMatchObject({
-        status: 404,
-        statusText: 'Not Found',
-      });
+      try {
+        await client.get('/missing');
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(404);
+        expect((error as ApiError).statusText).toBe('Not Found');
+      }
     });
 
     it('should create TimeoutError with proper message', () => {
@@ -179,6 +180,7 @@ describe('apiClient', () => {
     });
 
     it('should throw ValidationError on schema mismatch', async () => {
+      vi.useRealTimers(); // Use real timers for rejection tests
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -192,11 +194,13 @@ describe('apiClient', () => {
       });
 
       const client = createApiClient({ baseUrl: 'https://api.example.com' });
-      const promise = client.get('/user', { schema });
 
-      await vi.runAllTimersAsync();
-
-      await expect(promise).rejects.toThrow(ValidationError);
+      try {
+        await client.get('/user', { schema });
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ValidationError);
+      }
     });
   });
 
@@ -273,6 +277,7 @@ describe('apiClient', () => {
     });
 
     it('should not retry when skipRetry is true', async () => {
+      vi.useRealTimers(); // Use real timers for rejection tests
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 503,
@@ -286,14 +291,17 @@ describe('apiClient', () => {
         maxRetries: 3,
       });
 
-      const promise = client.get('/no-retry', { skipRetry: true });
-      await vi.runAllTimersAsync();
-
-      await expect(promise).rejects.toThrow(ApiError);
+      try {
+        await client.get('/no-retry', { skipRetry: true });
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+      }
       expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
     it('should not retry on non-retryable status codes', async () => {
+      vi.useRealTimers(); // Use real timers for rejection tests
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
@@ -307,10 +315,12 @@ describe('apiClient', () => {
         maxRetries: 3,
       });
 
-      const promise = client.get('/bad-request');
-      await vi.runAllTimersAsync();
-
-      await expect(promise).rejects.toThrow(ApiError);
+      try {
+        await client.get('/bad-request');
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+      }
       expect(mockFetch).toHaveBeenCalledTimes(1);
     });
   });
