@@ -6,7 +6,13 @@ import { generateProject as generateWithServer } from '../api/generatorApi';
 import { useProjectStore } from '../store/projectStore';
 import type { EntityDesign, ServiceDesign } from '../types';
 import { addServiceToZip, createArtifactId } from '../utils/archiveSecurity';
+import { buildProjectConfig } from '../utils/projectConfigBuilder';
 import { generateSQL } from '../utils/sqlGenerator';
+
+// Helper function to create service artifact ID
+function createServiceArtifactId(serviceName: string): string {
+  return `api-${serviceName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+}
 
 interface ExportProgress {
   current: number;
@@ -106,60 +112,12 @@ export function useMultiServiceExport() {
         const serviceSql = generateSQL(serviceEntities, serviceRelations, service.name);
 
         // Create service-specific artifact ID
-        const serviceArtifactId = createArtifactId(service.name);
+        const serviceArtifactId = createServiceArtifactId(service.name);
+
+        const projectConfig = buildProjectConfig(project, service);
 
         const blob = await generateWithServer({
-          project: {
-            name: service.name,
-            groupId: project.groupId,
-            artifactId: serviceArtifactId,
-            javaVersion: project.javaVersion,
-            springBootVersion: project.springBootVersion,
-            modules: project.modules,
-            features: {
-              ...project.features,
-              // Apply service-specific settings
-            },
-            database: {
-              ...project.database,
-              type: service.config.databaseType as typeof project.database.type,
-            },
-            securityConfig: project.securityConfig,
-            rateLimitConfig: service.config.enableRateLimiting
-              ? project.rateLimitConfig
-              : { ...project.rateLimitConfig, requestsPerSecond: 0 },
-            cacheConfig: project.cacheConfig,
-            featureFlags: project.featureFlags,
-            i18nConfig: project.i18nConfig,
-            webhooksConfig: project.webhooksConfig,
-            bulkConfig: project.bulkConfig,
-            batchConfig: project.batchConfig,
-            multiTenancyConfig: project.multiTenancyConfig,
-            eventSourcingConfig: project.eventSourcingConfig,
-            apiVersioningConfig: project.apiVersioningConfig,
-            observabilityConfig: {
-              ...project.observabilityConfig,
-              tracing: {
-                ...project.observabilityConfig.tracing,
-                enabled: service.config.enableTracing,
-              },
-              metrics: {
-                ...project.observabilityConfig.metrics,
-                enabled: service.config.enableMetrics,
-              },
-            },
-            resilienceConfig: {
-              ...project.resilienceConfig,
-              circuitBreaker: {
-                ...project.resilienceConfig.circuitBreaker,
-                enabled: service.config.enableCircuitBreaker,
-              },
-            },
-            corsConfig: project.corsConfig,
-            graphqlConfig: project.graphqlConfig,
-            grpcConfig: project.grpcConfig,
-            gatewayConfig: project.gatewayConfig,
-          },
+          project: projectConfig,
           sql: serviceSql,
         });
 
@@ -206,7 +164,7 @@ export function useMultiServiceExport() {
         const result = await generateServiceProject(service);
 
         if (result.success && result.blob) {
-          const serviceArtifactId = createArtifactId(service.name);
+          const serviceArtifactId = createServiceArtifactId(service.name);
           saveAs(result.blob, `${serviceArtifactId}.zip`);
 
           notifications.show({
@@ -268,7 +226,7 @@ export function useMultiServiceExport() {
         results.push(result);
 
         if (result.success && result.blob) {
-          await addServiceToZip(zip, result.blob, createArtifactId(service.name));
+          await addServiceToZip(zip, result.blob, createServiceArtifactId(service.name));
         }
       }
 

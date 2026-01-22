@@ -31,14 +31,15 @@ import {
   type GenerateResponse,
   type HealthResponse,
 } from './schemas';
+import { API_CONFIG } from '../config/constants';
 
-// Default to localhost:8081, can be overridden via environment variable
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+// Use centralized API configuration
+const API_BASE_URL = API_CONFIG.BASE_URL;
 
 // Create the API client instance
 const apiClient: ApiClient = createApiClient({
   baseUrl: API_BASE_URL,
-  timeoutMs: 60000, // 60 seconds for generation requests
+  timeoutMs: API_CONFIG.GENERATION_REQUEST_TIMEOUT,
   maxRetries: 2,
   defaultHeaders: {
     Accept: 'application/json',
@@ -90,7 +91,7 @@ export async function checkHealth(signal?: AbortSignal): Promise<HealthResponse>
   const response = await apiClient.get<HealthResponse>('/api/health', {
     schema: HealthResponseSchema,
     signal,
-    timeoutMs: 10000, // 10 second timeout for health checks
+    timeoutMs: API_CONFIG.HEALTH_CHECK_TIMEOUT,
     maxRetries: 1,
   });
 
@@ -117,11 +118,14 @@ export async function validateSchema(
  * Generate a Spring Boot project and download as ZIP.
  * Returns raw blob (no Zod validation for binary data).
  */
-export async function generateProject(request: GenerateRequest, signal?: AbortSignal): Promise<Blob> {
+export async function generateProject(
+  request: GenerateRequest,
+  signal?: AbortSignal,
+): Promise<Blob> {
   const response = await apiClient.post<Blob>('/api/generate', request, {
     responseType: 'blob',
     signal,
-    timeoutMs: 120000, // 2 minute timeout for generation
+    timeoutMs: API_CONFIG.GENERATION_TIMEOUT,
     skipRetry: true, // Don't retry generation requests (could cause duplicate work)
   });
 
