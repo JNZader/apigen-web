@@ -200,9 +200,7 @@ function ServiceNodeComponent({ id, data, selected }: NodeProps<ServiceNodeType>
                 ta="center"
                 fw={isDropTarget ? 600 : 400}
               >
-                {isDropTarget
-                  ? 'Drop here to assign entity'
-                  : 'Click Configure to assign entities'}
+                {isDropTarget ? 'Drop here to assign entity' : 'Click Configure to assign entities'}
               </Text>
             </Stack>
           )}
@@ -210,9 +208,9 @@ function ServiceNodeComponent({ id, data, selected }: NodeProps<ServiceNodeType>
           {/* Show assigned entities */}
           {entityCount > 0 && (
             <Stack gap={4} style={{ zIndex: 1 }}>
-              {entityNames.slice(0, 5).map((name, index) => (
+              {entityNames.slice(0, 5).map((name) => (
                 <Badge
-                  key={`${name}-${index}`}
+                  key={name}
                   size="sm"
                   variant="light"
                   color="blue"
@@ -239,7 +237,14 @@ function ServiceNodeComponent({ id, data, selected }: NodeProps<ServiceNodeType>
         </Stack>
 
         {/* Service Footer with actions */}
-        <Card.Section withBorder inheritPadding py={4} px="xs" bg="white" style={{ pointerEvents: 'all' }}>
+        <Card.Section
+          withBorder
+          inheritPadding
+          py={4}
+          px="xs"
+          bg="white"
+          style={{ pointerEvents: 'all' }}
+        >
           <Group justify="space-between" wrap="nowrap">
             <Group gap={4}>
               <Badge

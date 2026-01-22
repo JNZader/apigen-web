@@ -249,10 +249,10 @@ describe('useThrottledAction', () => {
       });
 
       // Try concurrent calls
-      let secondResult: void | undefined;
       act(() => {
         result.current().then((r) => {
-          secondResult = r;
+          // Result is captured but not used in this test
+          expect(r).toBeUndefined();
         });
       });
 
@@ -263,7 +263,6 @@ describe('useThrottledAction', () => {
       });
 
       expect(mockAction).toHaveBeenCalledTimes(1);
-      expect(secondResult).toBeUndefined();
     });
 
     it('should allow sequential calls', async () => {

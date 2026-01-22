@@ -28,7 +28,7 @@ interface UseNodeDragHandlersOptions {
 
 export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
   const {
-    canvasView,
+    canvasView: _canvasView, // Not used after BOTH view removal
     entities,
     services,
     selectedEntityId: _selectedEntityId, // Kept for interface compatibility; fresh value read from store
@@ -201,7 +201,6 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
       onNodesChange,
       entities,
       services,
-      canvasView,
       isDraggingRef,
       debouncedEntityPositionUpdate,
       debouncedServicePositionUpdate,
@@ -210,12 +209,9 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
   );
 
   // Handle entity drag - no-op now that BOTH view is removed
-  const handleNodeDrag = useCallback(
-    (_event: React.MouseEvent, _node: Node) => {
-      // No-op - drag-to-assign was only available in BOTH view which has been removed
-    },
-    [],
-  );
+  const handleNodeDrag = useCallback((_event: React.MouseEvent, _node: Node) => {
+    // No-op - drag-to-assign was only available in BOTH view which has been removed
+  }, []);
 
   // Handle entity drag stop - just mark drag as ended
   // Service assignment is now done via context menu instead of drag-and-drop

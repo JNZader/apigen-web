@@ -77,7 +77,7 @@ export function EntityList({ onAddEntity }: Readonly<EntityListProps>) {
       )}
 
       {/* Scrollable container */}
-      <div
+      <nav
         ref={parentRef}
         style={{
           flex: 1,
@@ -127,8 +127,6 @@ export function EntityList({ onAddEntity }: Readonly<EntityListProps>) {
               width: '100%',
               position: 'relative',
             }}
-            role="list"
-            aria-label="Available entities"
           >
             {virtualItems.map((virtualRow) => {
               const entity = filteredEntities[virtualRow.index];
@@ -159,7 +157,7 @@ export function EntityList({ onAddEntity }: Readonly<EntityListProps>) {
             })}
           </div>
         )}
-      </div>
+      </nav>
     </Stack>
   );
 }
