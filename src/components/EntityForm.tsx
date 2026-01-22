@@ -16,6 +16,7 @@ import { useMemo } from 'react';
 import { useProjectStore, useServiceActions, useServices } from '../store/projectStore';
 import type { EntityDesign } from '../types';
 import { toPascalCase, toSnakeCase } from '../types';
+import { isValidEntityName, isValidTableName } from '../utils/validation';
 import { AddFieldForm } from './AddFieldForm';
 import { FieldEditor } from './FieldEditor';
 
@@ -77,13 +78,13 @@ export function EntityForm({ opened, onClose, entity }: Readonly<EntityFormProps
     validate: {
       name: (value) => {
         if (!value) return 'Entity name is required';
-        if (!/^[A-Z][a-zA-Z0-9]*$/.test(value))
+        if (!isValidEntityName(value))
           return 'Entity name must be PascalCase (e.g., Product, OrderItem)';
         return null;
       },
       tableName: (value) => {
         if (!value) return 'Table name is required';
-        if (!/^[a-z][a-z0-9_]*$/.test(value))
+        if (!isValidTableName(value))
           return 'Table name must be snake_case (e.g., products, order_items)';
         return null;
       },

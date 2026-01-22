@@ -65,9 +65,11 @@ export const useCanvasUIStore = create<CanvasUIState>()((set) => ({
 // Selectors
 // ============================================================================
 
+/** Returns whether a specific entity node is expanded (showing all fields). */
 export const useIsEntityExpanded = (id: string) =>
   useCanvasUIStore((state) => state.expandedEntityIds.has(id));
 
+/** Returns canvas UI actions for managing entity expansion state. */
 export const useCanvasUIActions = () =>
   useCanvasUIStore((state) => ({
     toggleEntityExpanded: state.toggleEntityExpanded,

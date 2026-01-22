@@ -5,7 +5,7 @@ import { useProjectStore } from '../store/projectStore';
 import type { JavaType } from '../types';
 import { JAVA_TYPES, toCamelCase, toSnakeCase } from '../types';
 import { notify } from '../utils/notifications';
-import { isValidJavaIdentifier } from '../utils/validation';
+import { isValidFieldName, isValidJavaIdentifier } from '../utils/validation';
 
 interface AddFieldFormProps {
   readonly entityId: string;
@@ -28,7 +28,7 @@ export function AddFieldForm({ entityId }: Readonly<AddFieldFormProps>) {
     if (!isValidJavaIdentifier(name)) {
       return 'Must be a valid Java identifier (camelCase recommended)';
     }
-    if (!/^[a-z]/.test(name)) {
+    if (!isValidFieldName(name)) {
       return 'Field name should start with lowercase (camelCase)';
     }
     const entity = getEntity(entityId);

@@ -171,8 +171,31 @@ export const useProjectStoreInternal = create<ProjectState>()(
 // Combined Store Facade (for backward compatibility)
 // ============================================================================
 
-// This provides the same interface as the original useProjectStore
-// by combining all individual stores
+/**
+ * Combined store facade that provides access to all project state.
+ *
+ * ⚠️ PERFORMANCE WARNING: This hook subscribes to ALL stores simultaneously.
+ * Using it without a selector will cause re-renders on ANY state change.
+ *
+ * RECOMMENDED: Use atomic selectors from individual stores instead:
+ * - `useEntities()`, `useEntityActions()` from entityStore
+ * - `useServices()`, `useServiceActions()` from serviceStore
+ * - `useRelations()` from relationStore
+ * - `useLayoutState()`, `useLayoutActions()` from layoutStore
+ *
+ * Use this store ONLY when you need to access multiple domains simultaneously
+ * (e.g., exporting the entire project state).
+ *
+ * @example
+ * // ❌ BAD - re-renders on any change
+ * const state = useProjectStore((s) => s);
+ *
+ * // ✅ GOOD - re-renders only when entities change
+ * const entities = useEntities();
+ *
+ * // ✅ GOOD - selective access when needed
+ * const { project, exportProject } = useDesignerPageData();
+ */
 export const useProjectStore = Object.assign(
   // The main hook returns combined state for components that subscribe to everything
   <T>(selector: (state: CombinedProjectState) => T): T => {

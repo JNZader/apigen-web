@@ -219,3 +219,25 @@ export function isValidArtifactId(value: string): boolean {
   const ARTIFACT_ID_REGEX = /^[a-z][a-z0-9-]*$/;
   return ARTIFACT_ID_REGEX.test(value);
 }
+
+// ============================================================================
+// Entity & Field Name Validation
+// ============================================================================
+
+/** Validates PascalCase entity names (e.g., User, OrderItem) */
+export function isValidEntityName(name: string): boolean {
+  if (!name) return false;
+  return /^[A-Z][a-zA-Z0-9]*$/.test(name);
+}
+
+/** Validates snake_case table names (e.g., users, order_items) */
+export function isValidTableName(name: string): boolean {
+  if (!name) return false;
+  return /^[a-z][a-z0-9_]*$/.test(name);
+}
+
+/** Validates camelCase field names - must start with lowercase (e.g., firstName, orderId) */
+export function isValidFieldName(name: string): boolean {
+  if (!name) return false;
+  return /^[a-z]/.test(name);
+}

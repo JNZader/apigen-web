@@ -5,7 +5,6 @@ import { useEntityStore } from '../../../store/entityStore';
 import { useLayoutActions, useServiceActions } from '../../../store/projectStore';
 import { useServiceStore } from '../../../store/serviceStore';
 import type { EntityDesign, ServiceDesign } from '../../../types';
-import { type CanvasView, ENTITY_NODE } from '../../../utils/canvasConstants';
 import {
   type PositionUpdate,
   adjustSelectionChanges,
@@ -14,31 +13,14 @@ import {
 } from './dragHelpers';
 
 interface UseNodeDragHandlersOptions {
-  canvasView: CanvasView;
   entities: EntityDesign[];
   services: ServiceDesign[];
-  selectedEntityId: string | null;
-  selectedEntityIds: string[];
-  selectedServiceId: string | null;
   isDraggingRef: RefObject<boolean>;
-  setNodes: (updater: Node[] | ((nodes: Node[]) => Node[])) => void;
   onNodesChange: (changes: NodeChange[]) => void;
-  setDropTargetServiceId: (id: string | null) => void;
 }
 
 export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
-  const {
-    canvasView: _canvasView, // No longer used after BOTH view removal
-    entities,
-    services,
-    selectedEntityId: _selectedEntityId, // Kept for interface compatibility; fresh value read from store
-    selectedEntityIds: _selectedEntityIds, // Kept for interface compatibility
-    selectedServiceId: _selectedServiceId, // Kept for interface compatibility; fresh value read from store
-    isDraggingRef,
-    setNodes: _setNodes, // Kept for interface compatibility
-    onNodesChange,
-    setDropTargetServiceId: _setDropTargetServiceId, // No longer used after BOTH view removal
-  } = options;
+  const { entities, services, isDraggingRef, onNodesChange } = options;
 
   const { updateService } = useServiceActions();
   const { updateEntityPositions, updateServicePositions } = useLayoutActions();
@@ -74,30 +56,6 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
       previousServicePositions.current.set(service.id, { ...service.position });
     }
   }, [services]);
-
-  // Check if a position is inside a service's bounds
-  // Uses center of entity node for more intuitive detection
-  // Note: Currently unused after BOTH view removal, but kept for potential future use
-  const _findServiceAtPosition = useCallback(
-    (position: { x: number; y: number }): ServiceDesign | null => {
-      // Calculate center of entity node
-      const centerX = position.x + ENTITY_NODE.WIDTH / 2;
-      const centerY = position.y + ENTITY_NODE.MIN_HEIGHT / 2;
-
-      for (const service of services) {
-        const isInside =
-          centerX >= service.position.x &&
-          centerX <= service.position.x + service.width &&
-          centerY >= service.position.y &&
-          centerY <= service.position.y + service.height;
-        if (isInside) {
-          return service;
-        }
-      }
-      return null;
-    },
-    [services],
-  );
 
   // Debounced position update to avoid excessive store updates during drag
   // Uses batch update pattern to update all positions in a single store operation
@@ -229,6 +187,5 @@ export function useNodeDragHandlers(options: UseNodeDragHandlersOptions) {
     handleNodesChange,
     handleNodeDrag,
     handleNodeDragStop,
-    findServiceAtPosition: _findServiceAtPosition,
   };
 }

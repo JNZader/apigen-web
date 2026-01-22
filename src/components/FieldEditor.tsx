@@ -15,7 +15,7 @@ import { IconCheck, IconTrash } from '@tabler/icons-react';
 import { memo, useState } from 'react';
 import type { FieldDesign, JavaType } from '../types';
 import { JAVA_TYPES, toSnakeCase } from '../types';
-import { isValidJavaIdentifier } from '../utils/validation';
+import { isValidFieldName, isValidJavaIdentifier } from '../utils/validation';
 import { ValidationEditor } from './ValidationEditor';
 
 interface FieldEditorProps {
@@ -36,7 +36,7 @@ export const FieldEditor = memo(function FieldEditor({
   const handleNameChange = (name: string) => {
     if (name && !isValidJavaIdentifier(name)) {
       setNameError('Must be a valid Java identifier (camelCase)');
-    } else if (name && !/^[a-z]/.test(name)) {
+    } else if (name && !isValidFieldName(name)) {
       setNameError('Field name should start with lowercase (camelCase)');
     } else {
       setNameError(null);

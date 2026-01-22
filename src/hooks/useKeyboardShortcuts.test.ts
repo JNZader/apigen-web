@@ -1,9 +1,14 @@
-import { describe, expect, it, vi } from 'vitest';
-import { useKeyboardShortcuts } from './useKeyboardShortcuts';
+import { renderHook } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+// Mock useHotkeys before importing the hook
+const mockUseHotkeys = vi.fn();
 vi.mock('@mantine/hooks', () => ({
-  useHotkeys: vi.fn(),
+  useHotkeys: (shortcuts: unknown[]) => mockUseHotkeys(shortcuts),
 }));
+
+// Import after mock setup
+import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 
 describe('useKeyboardShortcuts', () => {
   beforeEach(() => {
@@ -18,55 +23,45 @@ describe('useKeyboardShortcuts', () => {
     expect(useKeyboardShortcuts.name).toBe('useKeyboardShortcuts');
   });
 
-  it('should call useHotkeys with correct shortcuts', () => {
-    const mockOnUndo = vi.fn();
-    const mockOnRedo = vi.fn();
-    const mockOnSave = vi.fn();
-    const mockOnAddEntity = vi.fn();
-    const mockOnDelete = vi.fn();
-    const mockOnEscape = vi.fn();
+  it('should call useHotkeys with shortcuts array', () => {
+    const callbacks = {
+      onUndo: vi.fn(),
+      onRedo: vi.fn(),
+      onSave: vi.fn(),
+      onAddEntity: vi.fn(),
+      onDelete: vi.fn(),
+      onEscape: vi.fn(),
+    };
 
-    vi.mocked(require('@mantine/hooks')).useHotkeys.mockImplementation((shortcuts) => {
-      shortcuts([
-        ['mod+z', () => mockOnUndo()],
-        ['mod+y', () => mockOnRedo()],
-        ['mod+s', () => mockOnSave()],
-        ['mod+n', () => mockOnAddEntity()],
-        ['delete', () => mockOnDelete()],
-        ['escape', () => mockOnEscape()],
-      ]);
-    });
+    renderHook(() => useKeyboardShortcuts(callbacks));
 
-    useKeyboardShortcuts({
-      onUndo: mockOnUndo,
-      onRedo: mockOnRedo,
-      onSave: mockOnSave,
-      onAddEntity: mockOnAddEntity,
-      onDelete: mockOnDelete,
-      onEscape: mockOnEscape,
-    });
+    expect(mockUseHotkeys).toHaveBeenCalledTimes(1);
+    expect(mockUseHotkeys).toHaveBeenCalledWith(expect.any(Array));
 
-    expect(mockOnUndo).toHaveBeenCalled();
-    expect(mockOnRedo).toHaveBeenCalled();
-    expect(mockOnSave).toHaveBeenCalled();
-    expect(mockOnAddEntity).toHaveBeenCalled();
-    expect(mockOnDelete).toHaveBeenCalled();
-    expect(mockOnEscape).toHaveBeenCalled();
+    // Verify shortcuts array structure
+    const shortcuts = mockUseHotkeys.mock.calls[0][0];
+    expect(shortcuts.length).toBeGreaterThanOrEqual(6);
+
+    // Check that shortcut keys are present
+    const keys = shortcuts.map((s: [string, () => void]) => s[0]);
+    expect(keys).toContain('mod+z'); // undo
+    expect(keys).toContain('mod+y'); // redo
+    expect(keys).toContain('mod+s'); // save
+    expect(keys).toContain('mod+n'); // add entity
+    expect(keys).toContain('delete'); // delete
+    expect(keys).toContain('escape'); // escape
   });
 
-  it('should handle preventDefault correctly', () => {
-    const mockOnUndo = vi.fn((e) => {
-      expect(e.preventDefault).toHaveBeenCalled();
-    });
+  it('should work with partial callbacks', () => {
+    const callbacks = {
+      onUndo: vi.fn(),
+    };
 
-    vi.mocked(require('@mantine/hooks')).useHotkeys.mockImplementation((shortcuts) => {
-      shortcuts([['mod+z', () => mockOnUndo({ preventDefault: true } as Event)]]);
-    });
+    renderHook(() => useKeyboardShortcuts(callbacks));
 
-    useKeyboardShortcuts({
-      onUndo: mockOnUndo,
-    });
-
-    expect(mockOnUndo).toHaveBeenCalled();
+    expect(mockUseHotkeys).toHaveBeenCalledTimes(1);
+    // Should still create shortcuts array even with partial callbacks
+    const shortcuts = mockUseHotkeys.mock.calls[0][0];
+    expect(shortcuts.length).toBeGreaterThan(0);
   });
 });

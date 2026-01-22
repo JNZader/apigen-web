@@ -43,8 +43,6 @@ export interface EntityNodeData extends Record<string, unknown> {
 
 export type EntityNodeType = Node<EntityNodeData, 'entity'>;
 
-const COLLAPSED_FIELD_LIMIT = 5;
-
 function EntityNodeComponent({ data, selected }: NodeProps<EntityNodeType>) {
   const { entity, onEdit, onDelete, isSelected } = data;
   const isExpanded = useIsEntityExpanded(entity.id);
@@ -71,11 +69,11 @@ function EntityNodeComponent({ data, selected }: NodeProps<EntityNodeType>) {
     [services, entity.id],
   );
 
-  const hasMoreFields = entity.fields.length > COLLAPSED_FIELD_LIMIT;
+  const hasMoreFields = entity.fields.length > ENTITY_NODE.COLLAPSED_FIELD_LIMIT;
   const displayedFields = isExpanded
     ? entity.fields
-    : entity.fields.slice(0, COLLAPSED_FIELD_LIMIT);
-  const hiddenFieldsCount = entity.fields.length - COLLAPSED_FIELD_LIMIT;
+    : entity.fields.slice(0, ENTITY_NODE.COLLAPSED_FIELD_LIMIT);
+  const hiddenFieldsCount = entity.fields.length - ENTITY_NODE.COLLAPSED_FIELD_LIMIT;
 
   const toggleExpanded = useCallback(
     (e: React.MouseEvent) => {

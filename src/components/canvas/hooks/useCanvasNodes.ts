@@ -89,6 +89,14 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
   // This prevents "node not initialized" warnings from React Flow
   const isInitializedRef = useRef(false);
 
+  // Cleanup refs on unmount to prevent stale state on remount
+  useEffect(() => {
+    return () => {
+      isDraggingRef.current = false;
+      isInitializedRef.current = false;
+    };
+  }, []);
+
   // Calculate entity count for a service
   const getEntityCountForService = useCallback(
     (service: ServiceDesign) =>

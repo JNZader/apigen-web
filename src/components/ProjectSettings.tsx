@@ -30,14 +30,7 @@ import {
   IconShieldCheck,
 } from '@tabler/icons-react';
 import { useProject, useProjectActions } from '../store';
-import type {
-  FeatureFlag,
-  ProjectConfig,
-  SupportedLocale,
-  TenantStrategy,
-  VersioningStrategy,
-  WebhookEventType,
-} from '../types';
+import type { GatewayRouteConfig, ProjectConfig } from '../types';
 import { isValidArtifactId, isValidGroupId, isValidPackageName } from '../utils/validation';
 import { GatewayRouteDesigner } from './GatewayRouteDesigner';
 
@@ -620,7 +613,9 @@ function GatewaySettingsForm({ form }: { form: ReturnType<typeof useForm<Project
 
       <GatewayRouteDesigner
         routes={form.values.gatewayConfig.routes}
-        onChange={(routes) => form.setFieldValue('gatewayConfig.routes', routes)}
+        onRoutesChange={(routes: GatewayRouteConfig[]) =>
+          form.setFieldValue('gatewayConfig.routes', routes)
+        }
       />
     </Stack>
   );

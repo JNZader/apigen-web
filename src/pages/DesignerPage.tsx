@@ -345,23 +345,27 @@ export function DesignerPage() {
         </Grid>
       )}
 
-      <EntityForm
-        key={editingEntity ?? 'new'}
-        opened={entityFormOpened}
-        onClose={() => {
-          closeEntityForm();
-          setEditingEntity(null);
-        }}
-        entity={editingEntity ? getEntity(editingEntity) : undefined}
-      />
+      <SectionErrorBoundary section="Entity Form" variant="modal">
+        <EntityForm
+          key={editingEntity ?? 'new'}
+          opened={entityFormOpened}
+          onClose={() => {
+            closeEntityForm();
+            setEditingEntity(null);
+          }}
+          entity={editingEntity ? getEntity(editingEntity) : undefined}
+        />
+      </SectionErrorBoundary>
 
-      <RelationForm
-        key={`${relationSource}-${relationTarget}`}
-        opened={relationFormOpened}
-        onClose={closeRelationForm}
-        sourceEntityId={relationSource}
-        targetEntityId={relationTarget}
-      />
+      <SectionErrorBoundary section="Relation Form" variant="modal">
+        <RelationForm
+          key={`${relationSource}-${relationTarget}`}
+          opened={relationFormOpened}
+          onClose={closeRelationForm}
+          sourceEntityId={relationSource}
+          targetEntityId={relationTarget}
+        />
+      </SectionErrorBoundary>
 
       {/* Service creation modal */}
       <Modal
@@ -399,15 +403,17 @@ export function DesignerPage() {
       </Modal>
 
       {/* Service configuration panel */}
-      <ServiceConfigPanel
-        key={configureServiceId ?? 'none'}
-        serviceId={configureServiceId}
-        opened={serviceConfigOpened}
-        onClose={() => {
-          closeServiceConfig();
-          setConfigureServiceId(null);
-        }}
-      />
+      <SectionErrorBoundary section="Service Config" variant="modal">
+        <ServiceConfigPanel
+          key={configureServiceId ?? 'none'}
+          serviceId={configureServiceId}
+          opened={serviceConfigOpened}
+          onClose={() => {
+            closeServiceConfig();
+            setConfigureServiceId(null);
+          }}
+        />
+      </SectionErrorBoundary>
 
       {/* Event/Message designer drawer */}
       <Drawer

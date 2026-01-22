@@ -90,7 +90,8 @@ export function DesignerCanvas({
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
   // Track which service is being hovered during entity drag (for visual feedback)
-  const [dropTargetServiceId, setDropTargetServiceId] = useState<string | null>(null);
+  // setDropTargetServiceId is kept for potential future use (drag-to-assign feature)
+  const [dropTargetServiceId, _setDropTargetServiceId] = useState<string | null>(null);
 
   // Service connection form state management
   const {
@@ -133,7 +134,7 @@ export function DesignerCanvas({
   );
 
   // Use custom hooks for nodes and edges
-  const { nodes, setNodes, onNodesChange, isDraggingRef } = useCanvasNodes({
+  const { nodes, setNodes: _setNodes, onNodesChange, isDraggingRef } = useCanvasNodes({
     canvasView,
     entityServiceFilter,
     selectedEntityId,
@@ -153,16 +154,10 @@ export function DesignerCanvas({
 
   // Use custom hook for drag handlers
   const { handleNodesChange, handleNodeDrag, handleNodeDragStop } = useNodeDragHandlers({
-    canvasView,
     entities,
     services,
-    selectedEntityId,
-    selectedEntityIds,
-    selectedServiceId,
     isDraggingRef,
-    setNodes,
     onNodesChange,
-    setDropTargetServiceId,
   });
 
   // Use custom hook for connections

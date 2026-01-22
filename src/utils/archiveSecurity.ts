@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 import { ARCHIVE_CONFIG } from '../config/constants';
+import { warn } from './logger';
 
 // Re-export constants for backward compatibility
 export const MAX_FILES_IN_ARCHIVE = ARCHIVE_CONFIG.MAX_FILES_IN_ARCHIVE;
@@ -65,7 +66,7 @@ export async function addServiceToZip(
 
     // Validate path to prevent zip slip attack
     if (!isSafePath(path)) {
-      console.warn(`Skipping potentially unsafe path: ${path}`);
+      warn(`Skipping potentially unsafe path: ${path}`, 'archiveSecurity');
       continue;
     }
 

@@ -210,11 +210,18 @@ export const useEntityStore = create<EntityState>()(
 // Atomic Selectors
 // ============================================================================
 
+/** Returns all entities in the store. Updates when entities array changes. */
 export const useEntities = () => useEntityStore((state) => state.entities);
+
+/** Returns the currently selected entity ID (single selection). */
 export const useSelectedEntityId = () => useEntityStore((state) => state.selectedEntityId);
+
+/** Returns array of selected entity IDs (multi-selection via Ctrl+Click). */
 export const useSelectedEntityIds = () => useEntityStore((state) => state.selectedEntityIds);
 
 // Derived selectors
+
+/** Returns the selected entity object, or undefined if none selected. */
 export const useSelectedEntity = () =>
   useEntityStore((state) =>
     state.selectedEntityId
@@ -222,15 +229,18 @@ export const useSelectedEntity = () =>
       : undefined,
   );
 
+/** Returns entity by ID, or undefined if not found. */
 export const useEntityById = (id: string) =>
   useEntityStore((state) => state.entities.find((e) => e.id === id));
 
+/** Returns the total count of entities. */
 export const useEntityCount = () => useEntityStore((state) => state.entities.length);
 
 // ============================================================================
 // Action Selectors
 // ============================================================================
 
+/** Returns entity CRUD and selection actions. Uses useShallow to prevent unnecessary re-renders. */
 export const useEntityActions = () =>
   useEntityStore(
     useShallow((state) => ({
@@ -245,6 +255,7 @@ export const useEntityActions = () =>
     })),
   );
 
+/** Returns field CRUD actions. Uses useShallow to prevent unnecessary re-renders. */
 export const useFieldActions = () =>
   useEntityStore(
     useShallow((state) => ({

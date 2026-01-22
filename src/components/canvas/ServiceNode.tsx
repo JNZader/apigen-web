@@ -38,9 +38,11 @@ function getBorderWidth(isDropTarget: boolean, isHighlighted: boolean): number {
 function ServiceNodeComponent({ id, data, selected }: NodeProps<ServiceNodeType>) {
   const { service, entityCount, entityNames, onDelete, onConfigure, isSelected, isDropTarget } =
     data;
+  // Normalize isDropTarget to boolean (it's optional in the interface)
+  const isDropTargetNormalized = isDropTarget ?? false;
   // Use both ReactFlow's selected prop (required for NodeResizer functionality)
   // and our data.isSelected (for custom styling and state tracking)
-  const isHighlighted = !!(selected || isSelected || isDropTarget);
+  const isHighlighted = selected || isSelected || isDropTargetNormalized;
 
   const handleStyle = {
     width: 14,
@@ -112,13 +114,13 @@ function ServiceNodeComponent({ id, data, selected }: NodeProps<ServiceNodeType>
         style={{
           width: '100%',
           height: '100%',
-          borderColor: getBorderColor(isDropTarget ?? false, isHighlighted, service.color),
-          borderWidth: getBorderWidth(isDropTarget ?? false, isHighlighted),
+          borderColor: getBorderColor(isDropTargetNormalized, isHighlighted, service.color),
+          borderWidth: getBorderWidth(isDropTargetNormalized, isHighlighted),
           cursor: 'grab',
           backgroundColor,
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: isDropTarget ? '0 0 20px rgba(64, 192, 87, 0.4)' : undefined,
+          boxShadow: isDropTargetNormalized ? '0 0 20px rgba(64, 192, 87, 0.4)' : undefined,
           transition: 'border-color 0.15s, background-color 0.15s, box-shadow 0.15s',
           position: 'relative',
         }}

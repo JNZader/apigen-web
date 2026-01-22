@@ -5,7 +5,7 @@ import { useCallback, useRef, useState } from 'react';
 import { generateProject as generateWithServer } from '../api/generatorApi';
 import { useProjectStore } from '../store/projectStore';
 import type { EntityDesign, ServiceDesign } from '../types';
-import { addServiceToZip, createArtifactId } from '../utils/archiveSecurity';
+import { addServiceToZip } from '../utils/archiveSecurity';
 import { buildProjectConfig } from '../utils/projectConfigBuilder';
 import { generateSQL } from '../utils/sqlGenerator';
 
@@ -111,9 +111,6 @@ export function useMultiServiceExport() {
         const serviceRelations = getServiceRelations(serviceEntities);
         const serviceSql = generateSQL(serviceEntities, serviceRelations, service.name);
 
-        // Create service-specific artifact ID
-        const serviceArtifactId = createServiceArtifactId(service.name);
-
         const projectConfig = buildProjectConfig(project, service);
 
         const blob = await generateWithServer({
@@ -164,8 +161,7 @@ export function useMultiServiceExport() {
         const result = await generateServiceProject(service);
 
         if (result.success && result.blob) {
-          const serviceArtifactId = createServiceArtifactId(service.name);
-          saveAs(result.blob, `${serviceArtifactId}.zip`);
+          saveAs(result.blob, `${createServiceArtifactId(service.name)}.zip`);
 
           notifications.show({
             title: 'Service exported',

@@ -8,6 +8,7 @@ export const ENTITY_NODE = {
   WIDTH: 220,
   MIN_HEIGHT: 100,
   FIELD_HEIGHT: 28,
+  COLLAPSED_FIELD_LIMIT: 5,
 } as const;
 
 export const SERVICE_NODE = {

@@ -15,12 +15,16 @@ import { generateSQL } from '../utils/sqlGenerator';
  */
 export function useProjectGeneration() {
   const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   // Ref for synchronous blocking - prevents race conditions before React re-renders
   const isGeneratingRef = useRef(false);
 
   const project = useProjectStore((state) => state.project);
   const entities = useProjectStore((state) => state.entities);
   const relations = useProjectStore((state) => state.relations);
+
+  /** Clears the error state. Call this before retrying generation. */
+  const clearError = useCallback(() => setError(null), []);
 
   const generateProject = useCallback(async (): Promise<boolean> => {
     // Synchronous check prevents multiple calls even before React updates state
@@ -40,6 +44,7 @@ export function useProjectGeneration() {
     // Set ref immediately (synchronous) to block any concurrent calls
     isGeneratingRef.current = true;
     setGenerating(true);
+    setError(null);
 
     try {
       const sql = generateSQL(entities, relations, project.name);
@@ -59,13 +64,16 @@ export function useProjectGeneration() {
         color: 'green',
       });
       return true;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to generate project';
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to generate project';
+      const displayMessage = errorMessage.includes('fetch')
+        ? 'Could not connect to APiGen Server. Make sure it is running on localhost:8081'
+        : errorMessage;
+
+      setError(displayMessage);
       notifications.show({
         title: 'Server Error',
-        message: errorMessage.includes('fetch')
-          ? 'Could not connect to APiGen Server. Make sure it is running on localhost:8081'
-          : errorMessage,
+        message: displayMessage,
         color: 'red',
       });
       return false;
@@ -77,6 +85,8 @@ export function useProjectGeneration() {
 
   return {
     generating,
+    error,
+    clearError,
     generateProject,
   };
 }

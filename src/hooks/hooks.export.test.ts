@@ -1,12 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   useKeyboardShortcuts,
   useHistory,
   useMultiServiceExport,
   useThrottledAction,
   useDebouncedAction,
+  useProjectGeneration,
 } from './index';
-import { useProjectGeneration, useProjectGeneration as useProjectGenerationHook } from './index';
 
 describe('Hook exports from index', () => {
   it('should export useKeyboardShortcuts', () => {
