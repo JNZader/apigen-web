@@ -1,9 +1,10 @@
 import JSZip from 'jszip';
+import { ARCHIVE_CONFIG } from '../config/constants';
 
-// Constants for archive safety limits
-export const MAX_FILES_IN_ARCHIVE = 1000;
-export const MAX_TOTAL_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
-export const MAX_SINGLE_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+// Re-export constants for backward compatibility
+export const MAX_FILES_IN_ARCHIVE = ARCHIVE_CONFIG.MAX_FILES_IN_ARCHIVE;
+export const MAX_TOTAL_SIZE_BYTES = ARCHIVE_CONFIG.MAX_TOTAL_SIZE_BYTES;
+export const MAX_SINGLE_FILE_SIZE_BYTES = ARCHIVE_CONFIG.MAX_SINGLE_FILE_SIZE_BYTES;
 
 /**
  * Validate path doesn't contain directory traversal (Zip Slip prevention)

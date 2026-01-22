@@ -9,6 +9,11 @@ import { addServiceToZip, createArtifactId } from '../utils/archiveSecurity';
 import { buildProjectConfig } from '../utils/projectConfigBuilder';
 import { generateSQL } from '../utils/sqlGenerator';
 
+// Helper function to create service artifact ID
+function createServiceArtifactId(serviceName: string): string {
+  return `api-${serviceName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+}
+
 interface ExportProgress {
   current: number;
   total: number;
@@ -107,7 +112,7 @@ export function useMultiServiceExport() {
         const serviceSql = generateSQL(serviceEntities, serviceRelations, service.name);
 
         // Create service-specific artifact ID
-        const serviceArtifactId = createArtifactId(service.name);
+        const serviceArtifactId = createServiceArtifactId(service.name);
 
         const projectConfig = buildProjectConfig(project, service);
 
@@ -159,7 +164,7 @@ export function useMultiServiceExport() {
         const result = await generateServiceProject(service);
 
         if (result.success && result.blob) {
-          const serviceArtifactId = createArtifactId(service.name);
+          const serviceArtifactId = createServiceArtifactId(service.name);
           saveAs(result.blob, `${serviceArtifactId}.zip`);
 
           notifications.show({
@@ -221,7 +226,7 @@ export function useMultiServiceExport() {
         results.push(result);
 
         if (result.success && result.blob) {
-          await addServiceToZip(zip, result.blob, createArtifactId(service.name));
+          await addServiceToZip(zip, result.blob, createServiceArtifactId(service.name));
         }
       }
 

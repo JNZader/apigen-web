@@ -11,6 +11,7 @@ export function buildProjectConfig(
   const baseConfig = {
     name: service?.name || baseProject.name,
     groupId: baseProject.groupId,
+    packageName: baseProject.packageName,
     artifactId: service?.name
       ? `api-${service.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`
       : baseProject.artifactId,
