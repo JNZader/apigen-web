@@ -3,6 +3,7 @@ import { saveAs } from 'file-saver';
 import { useCallback, useRef, useState } from 'react';
 import { generateProject as generateWithServer } from '../api/generatorApi';
 import { useProjectStore } from '../store/projectStore';
+import { buildProjectConfig } from '../utils/projectConfigBuilder';
 import { generateSQL } from '../utils/sqlGenerator';
 
 /**
@@ -43,34 +44,10 @@ export function useProjectGeneration() {
     try {
       const sql = generateSQL(entities, relations, project.name);
 
+      const projectConfig = buildProjectConfig(project);
+
       const blob = await generateWithServer({
-        project: {
-          name: project.name,
-          groupId: project.groupId,
-          artifactId: project.artifactId,
-          javaVersion: project.javaVersion,
-          springBootVersion: project.springBootVersion,
-          modules: project.modules,
-          features: project.features,
-          database: project.database,
-          securityConfig: project.securityConfig,
-          rateLimitConfig: project.rateLimitConfig,
-          cacheConfig: project.cacheConfig,
-          featureFlags: project.featureFlags,
-          i18nConfig: project.i18nConfig,
-          webhooksConfig: project.webhooksConfig,
-          bulkConfig: project.bulkConfig,
-          batchConfig: project.batchConfig,
-          multiTenancyConfig: project.multiTenancyConfig,
-          eventSourcingConfig: project.eventSourcingConfig,
-          apiVersioningConfig: project.apiVersioningConfig,
-          observabilityConfig: project.observabilityConfig,
-          resilienceConfig: project.resilienceConfig,
-          corsConfig: project.corsConfig,
-          graphqlConfig: project.graphqlConfig,
-          grpcConfig: project.grpcConfig,
-          gatewayConfig: project.gatewayConfig,
-        },
+        project: projectConfig,
         sql,
       });
 

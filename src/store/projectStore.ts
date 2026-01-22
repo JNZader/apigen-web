@@ -78,11 +78,18 @@ export const useProjectStoreInternal = create<ProjectState>()(
       project: defaultProjectConfig,
 
       // Actions
+      /**
+       * Updates the project configuration with partial updates
+       * @param updates - Partial project configuration to merge
+       */
       setProject: (updates) =>
         set((state) => ({
           project: { ...state.project, ...updates },
         })),
 
+      /**
+       * Resets the entire project to default state, clearing all entities, relations, and services
+       */
       resetProject: () => {
         // Reset all stores
         useEntityStore.setState({ entities: [], selectedEntityId: null });
@@ -93,6 +100,10 @@ export const useProjectStoreInternal = create<ProjectState>()(
         set({ project: defaultProjectConfig });
       },
 
+      /**
+       * Exports the entire project state as a JSON string for persistence
+       * @returns JSON string containing project, entities, relations, services, and connections
+       */
       exportProject: () => {
         const state = get();
         const entityState = useEntityStore.getState();
@@ -450,9 +461,27 @@ export {
   useServices,
 } from './serviceStore';
 
-// Project-specific selectors
+/**
+ * Selector for accessing the current project configuration
+ * @returns The current project configuration
+ */
 export const useProject = () => useProjectStoreInternal((state) => state.project);
 
+// Optimized selectors for DesignerPage to reduce re-renders
+export const useDesignerPageData = () => {
+  const project = useProjectStoreInternal((state) => state.project);
+  const exportProject = useProjectStoreInternal((state) => state.exportProject);
+
+  return {
+    project,
+    exportProject,
+  };
+};
+
+/**
+ * Selector for project actions that don't cause unnecessary re-renders
+ * @returns Object containing project action functions: setProject, resetProject, exportProject, importProject
+ */
 export const useProjectActions = () =>
   useProjectStoreInternal(
     useShallow((state) => ({

@@ -6,6 +6,7 @@ import { generateProject as generateWithServer } from '../api/generatorApi';
 import { useProjectStore } from '../store/projectStore';
 import type { EntityDesign, ServiceDesign } from '../types';
 import { addServiceToZip, createArtifactId } from '../utils/archiveSecurity';
+import { buildProjectConfig } from '../utils/projectConfigBuilder';
 import { generateSQL } from '../utils/sqlGenerator';
 
 interface ExportProgress {
@@ -108,58 +109,10 @@ export function useMultiServiceExport() {
         // Create service-specific artifact ID
         const serviceArtifactId = createArtifactId(service.name);
 
+        const projectConfig = buildProjectConfig(project, service);
+
         const blob = await generateWithServer({
-          project: {
-            name: service.name,
-            groupId: project.groupId,
-            artifactId: serviceArtifactId,
-            javaVersion: project.javaVersion,
-            springBootVersion: project.springBootVersion,
-            modules: project.modules,
-            features: {
-              ...project.features,
-              // Apply service-specific settings
-            },
-            database: {
-              ...project.database,
-              type: service.config.databaseType as typeof project.database.type,
-            },
-            securityConfig: project.securityConfig,
-            rateLimitConfig: service.config.enableRateLimiting
-              ? project.rateLimitConfig
-              : { ...project.rateLimitConfig, requestsPerSecond: 0 },
-            cacheConfig: project.cacheConfig,
-            featureFlags: project.featureFlags,
-            i18nConfig: project.i18nConfig,
-            webhooksConfig: project.webhooksConfig,
-            bulkConfig: project.bulkConfig,
-            batchConfig: project.batchConfig,
-            multiTenancyConfig: project.multiTenancyConfig,
-            eventSourcingConfig: project.eventSourcingConfig,
-            apiVersioningConfig: project.apiVersioningConfig,
-            observabilityConfig: {
-              ...project.observabilityConfig,
-              tracing: {
-                ...project.observabilityConfig.tracing,
-                enabled: service.config.enableTracing,
-              },
-              metrics: {
-                ...project.observabilityConfig.metrics,
-                enabled: service.config.enableMetrics,
-              },
-            },
-            resilienceConfig: {
-              ...project.resilienceConfig,
-              circuitBreaker: {
-                ...project.resilienceConfig.circuitBreaker,
-                enabled: service.config.enableCircuitBreaker,
-              },
-            },
-            corsConfig: project.corsConfig,
-            graphqlConfig: project.graphqlConfig,
-            grpcConfig: project.grpcConfig,
-            gatewayConfig: project.gatewayConfig,
-          },
+          project: projectConfig,
           sql: serviceSql,
         });
 

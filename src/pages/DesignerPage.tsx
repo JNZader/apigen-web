@@ -38,7 +38,7 @@ import { RelationForm } from '../components/RelationForm';
 import { SectionErrorBoundary } from '../components/SectionErrorBoundary';
 import { ServiceConfigPanel } from '../components/ServiceConfigPanel';
 import { useEntityDeletion, useHistory, useKeyboardShortcuts, useSelectedEntity } from '../hooks';
-import { useProjectStore, useServiceActions } from '../store/projectStore';
+import { useDesignerPageData, useServiceActions, useProjectStore } from '../store/projectStore';
 
 type ViewMode = 'canvas' | 'grid';
 
@@ -74,11 +74,10 @@ export function DesignerPage() {
   const { confirmDelete } = useEntityDeletion();
   const { undo, redo } = useHistory();
 
-  // Get entities list and store actions (atomic selectors)
+  // Get entities list and store actions (optimized selectors to reduce re-renders)
+  const { project, exportProject } = useDesignerPageData();
   const entities = useProjectStore((state) => state.entities);
   const getEntity = useProjectStore((state) => state.getEntity);
-  const project = useProjectStore((state) => state.project);
-  const exportProject = useProjectStore((state) => state.exportProject);
 
   // Service actions
   const { addService } = useServiceActions();
