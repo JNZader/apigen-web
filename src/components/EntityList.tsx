@@ -77,7 +77,7 @@ export function EntityList({ onAddEntity }: Readonly<EntityListProps>) {
       )}
 
       {/* Scrollable container */}
-      <div
+      <nav
         ref={parentRef}
         style={{
           flex: 1,
@@ -102,7 +102,7 @@ export function EntityList({ onAddEntity }: Readonly<EntityListProps>) {
 
         {filteredEntities.length > 0 && !shouldVirtualize && (
           /* Non-virtualized rendering for small lists */
-          <Stack gap={4} role="list" aria-label="Available entities">
+          <Stack gap={4} aria-label="Available entities">
             {filteredEntities.map((entity) => (
               <NavLink
                 key={entity.id}
@@ -127,8 +127,6 @@ export function EntityList({ onAddEntity }: Readonly<EntityListProps>) {
               width: '100%',
               position: 'relative',
             }}
-            role="list"
-            aria-label="Available entities"
           >
             {virtualItems.map((virtualRow) => {
               const entity = filteredEntities[virtualRow.index];
@@ -159,7 +157,7 @@ export function EntityList({ onAddEntity }: Readonly<EntityListProps>) {
             })}
           </div>
         )}
-      </div>
+      </nav>
     </Stack>
   );
 }

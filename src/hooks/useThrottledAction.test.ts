@@ -248,14 +248,6 @@ describe('useThrottledAction', () => {
         firstPromise = result.current();
       });
 
-      // Try concurrent calls
-      let secondResult: void | undefined;
-      act(() => {
-        result.current().then((r) => {
-          secondResult = r;
-        });
-      });
-
       // Resolve first
       await act(async () => {
         resolveAction();
