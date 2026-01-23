@@ -1,11 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   createDefaultField,
-  toSnakeCase,
-  toPascalCase,
-  toCamelCase,
   JAVA_TYPES,
   TYPE_COLORS,
+  toCamelCase,
+  toPascalCase,
+  toSnakeCase,
   VALIDATION_TYPES,
 } from './entity';
 

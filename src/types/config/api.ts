@@ -120,11 +120,7 @@ export interface GatewayConfig {
 /**
  * API versioning strategy options.
  */
-export type VersioningStrategy =
-  | 'HEADER'
-  | 'PATH'
-  | 'QUERY_PARAM'
-  | 'MEDIA_TYPE';
+export type VersioningStrategy = 'HEADER' | 'PATH' | 'QUERY_PARAM' | 'MEDIA_TYPE';
 
 /**
  * API versioning configuration.

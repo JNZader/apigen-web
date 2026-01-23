@@ -1,5 +1,5 @@
-import type { RefObject } from 'react';
 import type { NodeChange, NodePositionChange } from '@xyflow/react';
+import type { RefObject } from 'react';
 import type { EntityDesign, ServiceDesign } from '../../../types';
 
 // ============================================================================
@@ -149,8 +149,7 @@ export function adjustSelectionChanges(
 
     // For entities, check both single and multi selection
     const shouldStaySelected =
-      currentSelectedEntityId === change.id ||
-      currentSelectedEntityIds.includes(change.id);
+      currentSelectedEntityId === change.id || currentSelectedEntityIds.includes(change.id);
 
     return shouldStaySelected ? { ...change, selected: true } : change;
   });

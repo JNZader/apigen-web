@@ -1,5 +1,6 @@
-import { defineConfig } from 'vite'
+import { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
 
 // Chunk mapping configuration for code splitting
 const CHUNK_MAPPING: Array<{ patterns: string[]; chunk: string }> = [
@@ -22,6 +23,18 @@ const IMAGE_EXTENSIONS = ['.gif', '.jpg', '.jpeg', '.png', '.svg', '.webp'];
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+      '@components': resolve(__dirname, 'src/components'),
+      '@hooks': resolve(__dirname, 'src/hooks'),
+      '@store': resolve(__dirname, 'src/store'),
+      '@types': resolve(__dirname, 'src/types'),
+      '@utils': resolve(__dirname, 'src/utils'),
+      '@api': resolve(__dirname, 'src/api'),
+    },
+  },
 
   build: {
     // Disable source maps in production for smaller bundles

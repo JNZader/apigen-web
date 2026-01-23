@@ -9,136 +9,128 @@
 // IMPORTS FOR DEFAULT CONFIG
 // ============================================================================
 
-import { defaultSecurityConfig } from './config/security';
-import { defaultDatabaseConfig } from './config/database';
-import { defaultCacheConfig } from './config/cache';
-import { defaultObservabilityConfig } from './config/observability';
-import { defaultResilienceConfig } from './config/resilience';
-import { defaultWebhooksConfig, defaultI18nConfig } from './config/messaging';
 import {
-  defaultFeatureFlagsConfig,
-  defaultBulkConfig,
-  defaultBatchConfig,
-} from './config/features';
-import {
-  defaultGraphQLConfig,
-  defaultGrpcConfig,
-  defaultGatewayConfig,
   defaultApiVersioningConfig,
   defaultCorsConfig,
+  defaultGatewayConfig,
+  defaultGraphQLConfig,
+  defaultGrpcConfig,
 } from './config/api';
+import { defaultCacheConfig } from './config/cache';
+import { defaultDatabaseConfig } from './config/database';
 import {
-  defaultMultiTenancyConfig,
+  defaultBatchConfig,
+  defaultBulkConfig,
+  defaultFeatureFlagsConfig,
+} from './config/features';
+import { defaultI18nConfig, defaultWebhooksConfig } from './config/messaging';
+import {
   defaultEventSourcingConfig,
+  defaultMultiTenancyConfig,
   defaultRateLimitConfig,
 } from './config/microservices';
+import { defaultObservabilityConfig } from './config/observability';
+import { defaultResilienceConfig } from './config/resilience';
+import { defaultSecurityConfig } from './config/security';
 
 // ============================================================================
 // RE-EXPORTS FROM CONFIG MODULES
 // ============================================================================
 
-// Security types
+// API types
 export type {
-  SecurityMode,
-  JwtSecretLength,
-  ReferrerPolicy,
-  JwtKeyRotationConfig,
-  SecurityHeadersConfig,
-  OAuth2Config,
-  PkceConfig,
-  SecurityConfig,
-} from './config/security';
-export { defaultSecurityConfig } from './config/security';
-
-// Database types
-export type {
-  DatabaseType,
-  HikariConfig,
-  DatabaseConfig,
-} from './config/database';
-export { defaultDatabaseConfig } from './config/database';
-
+  ApiVersioningConfig,
+  CorsConfig,
+  GatewayConfig,
+  GatewayRouteConfig,
+  GraphQLConfig,
+  GrpcConfig,
+  VersioningStrategy,
+} from './config/api';
+export {
+  defaultApiVersioningConfig,
+  defaultCorsConfig,
+  defaultGatewayConfig,
+  defaultGraphQLConfig,
+  defaultGrpcConfig,
+} from './config/api';
 // Cache types
 export type {
+  CacheConfig,
   CacheType,
   EntityCacheSettings,
   ListCacheSettings,
   RedisCacheConfig,
-  CacheConfig,
 } from './config/cache';
 export { defaultCacheConfig } from './config/cache';
-
+// Database types
+export type {
+  DatabaseConfig,
+  DatabaseType,
+  HikariConfig,
+} from './config/database';
+export { defaultDatabaseConfig } from './config/database';
+// Feature types
+export type {
+  BatchConfig,
+  BulkConfig,
+  BulkFormat,
+  FeatureFlag,
+  FeatureFlagsConfig,
+} from './config/features';
+export {
+  defaultBatchConfig,
+  defaultBulkConfig,
+  defaultFeatureFlagsConfig,
+} from './config/features';
+// Messaging types
+export type {
+  I18nConfig,
+  SupportedLocale,
+  WebhookEventType,
+  WebhooksConfig,
+} from './config/messaging';
+export { defaultI18nConfig, defaultWebhooksConfig } from './config/messaging';
+// Microservices types
+export type {
+  EventSourcingConfig,
+  MultiTenancyConfig,
+  RateLimitConfig,
+  RateLimitStorageMode,
+  TenantStrategy,
+} from './config/microservices';
+export {
+  defaultEventSourcingConfig,
+  defaultMultiTenancyConfig,
+  defaultRateLimitConfig,
+} from './config/microservices';
 // Observability types
 export type {
-  TracingConfig,
   MetricsConfig,
-  QueryAnalysisConfig,
   ObservabilityConfig,
+  QueryAnalysisConfig,
+  TracingConfig,
 } from './config/observability';
 export { defaultObservabilityConfig } from './config/observability';
-
 // Resilience types
 export type {
   CircuitBreakerConfig,
-  RetryConfig,
   ResilienceConfig,
+  RetryConfig,
 } from './config/resilience';
 export { defaultResilienceConfig } from './config/resilience';
-
-// Messaging types
+// Security types
 export type {
-  WebhookEventType,
-  WebhooksConfig,
-  SupportedLocale,
-  I18nConfig,
-} from './config/messaging';
-export { defaultWebhooksConfig, defaultI18nConfig } from './config/messaging';
-
-// Feature types
-export type {
-  FeatureFlag,
-  FeatureFlagsConfig,
-  BulkFormat,
-  BulkConfig,
-  BatchConfig,
-} from './config/features';
-export {
-  defaultFeatureFlagsConfig,
-  defaultBulkConfig,
-  defaultBatchConfig,
-} from './config/features';
-
-// API types
-export type {
-  GraphQLConfig,
-  GrpcConfig,
-  GatewayRouteConfig,
-  GatewayConfig,
-  VersioningStrategy,
-  ApiVersioningConfig,
-  CorsConfig,
-} from './config/api';
-export {
-  defaultGraphQLConfig,
-  defaultGrpcConfig,
-  defaultGatewayConfig,
-  defaultApiVersioningConfig,
-  defaultCorsConfig,
-} from './config/api';
-
-// Microservices types
-export type {
-  TenantStrategy,
-  MultiTenancyConfig,
-  EventSourcingConfig,
-  RateLimitStorageMode,
-  RateLimitConfig,
-} from './config/microservices';
-export {
-  defaultMultiTenancyConfig,
-  defaultEventSourcingConfig,
-  defaultRateLimitConfig,
-} from './config/microservices';
+  JwtKeyRotationConfig,
+  JwtSecretLength,
+  OAuth2Config,
+  PkceConfig,
+  ReferrerPolicy,
+  SecurityConfig,
+  SecurityHeadersConfig,
+  SecurityMode,
+} from './config/security';
+export { defaultSecurityConfig } from './config/security';
 
 // ============================================================================
 // PROJECT MODULES

@@ -38,7 +38,7 @@ import { RelationForm } from '../components/RelationForm';
 import { SectionErrorBoundary } from '../components/SectionErrorBoundary';
 import { ServiceConfigPanel } from '../components/ServiceConfigPanel';
 import { useEntityDeletion, useHistory, useKeyboardShortcuts, useSelectedEntity } from '../hooks';
-import { useDesignerPageData, useServiceActions, useProjectStore } from '../store/projectStore';
+import { useDesignerPageData, useProjectStore, useServiceActions } from '../store/projectStore';
 
 type ViewMode = 'canvas' | 'grid';
 

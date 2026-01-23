@@ -60,16 +60,7 @@ export interface WebhooksConfig {
 /**
  * Supported locale codes for internationalization.
  */
-export type SupportedLocale =
-  | 'en'
-  | 'es'
-  | 'pt'
-  | 'fr'
-  | 'de'
-  | 'it'
-  | 'zh'
-  | 'ja'
-  | 'ko';
+export type SupportedLocale = 'en' | 'es' | 'pt' | 'fr' | 'de' | 'it' | 'zh' | 'ja' | 'ko';
 
 /**
  * Internationalization configuration.

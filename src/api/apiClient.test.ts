@@ -1,11 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  createApiClient,
-  ApiError,
-  TimeoutError,
-  ValidationError,
-} from './apiClient';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
+import { ApiError, createApiClient, TimeoutError, ValidationError } from './apiClient';
 
 // Mock fetch globally
 const mockFetch = vi.fn();

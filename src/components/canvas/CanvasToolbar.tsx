@@ -34,7 +34,11 @@ import {
   useServices,
 } from '../../store/projectStore';
 import { CANVAS_VIEWS } from '../../utils/canvasConstants';
-import { calculateAutoLayout, calculateServiceLayout, LAYOUT_PRESETS } from '../../utils/canvasLayout';
+import {
+  calculateAutoLayout,
+  calculateServiceLayout,
+  LAYOUT_PRESETS,
+} from '../../utils/canvasLayout';
 import { EntityServiceTabs } from './EntityServiceTabs';
 
 interface CanvasToolbarProps {
@@ -75,11 +79,7 @@ export function CanvasToolbar({
           return;
         }
 
-        const positions = calculateAutoLayout(
-          entities,
-          relations,
-          LAYOUT_PRESETS[preset],
-        );
+        const positions = calculateAutoLayout(entities, relations, LAYOUT_PRESETS[preset]);
         updateEntityPositions(positions);
         setLayoutPreference(preset);
 
@@ -99,7 +99,11 @@ export function CanvasToolbar({
         }
 
         // Layout services using dagre (respects connections and dimensions)
-        const servicePositions = calculateServiceLayout(services, serviceConnections, LAYOUT_PRESETS[preset]);
+        const servicePositions = calculateServiceLayout(
+          services,
+          serviceConnections,
+          LAYOUT_PRESETS[preset],
+        );
         updateServicePositions(servicePositions);
 
         setLayoutPreference(preset);

@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { useServiceConnectionStore } from './serviceConnectionStore';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { ServiceConnectionDesign } from '../types';
+import { useServiceConnectionStore } from './serviceConnectionStore';
 
 // Helper to create a mock connection without id
 function createMockConnection(
@@ -142,8 +142,7 @@ describe('serviceConnectionStore', () => {
 
   describe('setServiceConnections', () => {
     it('should replace all connections', () => {
-      const { addServiceConnection, setServiceConnections } =
-        useServiceConnectionStore.getState();
+      const { addServiceConnection, setServiceConnections } = useServiceConnectionStore.getState();
 
       addServiceConnection(createMockConnection('service-1', 'service-2'));
       addServiceConnection(createMockConnection('service-2', 'service-3'));
@@ -166,8 +165,7 @@ describe('serviceConnectionStore', () => {
     });
 
     it('should clear all connections when set to empty array', () => {
-      const { addServiceConnection, setServiceConnections } =
-        useServiceConnectionStore.getState();
+      const { addServiceConnection, setServiceConnections } = useServiceConnectionStore.getState();
 
       addServiceConnection(createMockConnection('service-1', 'service-2'));
 

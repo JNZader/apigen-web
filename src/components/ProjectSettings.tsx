@@ -100,9 +100,7 @@ function BasicSettingsForm({ form }: { form: ReturnType<typeof useForm<ProjectCo
       />
 
       <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
-        <Text size="sm">
-          Spring Boot version is determined by APiGen Core (currently 4.0.0)
-        </Text>
+        <Text size="sm">Spring Boot version is determined by APiGen Core (currently 4.0.0)</Text>
       </Alert>
     </Stack>
   );
@@ -316,7 +314,9 @@ function SecuritySettingsForm({ form }: { form: ReturnType<typeof useForm<Projec
               />
               <Switch
                 label="Include Subdomains"
-                {...form.getInputProps('securityConfig.headers.hstsIncludeSubdomains', { type: 'checkbox' })}
+                {...form.getInputProps('securityConfig.headers.hstsIncludeSubdomains', {
+                  type: 'checkbox',
+                })}
               />
               <Switch
                 label="Enable Preload"
@@ -346,7 +346,10 @@ function SecuritySettingsForm({ form }: { form: ReturnType<typeof useForm<Projec
               { value: 'origin-when-cross-origin', label: 'Origin When Cross-Origin' },
               { value: 'same-origin', label: 'Same Origin' },
               { value: 'strict-origin', label: 'Strict Origin' },
-              { value: 'strict-origin-when-cross-origin', label: 'Strict Origin When Cross-Origin' },
+              {
+                value: 'strict-origin-when-cross-origin',
+                label: 'Strict Origin When Cross-Origin',
+              },
               { value: 'unsafe-url', label: 'Unsafe URL' },
             ]}
             {...form.getInputProps('securityConfig.headers.referrerPolicy')}
@@ -809,14 +812,18 @@ function ResilienceSettingsForm({ form }: { form: ReturnType<typeof useForm<Proj
             label="Slow Call Duration Threshold (seconds)"
             description="Duration threshold for slow calls"
             min={1}
-            {...form.getInputProps('resilienceConfig.circuitBreaker.slowCallDurationThresholdSeconds')}
+            {...form.getInputProps(
+              'resilienceConfig.circuitBreaker.slowCallDurationThresholdSeconds',
+            )}
           />
 
           <NumberInput
             label="Wait Duration in Open State (seconds)"
             description="Time to wait before transitioning from OPEN to HALF_OPEN"
             min={1}
-            {...form.getInputProps('resilienceConfig.circuitBreaker.waitDurationInOpenStateSeconds')}
+            {...form.getInputProps(
+              'resilienceConfig.circuitBreaker.waitDurationInOpenStateSeconds',
+            )}
           />
         </Stack>
       </Collapse>
@@ -846,7 +853,9 @@ function ResilienceSettingsForm({ form }: { form: ReturnType<typeof useForm<Proj
 
           <Switch
             label="Enable Exponential Backoff"
-            {...form.getInputProps('resilienceConfig.retry.enableExponentialBackoff', { type: 'checkbox' })}
+            {...form.getInputProps('resilienceConfig.retry.enableExponentialBackoff', {
+              type: 'checkbox',
+            })}
           />
 
           <Collapse in={form.values.resilienceConfig.retry.enableExponentialBackoff}>
@@ -1147,13 +1156,17 @@ function GatewaySettingsForm({ form }: { form: ReturnType<typeof useForm<Project
                   <Switch
                     label="Include Headers"
                     description="Log request/response headers"
-                    {...form.getInputProps('gatewayConfig.loggingIncludeHeaders', { type: 'checkbox' })}
+                    {...form.getInputProps('gatewayConfig.loggingIncludeHeaders', {
+                      type: 'checkbox',
+                    })}
                   />
 
                   <Switch
                     label="Include Body"
                     description="Log request/response body"
-                    {...form.getInputProps('gatewayConfig.loggingIncludeBody', { type: 'checkbox' })}
+                    {...form.getInputProps('gatewayConfig.loggingIncludeBody', {
+                      type: 'checkbox',
+                    })}
                   />
                 </Stack>
               </Collapse>

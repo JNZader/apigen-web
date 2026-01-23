@@ -12,11 +12,7 @@
 /**
  * Tenant identification strategy options.
  */
-export type TenantStrategy =
-  | 'HEADER'
-  | 'SUBDOMAIN'
-  | 'PATH'
-  | 'JWT_CLAIM';
+export type TenantStrategy = 'HEADER' | 'SUBDOMAIN' | 'PATH' | 'JWT_CLAIM';
 
 /**
  * Multi-tenancy configuration.

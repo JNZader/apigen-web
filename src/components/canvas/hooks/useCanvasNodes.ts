@@ -70,11 +70,7 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
         if (change.type === 'dimensions' && change.dimensions) {
           const service = services.find((s) => s.id === change.id);
           if (service) {
-            updateServiceDimensions(
-              change.id,
-              change.dimensions.width,
-              change.dimensions.height,
-            );
+            updateServiceDimensions(change.id, change.dimensions.width, change.dimensions.height);
           }
         }
       }
@@ -297,8 +293,7 @@ export function useCanvasNodes(options: UseCanvasNodesOptions) {
         const isEntity = entityIdSet.has(node.id);
         if (isEntity) {
           // Entity is selected if it's the primary selection OR in multi-selection
-          const newIsSelected =
-            selectedEntityId === node.id || selectedEntityIdSet.has(node.id);
+          const newIsSelected = selectedEntityId === node.id || selectedEntityIdSet.has(node.id);
           // Always return updated node to ensure selection state is consistent
           return {
             ...node,

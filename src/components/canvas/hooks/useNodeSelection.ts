@@ -52,7 +52,14 @@ export function useNodeSelection({
         clearEntitySelection();
       }
     },
-    [entities, services, onSelectEntity, selectService, toggleEntitySelection, clearEntitySelection],
+    [
+      entities,
+      services,
+      onSelectEntity,
+      selectService,
+      toggleEntitySelection,
+      clearEntitySelection,
+    ],
   );
 
   // Handle canvas click (deselect)

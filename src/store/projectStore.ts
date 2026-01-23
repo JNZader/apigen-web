@@ -451,6 +451,7 @@ export {
   useSelectedEntityId,
   useSelectedEntityIds,
 } from './entityStore';
+export type { EntityServiceFilter } from './layoutStore';
 // Re-export from layoutStore
 export {
   useCanvasView,
@@ -460,7 +461,6 @@ export {
   useLayoutPreference,
   useNeedsAutoLayout,
 } from './layoutStore';
-export type { EntityServiceFilter } from './layoutStore';
 // Re-export from relationStore
 export {
   useRelationActions,

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
-  useKeyboardShortcuts,
-  useHistory,
-  useMultiServiceExport,
-  useThrottledAction,
   useDebouncedAction,
+  useHistory,
+  useKeyboardShortcuts,
+  useMultiServiceExport,
   useProjectGeneration,
+  useThrottledAction,
 } from './index';
 
 describe('Hook exports from index', () => {

@@ -1,8 +1,8 @@
 import { MantineProvider } from '@mantine/core';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { EntityCard } from './EntityCard';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EntityDesign } from '../types';
+import { EntityCard } from './EntityCard';
 
 // Helper to wrap components with Mantine provider
 function renderWithMantine(ui: React.ReactElement) {
@@ -145,9 +145,7 @@ describe('EntityCard', () => {
   it('should call onEdit when edit button is clicked', () => {
     const onEdit = vi.fn();
     const onSelect = vi.fn();
-    renderWithMantine(
-      <EntityCard {...defaultProps} onEdit={onEdit} onSelect={onSelect} />,
-    );
+    renderWithMantine(<EntityCard {...defaultProps} onEdit={onEdit} onSelect={onSelect} />);
 
     const editButton = screen.getByRole('button', { name: /Edit User entity/i });
     fireEvent.click(editButton);
@@ -160,9 +158,7 @@ describe('EntityCard', () => {
   it('should call onDelete when delete button is clicked', () => {
     const onDelete = vi.fn();
     const onSelect = vi.fn();
-    renderWithMantine(
-      <EntityCard {...defaultProps} onDelete={onDelete} onSelect={onSelect} />,
-    );
+    renderWithMantine(<EntityCard {...defaultProps} onDelete={onDelete} onSelect={onSelect} />);
 
     const deleteButton = screen.getByRole('button', {
       name: /Delete User entity/i,

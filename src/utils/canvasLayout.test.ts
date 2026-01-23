@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { calculateAutoLayout, calculateServiceLayout, LAYOUT_PRESETS } from './canvasLayout';
-import type { EntityDesign, ServiceDesign, ServiceConnectionDesign } from '../types';
+import { describe, expect, it } from 'vitest';
+import type { EntityDesign, ServiceConnectionDesign, ServiceDesign } from '../types';
 import type { RelationDesign } from '../types/relation';
+import { calculateAutoLayout, calculateServiceLayout, LAYOUT_PRESETS } from './canvasLayout';
 
 // Helper to create mock entities
 function createMockEntity(id: string, fieldCount = 0): EntityDesign {
@@ -30,10 +30,7 @@ function createMockEntity(id: string, fieldCount = 0): EntityDesign {
 }
 
 // Helper to create mock relations
-function createMockRelation(
-  sourceEntityId: string,
-  targetEntityId: string,
-): RelationDesign {
+function createMockRelation(sourceEntityId: string, targetEntityId: string): RelationDesign {
   return {
     id: `rel-${sourceEntityId}-${targetEntityId}`,
     sourceEntityId,
@@ -136,15 +133,8 @@ describe('canvasLayout utilities', () => {
     });
 
     it('should calculate dagre layout for entities with relations', () => {
-      const entities = [
-        createMockEntity('1'),
-        createMockEntity('2'),
-        createMockEntity('3'),
-      ];
-      const relations = [
-        createMockRelation('1', '2'),
-        createMockRelation('2', '3'),
-      ];
+      const entities = [createMockEntity('1'), createMockEntity('2'), createMockEntity('3')];
+      const relations = [createMockRelation('1', '2'), createMockRelation('2', '3')];
 
       const positions = calculateAutoLayout(entities, relations);
 
@@ -208,26 +198,11 @@ describe('canvasLayout utilities', () => {
     });
 
     it('should use different spacing options', () => {
-      const entities = [
-        createMockEntity('1'),
-        createMockEntity('2'),
-        createMockEntity('3'),
-      ];
-      const relations = [
-        createMockRelation('1', '2'),
-        createMockRelation('2', '3'),
-      ];
+      const entities = [createMockEntity('1'), createMockEntity('2'), createMockEntity('3')];
+      const relations = [createMockRelation('1', '2'), createMockRelation('2', '3')];
 
-      const compactPositions = calculateAutoLayout(
-        entities,
-        relations,
-        LAYOUT_PRESETS.compact,
-      );
-      const spaciousPositions = calculateAutoLayout(
-        entities,
-        relations,
-        LAYOUT_PRESETS.spacious,
-      );
+      const compactPositions = calculateAutoLayout(entities, relations, LAYOUT_PRESETS.compact);
+      const spaciousPositions = calculateAutoLayout(entities, relations, LAYOUT_PRESETS.spacious);
 
       expect(compactPositions.size).toBe(3);
       expect(spaciousPositions.size).toBe(3);
@@ -242,11 +217,7 @@ describe('canvasLayout utilities', () => {
     });
 
     it('should calculate grid layout for services without connections', () => {
-      const services = [
-        createMockService('1'),
-        createMockService('2'),
-        createMockService('3'),
-      ];
+      const services = [createMockService('1'), createMockService('2'), createMockService('3')];
 
       const positions = calculateServiceLayout(services, []);
 
@@ -261,15 +232,8 @@ describe('canvasLayout utilities', () => {
     });
 
     it('should calculate dagre layout for services with connections', () => {
-      const services = [
-        createMockService('1'),
-        createMockService('2'),
-        createMockService('3'),
-      ];
-      const connections = [
-        createMockConnection('1', '2'),
-        createMockConnection('2', '3'),
-      ];
+      const services = [createMockService('1'), createMockService('2'), createMockService('3')];
+      const connections = [createMockConnection('1', '2'), createMockConnection('2', '3')];
 
       const positions = calculateServiceLayout(services, connections);
 

@@ -134,7 +134,12 @@ export function DesignerCanvas({
   );
 
   // Use custom hooks for nodes and edges
-  const { nodes, setNodes: _setNodes, onNodesChange, isDraggingRef } = useCanvasNodes({
+  const {
+    nodes,
+    setNodes: _setNodes,
+    onNodesChange,
+    isDraggingRef,
+  } = useCanvasNodes({
     canvasView,
     entityServiceFilter,
     selectedEntityId,

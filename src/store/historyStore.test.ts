@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { useHistoryStore } from './historyStore';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EntityDesign } from '../types';
 import type { RelationDesign } from '../types/relation';
+import { useHistoryStore } from './historyStore';
 
 // Helper to create mock entity state
 function createMockState(

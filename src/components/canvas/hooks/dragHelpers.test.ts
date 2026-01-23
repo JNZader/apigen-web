@@ -74,9 +74,7 @@ describe('updateDragState', () => {
     const isDraggingRef = { current: false };
     const isDragInProgress = { current: false };
 
-    const changes: NodeChange[] = [
-      { type: 'select', id: 'node-1', selected: true },
-    ];
+    const changes: NodeChange[] = [{ type: 'select', id: 'node-1', selected: true }];
 
     updateDragState(changes, isDraggingRef, isDragInProgress);
 
@@ -88,9 +86,7 @@ describe('updateDragState', () => {
     const isDraggingRef = { current: false };
     const isDragInProgress = { current: false };
 
-    const changes: NodeChange[] = [
-      { type: 'position', id: 'node-1', dragging: false },
-    ];
+    const changes: NodeChange[] = [{ type: 'position', id: 'node-1', dragging: false }];
 
     updateDragState(changes, isDraggingRef, isDragInProgress);
 
@@ -325,9 +321,7 @@ describe('adjustSelectionChanges', () => {
   const services = [createMockService({ id: 'service-1' })];
 
   it('should allow select changes to pass through', () => {
-    const changes: NodeChange[] = [
-      { type: 'select', id: 'entity-1', selected: true },
-    ];
+    const changes: NodeChange[] = [{ type: 'select', id: 'entity-1', selected: true }];
 
     const result = adjustSelectionChanges(changes, null, [], null, services);
 
@@ -335,9 +329,7 @@ describe('adjustSelectionChanges', () => {
   });
 
   it('should prevent deselection of currently selected entity', () => {
-    const changes: NodeChange[] = [
-      { type: 'select', id: 'entity-1', selected: false },
-    ];
+    const changes: NodeChange[] = [{ type: 'select', id: 'entity-1', selected: false }];
 
     const result = adjustSelectionChanges(
       changes,
@@ -351,9 +343,7 @@ describe('adjustSelectionChanges', () => {
   });
 
   it('should prevent deselection of entity in multi-selection', () => {
-    const changes: NodeChange[] = [
-      { type: 'select', id: 'entity-2', selected: false },
-    ];
+    const changes: NodeChange[] = [{ type: 'select', id: 'entity-2', selected: false }];
 
     const result = adjustSelectionChanges(
       changes,
@@ -367,9 +357,7 @@ describe('adjustSelectionChanges', () => {
   });
 
   it('should prevent deselection of currently selected service', () => {
-    const changes: NodeChange[] = [
-      { type: 'select', id: 'service-1', selected: false },
-    ];
+    const changes: NodeChange[] = [{ type: 'select', id: 'service-1', selected: false }];
 
     const result = adjustSelectionChanges(
       changes,
@@ -383,9 +371,7 @@ describe('adjustSelectionChanges', () => {
   });
 
   it('should allow deselection of non-selected nodes', () => {
-    const changes: NodeChange[] = [
-      { type: 'select', id: 'entity-2', selected: false },
-    ];
+    const changes: NodeChange[] = [{ type: 'select', id: 'entity-2', selected: false }];
 
     const result = adjustSelectionChanges(
       changes,

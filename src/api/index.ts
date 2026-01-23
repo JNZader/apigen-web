@@ -4,32 +4,32 @@
 
 // Client and types
 export {
-  createApiClient,
-  ApiError,
-  TimeoutError,
-  ValidationError,
   type ApiClient,
   type ApiClientConfig,
-  type RequestOptions,
+  ApiError,
   type ApiResponse,
+  createApiClient,
+  type RequestOptions,
+  TimeoutError,
+  ValidationError,
 } from './apiClient';
 
 // Generator API functions
 export {
   checkHealth,
-  validateSchema,
+  type GenerateRequest,
   generateProject,
   isServerAvailable,
   type ProjectConfig,
-  type GenerateRequest,
+  validateSchema,
 } from './generatorApi';
 
 // Schemas and response types
 export {
-  HealthResponseSchema,
+  type GenerateResponse,
   GenerateResponseSchema,
+  type GenerationStats,
   GenerationStatsSchema,
   type HealthResponse,
-  type GenerateResponse,
-  type GenerationStats,
+  HealthResponseSchema,
 } from './schemas';

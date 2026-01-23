@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
+import type { LayoutPreset } from '../../../store/layoutStore';
 import type { EntityDesign } from '../../../types';
 import type { RelationDesign } from '../../../types/relation';
-import type { LayoutPreset } from '../../../store/layoutStore';
 import { calculateAutoLayout, LAYOUT_PRESETS } from '../../../utils/canvasLayout';
 
 interface UseAutoLayoutOptions {

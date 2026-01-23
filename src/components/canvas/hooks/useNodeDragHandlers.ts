@@ -6,9 +6,9 @@ import { useLayoutActions, useServiceActions } from '../../../store/projectStore
 import { useServiceStore } from '../../../store/serviceStore';
 import type { EntityDesign, ServiceDesign } from '../../../types';
 import {
-  type PositionUpdate,
   adjustSelectionChanges,
   extractServiceDimensions,
+  type PositionUpdate,
   updateDragState,
 } from './dragHelpers';
 

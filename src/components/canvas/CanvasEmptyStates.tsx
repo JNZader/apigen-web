@@ -76,7 +76,6 @@ export function CanvasEmptyStates({
           </Paper>
         </Panel>
       )}
-
     </>
   );
 }

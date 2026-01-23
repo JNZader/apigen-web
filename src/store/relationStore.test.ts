@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { useRelationStore } from './relationStore';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { RelationDesign } from '../types/relation';
+import { useRelationStore } from './relationStore';
 
 // Helper to create a mock relation without id
 function createMockRelation(
@@ -72,7 +72,9 @@ describe('relationStore', () => {
       const { addRelation, updateRelation } = useRelationStore.getState();
 
       addRelation(createMockRelation('entity-1', 'entity-2'));
-      const { relations: [relation] } = useRelationStore.getState();
+      const {
+        relations: [relation],
+      } = useRelationStore.getState();
 
       updateRelation(relation.id, { type: 'ManyToMany', sourceFieldName: 'updatedField' });
 
@@ -100,7 +102,9 @@ describe('relationStore', () => {
       const { addRelation, removeRelation } = useRelationStore.getState();
 
       addRelation(createMockRelation('entity-1', 'entity-2'));
-      const { relations: [relation] } = useRelationStore.getState();
+      const {
+        relations: [relation],
+      } = useRelationStore.getState();
 
       removeRelation(relation.id);
 

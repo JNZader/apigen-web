@@ -28,7 +28,13 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { useCallback, useRef, useState } from 'react';
-import { useEntities, useEntityActions, useProject, useRelationActions, useRelations } from '../store';
+import {
+  useEntities,
+  useEntityActions,
+  useProject,
+  useRelationActions,
+  useRelations,
+} from '../store';
 import { generateSQL } from '../utils/sqlGenerator';
 import { parseSQL } from '../utils/sqlParser';
 

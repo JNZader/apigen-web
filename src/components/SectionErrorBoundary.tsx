@@ -59,12 +59,7 @@ export class SectionErrorBoundary extends Component<Props, State> {
     // Inline variant - minimal, single line
     if (variant === 'inline') {
       return (
-        <Alert
-          icon={<IconAlertTriangle size={16} />}
-          color="red"
-          variant="light"
-          py="xs"
-        >
+        <Alert icon={<IconAlertTriangle size={16} />} color="red" variant="light" py="xs">
           <Group justify="space-between" wrap="nowrap">
             <Text size="sm" truncate>
               Error loading {section.toLowerCase()}
@@ -140,12 +135,7 @@ export class SectionErrorBoundary extends Component<Props, State> {
 
     // Full variant - for main content areas (default)
     return (
-      <Stack
-        p="xl"
-        align="center"
-        justify="center"
-        style={{ minHeight: 300, width: '100%' }}
-      >
+      <Stack p="xl" align="center" justify="center" style={{ minHeight: 300, width: '100%' }}>
         <Alert
           icon={<IconAlertTriangle size={24} />}
           title={`${section} Error`}
@@ -155,8 +145,8 @@ export class SectionErrorBoundary extends Component<Props, State> {
         >
           <Stack gap="sm">
             <Text size="sm">
-              An error occurred in the {section.toLowerCase()}. Other parts of the app
-              should still work.
+              An error occurred in the {section.toLowerCase()}. Other parts of the app should still
+              work.
             </Text>
 
             {error && (

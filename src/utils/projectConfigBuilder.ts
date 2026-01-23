@@ -1,5 +1,4 @@
-import type { ProjectConfig } from '../types';
-import type { ServiceDesign } from '../types';
+import type { ProjectConfig, ServiceDesign } from '../types';
 
 /**
  * Builds a ProjectConfig object for generation, applying service-specific overrides if provided

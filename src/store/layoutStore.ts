@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useShallow } from 'zustand/shallow';
-import { CANVAS_VIEWS } from '../utils/canvasConstants';
 import type { CanvasView } from '../utils/canvasConstants';
+import { CANVAS_VIEWS } from '../utils/canvasConstants';
 import { useEntityStore } from './entityStore';
 import { useServiceStore } from './serviceStore';
 

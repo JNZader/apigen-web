@@ -12,6 +12,7 @@ import {
   UnstyledButton,
   useMantineTheme,
 } from '@mantine/core';
+import { useClickOutside } from '@mantine/hooks';
 // Note: Using custom Paper-based context menu instead of Menu for correct Portal positioning
 import {
   IconChevronDown,
@@ -23,7 +24,6 @@ import {
   IconTrash,
   IconX,
 } from '@tabler/icons-react';
-import { useClickOutside } from '@mantine/hooks';
 import type { Node, NodeProps } from '@xyflow/react';
 import { Handle, Position } from '@xyflow/react';
 import { memo, useCallback, useMemo, useState } from 'react';
@@ -185,147 +185,147 @@ function EntityNodeComponent({ data, selected }: NodeProps<EntityNodeType>) {
         {/* Target handle for incoming relations */}
         <Handle type="target" position={Position.Left} style={handleStyle} />
 
-          <Card
-            shadow={selected || isSelected ? 'lg' : 'sm'}
-            padding={0}
-            radius="md"
-            withBorder
-            style={{
-              width: ENTITY_NODE.WIDTH,
-              borderColor: getBorderColor(),
-              borderWidth: getBorderWidth(),
-              cursor: 'grab',
-            }}
-          >
-            <Card.Section withBorder inheritPadding py="xs" bg="blue.6">
-              <Group justify="space-between" wrap="nowrap">
-                <Group gap={6} wrap="nowrap">
-                  <IconTable size={14} color="white" />
-                  <Text fw={700} c="white" size="sm" truncate style={{ maxWidth: 100 }}>
-                    {entity.name}
-                  </Text>
-                </Group>
-                <Group gap={4} wrap="nowrap">
-                  {assignedService && (
-                    <Tooltip label={`Assigned to ${assignedService.name}`}>
-                      <Badge
-                        size="xs"
-                        variant="filled"
-                        style={{
-                          backgroundColor: assignedService.color,
-                          maxWidth: 60,
-                        }}
-                      >
-                        <Text size="xs" truncate>
-                          {assignedService.name}
-                        </Text>
-                      </Badge>
-                    </Tooltip>
-                  )}
-                  <Badge color="blue" variant="light" size="xs">
-                    {entity.fields.length}
-                  </Badge>
-                </Group>
+        <Card
+          shadow={selected || isSelected ? 'lg' : 'sm'}
+          padding={0}
+          radius="md"
+          withBorder
+          style={{
+            width: ENTITY_NODE.WIDTH,
+            borderColor: getBorderColor(),
+            borderWidth: getBorderWidth(),
+            cursor: 'grab',
+          }}
+        >
+          <Card.Section withBorder inheritPadding py="xs" bg="blue.6">
+            <Group justify="space-between" wrap="nowrap">
+              <Group gap={6} wrap="nowrap">
+                <IconTable size={14} color="white" />
+                <Text fw={700} c="white" size="sm" truncate style={{ maxWidth: 100 }}>
+                  {entity.name}
+                </Text>
               </Group>
-            </Card.Section>
-
-            <Stack gap={2} p="xs">
-              {/* ID field (inherited from Base) */}
-              <Group justify="space-between" wrap="nowrap">
-                <Group gap={4} wrap="nowrap">
-                  <IconKey size={10} color="var(--mantine-color-yellow-6)" />
-                  <Text size="xs" c="dimmed">
-                    id
-                  </Text>
-                </Group>
-                <Badge size="xs" variant="light" color="yellow">
-                  Long
+              <Group gap={4} wrap="nowrap">
+                {assignedService && (
+                  <Tooltip label={`Assigned to ${assignedService.name}`}>
+                    <Badge
+                      size="xs"
+                      variant="filled"
+                      style={{
+                        backgroundColor: assignedService.color,
+                        maxWidth: 60,
+                      }}
+                    >
+                      <Text size="xs" truncate>
+                        {assignedService.name}
+                      </Text>
+                    </Badge>
+                  </Tooltip>
+                )}
+                <Badge color="blue" variant="light" size="xs">
+                  {entity.fields.length}
                 </Badge>
               </Group>
-
-              {entity.fields.length > 0 && <Divider my={2} />}
-
-              {/* Entity fields */}
-              <div id={`entity-fields-${entity.id}`}>
-                {displayedFields.map((field: FieldDesign) => (
-                  <Group key={field.id} justify="space-between" wrap="nowrap">
-                    <Text size="xs" truncate style={{ maxWidth: 120 }}>
-                      {field.name}
-                      {!field.nullable && (
-                        <Text component="span" c="red" size="xs">
-                          *
-                        </Text>
-                      )}
-                    </Text>
-                    <Badge size="xs" variant="light" color={TYPE_COLORS[field.type] || 'gray'}>
-                      {field.type}
-                    </Badge>
-                  </Group>
-                ))}
-              </div>
-
-              {/* Expand/Collapse button */}
-              {hasMoreFields && (
-                <UnstyledButton
-                  onClick={toggleExpanded}
-                  style={{ width: '100%' }}
-                  aria-expanded={isExpanded}
-                  aria-controls={`entity-fields-${entity.id}`}
-                >
-                  <Group justify="center" gap={4} py={2}>
-                    {isExpanded ? (
-                      <>
-                        <IconChevronUp size={12} color="var(--mantine-color-blue-5)" />
-                        <Text size="xs" c="blue">
-                          Show less
-                        </Text>
-                      </>
-                    ) : (
-                      <>
-                        <IconChevronDown size={12} color="var(--mantine-color-blue-5)" />
-                        <Text size="xs" c="blue">
-                          +{hiddenFieldsCount} more fields
-                        </Text>
-                      </>
-                    )}
-                  </Group>
-                </UnstyledButton>
-              )}
-
-              {entity.fields.length === 0 && (
-                <Text size="xs" c="dimmed" fs="italic" ta="center">
-                  No fields
-                </Text>
-              )}
-            </Stack>
-
-            <Divider />
-
-            <Group p={4} justify="flex-end" gap={4}>
-              <Tooltip label="Edit">
-                <ActionIcon
-                  variant="subtle"
-                  color="blue"
-                  size="sm"
-                  onClick={handleEdit}
-                  aria-label={`Edit ${entity.name} entity`}
-                >
-                  <IconEdit size={14} aria-hidden="true" />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label="Delete">
-                <ActionIcon
-                  variant="subtle"
-                  color="red"
-                  size="sm"
-                  onClick={handleDelete}
-                  aria-label={`Delete ${entity.name} entity`}
-                >
-                  <IconTrash size={14} aria-hidden="true" />
-                </ActionIcon>
-              </Tooltip>
             </Group>
-          </Card>
+          </Card.Section>
+
+          <Stack gap={2} p="xs">
+            {/* ID field (inherited from Base) */}
+            <Group justify="space-between" wrap="nowrap">
+              <Group gap={4} wrap="nowrap">
+                <IconKey size={10} color="var(--mantine-color-yellow-6)" />
+                <Text size="xs" c="dimmed">
+                  id
+                </Text>
+              </Group>
+              <Badge size="xs" variant="light" color="yellow">
+                Long
+              </Badge>
+            </Group>
+
+            {entity.fields.length > 0 && <Divider my={2} />}
+
+            {/* Entity fields */}
+            <div id={`entity-fields-${entity.id}`}>
+              {displayedFields.map((field: FieldDesign) => (
+                <Group key={field.id} justify="space-between" wrap="nowrap">
+                  <Text size="xs" truncate style={{ maxWidth: 120 }}>
+                    {field.name}
+                    {!field.nullable && (
+                      <Text component="span" c="red" size="xs">
+                        *
+                      </Text>
+                    )}
+                  </Text>
+                  <Badge size="xs" variant="light" color={TYPE_COLORS[field.type] || 'gray'}>
+                    {field.type}
+                  </Badge>
+                </Group>
+              ))}
+            </div>
+
+            {/* Expand/Collapse button */}
+            {hasMoreFields && (
+              <UnstyledButton
+                onClick={toggleExpanded}
+                style={{ width: '100%' }}
+                aria-expanded={isExpanded}
+                aria-controls={`entity-fields-${entity.id}`}
+              >
+                <Group justify="center" gap={4} py={2}>
+                  {isExpanded ? (
+                    <>
+                      <IconChevronUp size={12} color="var(--mantine-color-blue-5)" />
+                      <Text size="xs" c="blue">
+                        Show less
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <IconChevronDown size={12} color="var(--mantine-color-blue-5)" />
+                      <Text size="xs" c="blue">
+                        +{hiddenFieldsCount} more fields
+                      </Text>
+                    </>
+                  )}
+                </Group>
+              </UnstyledButton>
+            )}
+
+            {entity.fields.length === 0 && (
+              <Text size="xs" c="dimmed" fs="italic" ta="center">
+                No fields
+              </Text>
+            )}
+          </Stack>
+
+          <Divider />
+
+          <Group p={4} justify="flex-end" gap={4}>
+            <Tooltip label="Edit">
+              <ActionIcon
+                variant="subtle"
+                color="blue"
+                size="sm"
+                onClick={handleEdit}
+                aria-label={`Edit ${entity.name} entity`}
+              >
+                <IconEdit size={14} aria-hidden="true" />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Delete">
+              <ActionIcon
+                variant="subtle"
+                color="red"
+                size="sm"
+                onClick={handleDelete}
+                aria-label={`Delete ${entity.name} entity`}
+              >
+                <IconTrash size={14} aria-hidden="true" />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        </Card>
 
         {/* Source handle for outgoing relations */}
         <Handle type="source" position={Position.Right} style={handleStyle} />
@@ -358,8 +358,7 @@ function EntityNodeComponent({ data, selected }: NodeProps<EntityNodeType>) {
               </Text>
             ) : (
               services.map((service) => {
-                const isCurrentService =
-                  !isPartOfMultiSelect && assignedService?.id === service.id;
+                const isCurrentService = !isPartOfMultiSelect && assignedService?.id === service.id;
                 return (
                   <UnstyledButton
                     key={service.id}
@@ -374,8 +373,7 @@ function EntityNodeComponent({ data, selected }: NodeProps<EntityNodeType>) {
                     }}
                     onMouseEnter={(e) => {
                       if (!isCurrentService) {
-                        e.currentTarget.style.backgroundColor =
-                          'var(--mantine-color-gray-1)';
+                        e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-1)';
                       }
                     }}
                     onMouseLeave={(e) => {

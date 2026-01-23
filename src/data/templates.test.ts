@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PROJECT_TEMPLATES, type ProjectTemplate, applyTemplate } from '../data/templates';
+import { applyTemplate, PROJECT_TEMPLATES, type ProjectTemplate } from '../data/templates';
 
 describe('templates', () => {
   describe('PROJECT_TEMPLATES', () => {

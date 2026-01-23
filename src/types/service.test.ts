@@ -1,12 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  getNextServiceColor,
   createDefaultService,
-  SERVICE_COLORS,
-  defaultServiceConfig,
-  defaultServiceConnectionConfig,
   defaultKafkaEventConfig,
   defaultRabbitMQEventConfig,
+  defaultServiceConfig,
+  defaultServiceConnectionConfig,
+  getNextServiceColor,
+  SERVICE_COLORS,
 } from './service';
 
 describe('service type utilities', () => {

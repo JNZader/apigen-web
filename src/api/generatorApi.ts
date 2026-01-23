@@ -2,6 +2,8 @@
  * API client for the APiGen Server.
  * Uses centralized API client with AbortController, retry, and Zod validation.
  */
+
+import { API_CONFIG } from '../config/constants';
 import type {
   ApiVersioningConfig,
   BatchConfig,
@@ -24,14 +26,13 @@ import type {
   SecurityConfig,
   WebhooksConfig,
 } from '../types';
-import { createApiClient, type ApiClient } from './apiClient';
+import { type ApiClient, createApiClient } from './apiClient';
 import {
-  GenerateResponseSchema,
-  HealthResponseSchema,
   type GenerateResponse,
+  GenerateResponseSchema,
   type HealthResponse,
+  HealthResponseSchema,
 } from './schemas';
-import { API_CONFIG } from '../config/constants';
 
 // Use centralized API configuration
 const API_BASE_URL = API_CONFIG.BASE_URL;
@@ -80,8 +81,7 @@ export interface GenerateRequest {
 }
 
 // Re-export types from schemas for backwards compatibility
-export type { GenerateResponse, HealthResponse } from './schemas';
-export type { GenerationStats } from './schemas';
+export type { GenerateResponse, GenerationStats, HealthResponse } from './schemas';
 
 /**
  * Check if the APiGen Server is available.

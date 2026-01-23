@@ -1,10 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import {
-  createDefaultRelation,
-  RELATION_TYPES,
-  CASCADE_TYPES,
-  FK_ACTIONS,
-} from './relation';
+import { describe, expect, it } from 'vitest';
+import { CASCADE_TYPES, createDefaultRelation, FK_ACTIONS, RELATION_TYPES } from './relation';
 
 describe('relation type utilities', () => {
   describe('createDefaultRelation', () => {

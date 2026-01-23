@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as apiClientModule from './apiClient';
 
 // Mock the apiClient module
@@ -29,7 +29,9 @@ describe('generatorApi', () => {
     };
 
     // Update the mock to return our mockClient
-    vi.mocked(apiClientModule.createApiClient).mockReturnValue(mockClient as unknown as apiClientModule.ApiClient);
+    vi.mocked(apiClientModule.createApiClient).mockReturnValue(
+      mockClient as unknown as apiClientModule.ApiClient,
+    );
   });
 
   afterEach(() => {
@@ -55,7 +57,7 @@ describe('generatorApi', () => {
       const validateResponse = {
         success: true,
         warnings: [],
-        stats: { tableCount: 1, relationCount: 0 }
+        stats: { tableCount: 1, relationCount: 0 },
       };
       mockClient.post.mockResolvedValueOnce({ data: validateResponse });
 
@@ -79,7 +81,7 @@ describe('generatorApi', () => {
   describe('isServerAvailable', () => {
     it('should return true when health check succeeds', async () => {
       mockClient.get.mockResolvedValueOnce({
-        data: { status: 'UP', version: '1.0.0' }
+        data: { status: 'UP', version: '1.0.0' },
       });
 
       const { isServerAvailable: freshIsServerAvailable } = await import('./generatorApi');

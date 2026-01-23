@@ -281,7 +281,10 @@ export function ServiceConfigPanel({
                                 onChange={(e) =>
                                   handleEntityToggle(entity.id, e.currentTarget.checked)
                                 }
-                                description={getEntityDescription(otherServiceName, entity.tableName)}
+                                description={getEntityDescription(
+                                  otherServiceName,
+                                  entity.tableName,
+                                )}
                               />
                             </Group>
                           </Box>
@@ -342,7 +345,10 @@ export function ServiceConfigPanel({
                                   onChange={(e) =>
                                     handleEntityToggle(entity.id, e.currentTarget.checked)
                                   }
-                                  description={getEntityDescription(otherServiceName, entity.tableName)}
+                                  description={getEntityDescription(
+                                    otherServiceName,
+                                    entity.tableName,
+                                  )}
                                 />
                               </Group>
                             </Box>

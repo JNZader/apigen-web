@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { useLayoutStore } from './layoutStore';
-import { useEntityStore } from './entityStore';
-import { useServiceStore } from './serviceStore';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { CANVAS_VIEWS } from '../utils/canvasConstants';
+import { useEntityStore } from './entityStore';
+import { useLayoutStore } from './layoutStore';
+import { useServiceStore } from './serviceStore';
 
 describe('layoutStore', () => {
   beforeEach(() => {

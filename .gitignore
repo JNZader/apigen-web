@@ -37,6 +37,8 @@ dist-ssr
 
 # Claude
 .claude
+CLAUDE.md
+docs/IMPROVEMENTS.md
 
 # Test coverage
 coverage/

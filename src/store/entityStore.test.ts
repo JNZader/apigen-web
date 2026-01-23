@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useEntityStore } from './entityStore';
 
 describe('entityStore', () => {
@@ -280,8 +280,7 @@ describe('entityStore', () => {
 
   describe('clearEntitySelection', () => {
     it('should clear both primary and multi-selection', () => {
-      const { addEntity, toggleEntitySelection, clearEntitySelection } =
-        useEntityStore.getState();
+      const { addEntity, toggleEntitySelection, clearEntitySelection } = useEntityStore.getState();
       const entity1 = addEntity('First');
       const entity2 = addEntity('Second');
 

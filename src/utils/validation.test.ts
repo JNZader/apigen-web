@@ -1,10 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  validateProjectImport,
+  isValidArtifactId,
+  isValidGroupId,
   isValidJavaIdentifier,
   isValidPackageName,
-  isValidGroupId,
-  isValidArtifactId,
+  validateProjectImport,
 } from './validation';
 
 describe('validation utils', () => {
