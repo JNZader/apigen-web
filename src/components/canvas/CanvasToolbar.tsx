@@ -9,7 +9,6 @@ import {
   Tooltip,
   useMantineColorScheme,
 } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
 import {
   IconCamera,
   IconChevronDown,
@@ -39,6 +38,7 @@ import {
   calculateServiceLayout,
   LAYOUT_PRESETS,
 } from '../../utils/canvasLayout';
+import { notify } from '../../utils/notifications';
 import { EntityServiceTabs } from './EntityServiceTabs';
 
 interface CanvasToolbarProps {
@@ -71,10 +71,9 @@ export function CanvasToolbar({
     (preset: keyof typeof LAYOUT_PRESETS = 'horizontal') => {
       if (canvasView === CANVAS_VIEWS.ENTITIES) {
         if (entities.length === 0) {
-          notifications.show({
+          notify.warning({
             title: 'No entities',
             message: 'Add at least one entity to auto-arrange',
-            color: 'yellow',
           });
           return;
         }
@@ -83,17 +82,15 @@ export function CanvasToolbar({
         updateEntityPositions(positions);
         setLayoutPreference(preset);
 
-        notifications.show({
+        notify.success({
           title: 'Layout applied',
           message: `Entities arranged using ${preset} layout`,
-          color: 'green',
         });
       } else {
         if (services.length === 0) {
-          notifications.show({
+          notify.warning({
             title: 'No services',
             message: 'Add at least one service to auto-arrange',
-            color: 'yellow',
           });
           return;
         }
@@ -108,10 +105,9 @@ export function CanvasToolbar({
 
         setLayoutPreference(preset);
 
-        notifications.show({
+        notify.success({
           title: 'Layout applied',
           message: `Services arranged using ${preset} layout`,
-          color: 'green',
         });
       }
     },
@@ -134,10 +130,9 @@ export function CanvasToolbar({
         '.react-flow__viewport',
       ) as HTMLElement;
       if (!viewport) {
-        notifications.show({
+        notify.error({
           title: 'Error',
           message: 'Could not capture canvas',
-          color: 'red',
         });
         return;
       }
@@ -178,17 +173,15 @@ export function CanvasToolbar({
         link.href = dataUrl;
         link.click();
 
-        notifications.show({
+        notify.success({
           title: 'Image downloaded',
           message: `Diagram saved as ${filename}`,
-          color: 'green',
         });
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        notifications.show({
+        notify.error({
           title: 'Export Error',
           message: `Failed to export image: ${errorMessage}`,
-          color: 'red',
         });
       }
     },

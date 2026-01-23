@@ -17,7 +17,6 @@ import {
   ThemeIcon,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { notifications } from '@mantine/notifications';
 import {
   IconApi,
   IconArrowRight,
@@ -35,6 +34,7 @@ import {
   COMMUNICATION_LABELS,
   defaultServiceConnectionConfig,
 } from '../types';
+import { notify } from '../utils/notifications';
 
 interface ServiceConnectionFormProps {
   readonly opened: boolean;
@@ -227,10 +227,9 @@ export function ServiceConnectionForm({
         label: form.values.label || undefined,
         config,
       });
-      notifications.show({
+      notify.success({
         title: 'Connection updated',
         message: `${COMMUNICATION_LABELS[communicationType]} connection has been updated`,
-        color: 'green',
       });
     } else if (sourceServiceId && targetServiceId) {
       // Create new connection
@@ -241,10 +240,9 @@ export function ServiceConnectionForm({
         label: form.values.label || undefined,
         config,
       });
-      notifications.show({
+      notify.success({
         title: 'Connection created',
         message: `${COMMUNICATION_LABELS[communicationType]} connection has been created`,
-        color: 'green',
       });
     }
 

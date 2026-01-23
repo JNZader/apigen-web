@@ -11,12 +11,12 @@ import {
   Text,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { notifications } from '@mantine/notifications';
 import { IconArrowRight } from '@tabler/icons-react';
 import { useProjectStore } from '../store/projectStore';
 import { toCamelCase, toSnakeCase } from '../types';
 import type { CascadeType, FetchType, RelationType } from '../types/relation';
 import { CASCADE_TYPES, RELATION_TYPES } from '../types/relation';
+import { notify } from '../utils/notifications';
 
 interface RelationFormProps {
   readonly opened: boolean;
@@ -168,10 +168,9 @@ export function RelationForm({
       }),
     });
 
-    notifications.show({
+    notify.success({
       title: 'Relation Created',
       message: `${sourceEntity.name} -> ${targetEntity.name} (${values.type})`,
-      color: 'green',
     });
 
     onClose();

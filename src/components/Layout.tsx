@@ -12,7 +12,6 @@ import {
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
-import { notifications } from '@mantine/notifications';
 import {
   IconArrowBackUp,
   IconArrowForwardUp,
@@ -33,6 +32,7 @@ import { saveAs } from 'file-saver';
 import { lazy, type ReactNode, Suspense, useCallback, useRef, useState } from 'react';
 import { useHistory, useProjectGeneration } from '../hooks';
 import { useProjectStore } from '../store/projectStore';
+import { notify } from '../utils/notifications';
 import { Onboarding } from './Onboarding';
 
 // Lazy load modals for better initial load performance
@@ -83,10 +83,9 @@ export function Layout({ children, sidebar }: Readonly<LayoutProps>) {
       const json = exportProject();
       const blob = new Blob([json], { type: 'application/json' });
       saveAs(blob, `${project.artifactId}-design.json`);
-      notifications.show({
+      notify.success({
         title: 'Exported',
         message: 'Project design exported successfully',
-        color: 'green',
       });
     } finally {
       // Small delay to prevent accidental double-clicks
@@ -106,16 +105,14 @@ export function Layout({ children, sidebar }: Readonly<LayoutProps>) {
         try {
           const text = await file.text();
           importProject(text);
-          notifications.show({
+          notify.success({
             title: 'Imported',
             message: 'Project design imported successfully',
-            color: 'green',
           });
         } catch {
-          notifications.show({
+          notify.error({
             title: 'Error',
             message: 'Failed to import project design',
-            color: 'red',
           });
         }
       }
@@ -133,10 +130,9 @@ export function Layout({ children, sidebar }: Readonly<LayoutProps>) {
       cancelProps: { 'aria-label': 'Cancel reset' },
       onConfirm: () => {
         resetProject();
-        notifications.show({
+        notify.info({
           title: 'Reset',
           message: 'Project reset successfully',
-          color: 'blue',
         });
       },
     });

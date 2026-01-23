@@ -10,7 +10,6 @@ import {
   ThemeIcon,
 } from '@mantine/core';
 import { modals } from '@mantine/modals';
-import { notifications } from '@mantine/notifications';
 import {
   IconArrowRight,
   IconCheckbox,
@@ -22,6 +21,7 @@ import {
 import type { ProjectTemplate } from '../data/templates';
 import { applyTemplate, PROJECT_TEMPLATES } from '../data/templates';
 import { useEntities, useEntityActions, useRelationActions, useServiceActions } from '../store';
+import { notify } from '../utils/notifications';
 
 interface TemplateSelectorProps {
   readonly opened: boolean;
@@ -57,27 +57,24 @@ export function TemplateSelector({ opened, onClose }: Readonly<TemplateSelectorP
     if (template.id === 'blank') {
       setEntities([]);
       setRelations([]);
-      notifications.show({
+      notify.info({
         title: 'Template Applied',
         message: 'Started with a blank project',
-        color: 'blue',
       });
     } else {
       try {
         const { entities: newEntities, relations: newRelations } = applyTemplate(template);
         setEntities(newEntities);
         setRelations(newRelations);
-        notifications.show({
+        notify.success({
           title: 'Template Applied',
           message: `Loaded ${template.name} template with ${newEntities.length} entities`,
-          color: 'green',
         });
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        notifications.show({
+        notify.error({
           title: 'Template Error',
           message: `Failed to apply template: ${errorMessage}`,
-          color: 'red',
         });
       }
     }
