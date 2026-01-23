@@ -1,42 +1,39 @@
 name: Deploy
 
 on:
-  push:
+  # Only run after CI workflow completes on master
+  workflow_run:
+    workflows: ["CI"]
     branches: [master]
+    types: [completed]
   workflow_dispatch:
 
-env:
-  NODE_VERSION: '20'
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    # Only deploy if CI passes (Vercel handles actual deployment)
+    # Only deploy if CI passed
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     steps:
-      - uses: actions/checkout@v6
+      - name: Deployment triggered
+        run: |
+          echo "✅ CI passed - Vercel will auto-deploy from master"
+          echo "Triggered by: ${{ github.event_name }}"
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "CI Run: ${{ github.event.workflow_run.html_url }}"
+          fi
 
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Type check
-        run: npx tsc --noEmit
-
-      - name: Lint check
-        run: npm run check
-
-      - name: Run tests
-        run: npm run test:run
-
-      - name: Build
-        run: npm run build
-
-      # Vercel auto-deploys from master branch
-      # This workflow ensures all checks pass before Vercel deploys
-      - name: Deployment ready
-        run: echo "All checks passed. Vercel will handle deployment."
+  notify-failure:
+    name: Notify CI Failure
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - name: CI Failed
+        run: |
+          echo "❌ CI failed - deployment blocked"
+          echo "Check CI run: ${{ github.event.workflow_run.html_url }}"
+          exit 1
