@@ -1,9 +1,8 @@
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useEntityStore } from '../../../store/entityStore';
-import { useServiceStore } from '../../../store/serviceStore';
 import { createMockEntity, createMockService } from '../../../test/factories';
 import { resetAllStores } from '../../../test/utils';
+import type { CanvasView } from '../../../utils/canvasConstants';
 import { CANVAS_VIEWS } from '../../../utils/canvasConstants';
 import { useCanvasNodes } from './useCanvasNodes';
 
@@ -275,13 +274,14 @@ describe('useCanvasNodes', () => {
   describe('View Switching', () => {
     it('should rebuild nodes when view changes', () => {
       const { rerender } = renderHook(
-        ({ canvasView }) => useCanvasNodes({ ...defaultOptions, canvasView }),
-        { initialProps: { canvasView: CANVAS_VIEWS.ENTITIES } },
+        ({ canvasView }: { canvasView: CanvasView }) =>
+          useCanvasNodes({ ...defaultOptions, canvasView }),
+        { initialProps: { canvasView: CANVAS_VIEWS.ENTITIES as CanvasView } },
       );
 
       const callsBefore = mockSetNodes.mock.calls.length;
 
-      rerender({ canvasView: CANVAS_VIEWS.SERVICES });
+      rerender({ canvasView: CANVAS_VIEWS.SERVICES as CanvasView });
 
       // setNodes should be called again for the new view
       expect(mockSetNodes.mock.calls.length).toBeGreaterThan(callsBefore);

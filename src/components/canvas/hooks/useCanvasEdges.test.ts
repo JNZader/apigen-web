@@ -36,7 +36,7 @@ describe('useCanvasEdges', () => {
       const relation = createMockRelation({
         sourceEntityId: 'entity-1',
         targetEntityId: 'entity-2',
-        type: 'ONE_TO_MANY',
+        type: 'OneToMany',
       });
 
       useRelationStore.setState({ relations: [relation] });
@@ -56,7 +56,7 @@ describe('useCanvasEdges', () => {
         target: 'entity-2',
         type: 'relation',
         data: {
-          type: 'ONE_TO_MANY',
+          type: 'OneToMany',
         },
       });
     });
@@ -197,9 +197,16 @@ describe('useCanvasEdges', () => {
       useRelationStore.setState({ relations: [relation] });
       useServiceConnectionStore.setState({ serviceConnections: [connection] });
 
-      const { rerender } = renderHook(({ canvasView }) => useCanvasEdges({ canvasView }), {
-        initialProps: { canvasView: CANVAS_VIEWS.ENTITIES },
-      });
+      const { rerender } = renderHook(
+        ({
+          canvasView,
+        }: {
+          canvasView: typeof CANVAS_VIEWS.ENTITIES | typeof CANVAS_VIEWS.SERVICES;
+        }) => useCanvasEdges({ canvasView }),
+        {
+          initialProps: { canvasView: CANVAS_VIEWS.ENTITIES },
+        },
+      );
 
       // First call should be relation edges
       let edges = mockSetEdges.mock.calls[0][0];

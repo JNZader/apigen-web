@@ -147,7 +147,7 @@ describe('useCanvasConnections', () => {
           target: 'entity-2',
           sourceHandle: null,
           targetHandle: null,
-        };
+        } as unknown as import('@xyflow/react').Connection;
 
         result.current.onConnect(connection);
 
@@ -163,7 +163,7 @@ describe('useCanvasConnections', () => {
           target: null,
           sourceHandle: null,
           targetHandle: null,
-        };
+        } as unknown as import('@xyflow/react').Connection;
 
         result.current.onConnect(connection);
 

@@ -134,14 +134,14 @@ describe('useAutoLayout', () => {
     const entities = [createMockEntity({ name: 'User' })];
 
     const { rerender } = renderHook(
-      ({ layoutPreference }) =>
+      ({ layoutPreference }: { layoutPreference: 'compact' | 'spacious' | 'horizontal' }) =>
         useAutoLayout({
           ...defaultOptions,
           entities,
           needsAutoLayout: true,
           layoutPreference,
         }),
-      { initialProps: { layoutPreference: 'compact' as const } },
+      { initialProps: { layoutPreference: 'compact' } },
     );
 
     expect(mockUpdateEntityPositions).toHaveBeenCalledTimes(1);
@@ -150,7 +150,7 @@ describe('useAutoLayout', () => {
     mockUpdateEntityPositions.mockClear();
     mockSetNeedsAutoLayout.mockClear();
 
-    rerender({ layoutPreference: 'spacious' as const });
+    rerender({ layoutPreference: 'spacious' });
 
     // Should recalculate with new preset
     expect(mockUpdateEntityPositions).toHaveBeenCalled();
