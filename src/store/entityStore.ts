@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 import { useShallow } from 'zustand/shallow';
 import type { EntityDesign, FieldDesign } from '../types';
 import { toSnakeCase } from '../types';
+import { ENTITY_GRID } from '../utils/canvasConstants';
 
 // ============================================================================
 // Helper functions
@@ -93,8 +94,11 @@ export const useEntityStore = create<EntityState>()(
       // Entity actions
       addEntity: (name) => {
         const entityCount = get().entities.length;
-        const gridX = (entityCount % 4) * 320 + 50;
-        const gridY = Math.floor(entityCount / 4) * 250 + 50;
+        const gridX =
+          (entityCount % ENTITY_GRID.COLUMNS) * ENTITY_GRID.SPACING_X + ENTITY_GRID.PADDING;
+        const gridY =
+          Math.floor(entityCount / ENTITY_GRID.COLUMNS) * ENTITY_GRID.SPACING_Y +
+          ENTITY_GRID.PADDING;
 
         const entity: EntityDesign = {
           id: nanoid(),

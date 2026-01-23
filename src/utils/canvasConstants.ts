@@ -25,6 +25,17 @@ export const CANVAS = {
 } as const;
 
 /**
+ * Entity grid layout constants for initial entity placement.
+ * Used when adding new entities to calculate their default position.
+ */
+export const ENTITY_GRID = {
+  COLUMNS: 4,
+  SPACING_X: 320,
+  SPACING_Y: 250,
+  PADDING: 50,
+} as const;
+
+/**
  * Canvas view mode constants.
  * Use these instead of magic strings throughout the application.
  */
