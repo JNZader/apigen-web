@@ -264,8 +264,9 @@ describe('DesignerPage', () => {
       const exportButton = screen.getByRole('button', { name: /export services/i });
       await user.click(exportButton);
 
+      // The drawer shows "No services defined" when there are no services
       await waitFor(() => {
-        expect(screen.getByText(/export services/i)).toBeInTheDocument();
+        expect(screen.getByText(/no services defined/i)).toBeInTheDocument();
       });
     });
   });
