@@ -1,6 +1,6 @@
 import { saveAs } from 'file-saver';
 import { useCallback, useRef, useState } from 'react';
-import { generateProject as generateWithServer } from '../api/generatorApi';
+import { generateProject as generateWithServer, RateLimitError } from '../api/generatorApi';
 import { useProjectStore } from '../store/projectStore';
 import { notify } from '../utils/notifications';
 import { buildProjectConfig } from '../utils/projectConfigBuilder';
@@ -63,6 +63,18 @@ export function useProjectGeneration() {
       });
       return true;
     } catch (err) {
+      // Handle rate limit error with specific message
+      if (err instanceof RateLimitError) {
+        const seconds = Math.ceil(err.retryAfterMs / 1000);
+        const displayMessage = `Too many generation requests. Please wait ${seconds} seconds before trying again.`;
+        setError(displayMessage);
+        notify.warning({
+          title: 'Rate Limit',
+          message: displayMessage,
+        });
+        return false;
+      }
+
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate project';
       const displayMessage = errorMessage.includes('fetch')
         ? 'Could not connect to APiGen Server. Make sure it is running on localhost:8081'

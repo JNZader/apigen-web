@@ -1,6 +1,7 @@
 /**
  * API client for the APiGen Server.
  * Uses centralized API client with AbortController, retry, and Zod validation.
+ * Includes client-side rate limiting to prevent API abuse.
  */
 
 import { API_CONFIG } from '../config/constants';
@@ -26,6 +27,7 @@ import type {
   SecurityConfig,
   WebhooksConfig,
 } from '../types';
+import { RateLimitError, strictRateLimiter } from '../utils/rateLimiter';
 import { type ApiClient, createApiClient } from './apiClient';
 import {
   type GenerateResponse,
@@ -117,11 +119,21 @@ export async function validateSchema(
 /**
  * Generate a Spring Boot project and download as ZIP.
  * Returns raw blob (no Zod validation for binary data).
+ * Rate limited to prevent API abuse (10 requests per minute).
  */
 export async function generateProject(
   request: GenerateRequest,
   signal?: AbortSignal,
 ): Promise<Blob> {
+  // Check rate limit before making expensive generation request
+  if (!strictRateLimiter.canMakeRequest()) {
+    const retryAfter = strictRateLimiter.getTimeUntilReset();
+    throw new RateLimitError(retryAfter);
+  }
+
+  // Record the request before making it
+  strictRateLimiter.recordRequest();
+
   const response = await apiClient.post<Blob>('/api/generate', request, {
     responseType: 'blob',
     signal,
@@ -144,5 +156,6 @@ export async function isServerAvailable(signal?: AbortSignal): Promise<boolean> 
   }
 }
 
+export { RateLimitError } from '../utils/rateLimiter';
 // Export error types for use in components
 export { ApiError, TimeoutError } from './apiClient';

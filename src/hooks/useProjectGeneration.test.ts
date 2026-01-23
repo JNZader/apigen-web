@@ -19,9 +19,13 @@ vi.mock('../utils/sqlGenerator', () => ({
 
 // Mock the API - use a function that returns the mock to avoid hoisting issues
 const mockGenerateProject = vi.fn();
-vi.mock('../api/generatorApi', () => ({
-  generateProject: (...args: unknown[]) => mockGenerateProject(...args),
-}));
+vi.mock('../api/generatorApi', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../api/generatorApi')>();
+  return {
+    ...actual,
+    generateProject: (...args: unknown[]) => mockGenerateProject(...args),
+  };
+});
 
 // Mock the store
 const mockStore = {
@@ -286,6 +290,29 @@ describe('useProjectGeneration', () => {
       expect(retryResult!).toBe(true);
       // 2 total calls: first failed, second succeeded
       expect(mockGenerateProject).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle rate limit error with specific message', async () => {
+      const { RateLimitError } = await import('../api/generatorApi');
+      const { result } = renderHook(() => useProjectGeneration());
+
+      // Mock the generateProject to throw RateLimitError
+      mockGenerateProject.mockRejectedValueOnce(new RateLimitError(30000));
+
+      let generateResult: boolean;
+      await act(async () => {
+        generateResult = await result.current.generateProject();
+      });
+
+      // Should return false on rate limit
+      expect(generateResult!).toBe(false);
+
+      // Should set error message with retry time
+      expect(result.current.error).toContain('Too many generation requests');
+      expect(result.current.error).toContain('30 seconds');
+
+      // Should not be generating anymore
+      expect(result.current.generating).toBe(false);
     });
   });
 });
