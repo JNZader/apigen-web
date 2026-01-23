@@ -46,7 +46,7 @@ vi.mock('@xyflow/react', async (importOriginal) => {
         >
           Pane
         </button>
-        {children}
+        {children as React.ReactNode}
       </div>
     ),
     Background: () => <div data-testid="background" />,
