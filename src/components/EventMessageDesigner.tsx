@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Alert,
   Badge,
   Box,
   Button,
@@ -246,7 +247,7 @@ export function EventMessageDesigner() {
               Create Kafka or RabbitMQ connections between services in the canvas view to see them
               here.
             </Text>
-            <Alert icon={<IconInfoCircle size={16} />}>
+            <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
               <Text size="xs">
                 Switch to the Services view in the canvas, then drag from one service's output
                 handle to another service's input handle. Choose Kafka or RabbitMQ as the
@@ -566,17 +567,5 @@ export function EventMessageDesigner() {
         )}
       </Drawer>
     </Stack>
-  );
-}
-
-// Missing Alert import - need to add it
-function Alert({ icon, children }: Readonly<{ icon: React.ReactNode; children: React.ReactNode }>) {
-  return (
-    <Paper p="sm" withBorder bg="blue.0">
-      <Group gap="xs" wrap="nowrap">
-        {icon}
-        {children}
-      </Group>
-    </Paper>
   );
 }
