@@ -35,7 +35,7 @@
     "npm": ">=9.0.0"
   },
   "dependencies": {
-    "@dagrejs/dagre": "^1.1.8",
+    "@dagrejs/dagre": "^2.0.3",
     "@mantine/code-highlight": "^8.3.13",
     "@mantine/core": "^8.3.13",
     "@mantine/dropzone": "^8.3.13",
