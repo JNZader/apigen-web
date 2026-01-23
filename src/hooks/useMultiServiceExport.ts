@@ -1,4 +1,3 @@
-import { notifications } from '@mantine/notifications';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import { useCallback, useRef, useState } from 'react';
@@ -6,6 +5,7 @@ import { generateProject as generateWithServer } from '../api/generatorApi';
 import { useProjectStore } from '../store/projectStore';
 import type { EntityDesign, ServiceDesign } from '../types';
 import { addServiceToZip } from '../utils/archiveSecurity';
+import { notify } from '../utils/notifications';
 import { buildProjectConfig } from '../utils/projectConfigBuilder';
 import { generateSQL } from '../utils/sqlGenerator';
 
@@ -31,25 +31,22 @@ interface ServiceExportResult {
 // Helper to show export result notification
 function showExportNotification(successCount: number, failedServices: ServiceExportResult[]): void {
   if (successCount === 0) {
-    notifications.show({
+    notify.error({
       title: 'Export failed',
       message: 'No services could be exported',
-      color: 'red',
     });
     return;
   }
 
   if (failedServices.length > 0) {
-    notifications.show({
+    notify.warning({
       title: 'Partial export',
       message: `${successCount} services exported. Failed: ${failedServices.map((s) => s.serviceName).join(', ')}`,
-      color: 'yellow',
     });
   } else {
-    notifications.show({
+    notify.success({
       title: 'All services exported',
       message: `${successCount} services have been exported successfully`,
-      color: 'green',
     });
   }
 }
@@ -145,10 +142,9 @@ export function useMultiServiceExport() {
 
       const service = services.find((s) => s.id === serviceId);
       if (!service) {
-        notifications.show({
+        notify.error({
           title: 'Service not found',
           message: 'The selected service could not be found',
-          color: 'red',
         });
         return false;
       }
@@ -163,17 +159,15 @@ export function useMultiServiceExport() {
         if (result.success && result.blob) {
           saveAs(result.blob, `${createServiceArtifactId(service.name)}.zip`);
 
-          notifications.show({
+          notify.success({
             title: 'Service exported',
             message: `${service.name} has been exported successfully`,
-            color: 'green',
           });
           return true;
         } else {
-          notifications.show({
+          notify.error({
             title: 'Export failed',
             message: result.error || 'Failed to export service',
-            color: 'red',
           });
           return false;
         }
@@ -195,10 +189,9 @@ export function useMultiServiceExport() {
     const servicesWithEntities = services.filter((s) => s.entityIds.length > 0);
 
     if (servicesWithEntities.length === 0) {
-      notifications.show({
+      notify.warning({
         title: 'No services to export',
         message: 'Add entities to services before exporting',
-        color: 'yellow',
       });
       return false;
     }
@@ -243,10 +236,9 @@ export function useMultiServiceExport() {
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to export services';
-      notifications.show({
+      notify.error({
         title: 'Export error',
         message: errorMessage,
-        color: 'red',
       });
       return false;
     } finally {

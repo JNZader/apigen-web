@@ -1,7 +1,7 @@
 import { modals } from '@mantine/modals';
-import { notifications } from '@mantine/notifications';
 import { useCallback } from 'react';
 import { useProjectStore } from '../store/projectStore';
+import { notify } from '../utils/notifications';
 
 /**
  * Custom hook for entity deletion with confirmation modal.
@@ -24,10 +24,9 @@ export function useEntityDeletion() {
         cancelProps: { 'aria-label': 'Cancel deletion' },
         onConfirm: () => {
           removeEntity(entityId);
-          notifications.show({
+          notify.success({
             title: 'Deleted',
             message: `Entity ${entity.name} deleted successfully`,
-            color: 'red',
           });
         },
       });
@@ -41,10 +40,9 @@ export function useEntityDeletion() {
       if (!entity) return;
 
       removeEntity(entityId);
-      notifications.show({
+      notify.success({
         title: 'Deleted',
         message: `Entity ${entity.name} deleted successfully`,
-        color: 'red',
       });
     },
     [entities, removeEntity],

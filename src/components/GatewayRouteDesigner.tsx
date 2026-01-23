@@ -23,7 +23,6 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
 import {
   IconArrowRight,
   IconEdit,
@@ -38,6 +37,7 @@ import { nanoid } from 'nanoid';
 import { useState } from 'react';
 import { useServices } from '../store/projectStore';
 import type { GatewayRouteConfig } from '../types';
+import { notify } from '../utils/notifications';
 
 interface GatewayRouteDesignerProps {
   routes: GatewayRouteConfig[];
@@ -158,10 +158,9 @@ export function GatewayRouteDesigner({
   const handleDeleteRoute = (routeId: string) => {
     const newRoutes = routes.filter((r) => r.id !== routeId);
     onRoutesChange(newRoutes);
-    notifications.show({
+    notify.warning({
       title: 'Route deleted',
       message: 'Gateway route has been removed',
-      color: 'orange',
     });
   };
 
@@ -211,18 +210,16 @@ export function GatewayRouteDesigner({
       // Update existing route
       const newRoutes = routes.map((r) => (r.id === editingRouteId ? routeConfig : r));
       onRoutesChange(newRoutes);
-      notifications.show({
+      notify.info({
         title: 'Route updated',
         message: 'Gateway route has been updated',
-        color: 'blue',
       });
     } else {
       // Add new route
       onRoutesChange([...routes, routeConfig]);
-      notifications.show({
+      notify.success({
         title: 'Route created',
         message: 'New gateway route has been added',
-        color: 'green',
       });
     }
 

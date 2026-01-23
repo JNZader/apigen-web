@@ -15,7 +15,6 @@ import {
   Title,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
 import {
   IconArchive,
   IconInfoCircle,
@@ -39,6 +38,7 @@ import { SectionErrorBoundary } from '../components/SectionErrorBoundary';
 import { ServiceConfigPanel } from '../components/ServiceConfigPanel';
 import { useEntityDeletion, useHistory, useKeyboardShortcuts, useSelectedEntity } from '../hooks';
 import { useDesignerPageData, useProjectStore, useServiceActions } from '../store/projectStore';
+import { notify } from '../utils/notifications';
 
 type ViewMode = 'canvas' | 'grid';
 
@@ -107,20 +107,18 @@ export function DesignerPage() {
 
   const handleCreateService = () => {
     if (!newServiceName.trim()) {
-      notifications.show({
+      notify.error({
         title: 'Invalid name',
         message: 'Please enter a service name',
-        color: 'red',
       });
       return;
     }
     addService(newServiceName.trim());
     closeServiceForm();
     setNewServiceName('');
-    notifications.show({
+    notify.success({
       title: 'Service created',
       message: `Service "${newServiceName.trim()}" has been created`,
-      color: 'green',
     });
   };
 

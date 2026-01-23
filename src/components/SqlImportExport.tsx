@@ -17,7 +17,6 @@ import {
 } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import { modals } from '@mantine/modals';
-import { notifications } from '@mantine/notifications';
 import {
   IconAlertCircle,
   IconCheck,
@@ -35,6 +34,7 @@ import {
   useRelationActions,
   useRelations,
 } from '../store';
+import { notify } from '../utils/notifications';
 import { generateSQL } from '../utils/sqlGenerator';
 import { parseSQL } from '../utils/sqlParser';
 
@@ -67,10 +67,9 @@ export function SqlImportExport({ opened, onClose }: Readonly<SqlImportExportPro
       setEntities(parsedEntities);
       setRelations(parsedRelations);
 
-      notifications.show({
+      notify.success({
         title: 'SQL Imported',
         message: `Imported ${parsedEntities.length} entities and ${parsedRelations.length} relations`,
-        color: 'green',
       });
 
       setImportSql('');
@@ -135,10 +134,9 @@ export function SqlImportExport({ opened, onClose }: Readonly<SqlImportExportPro
       const content = await file.text();
       setImportSql(content);
       setImportError(null);
-      notifications.show({
+      notify.info({
         title: 'File loaded',
         message: `${file.name} loaded successfully`,
-        color: 'blue',
       });
     } catch {
       setImportError('Failed to read file');
@@ -162,10 +160,9 @@ export function SqlImportExport({ opened, onClose }: Readonly<SqlImportExportPro
       a.remove();
       URL.revokeObjectURL(url);
 
-      notifications.show({
+      notify.success({
         title: 'SQL Exported',
         message: 'Schema downloaded successfully',
-        color: 'green',
       });
     } finally {
       // Small delay to prevent accidental double-clicks

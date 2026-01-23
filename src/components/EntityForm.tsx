@@ -11,11 +11,11 @@ import {
   TextInput,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { notifications } from '@mantine/notifications';
 import { useMemo } from 'react';
 import { useProjectStore, useServiceActions, useServices } from '../store/projectStore';
 import type { EntityDesign } from '../types';
 import { toPascalCase, toSnakeCase } from '../types';
+import { notify } from '../utils/notifications';
 import { isValidEntityName, isValidTableName } from '../utils/validation';
 import { AddFieldForm } from './AddFieldForm';
 import { FieldEditor } from './FieldEditor';
@@ -115,18 +115,16 @@ export function EntityForm({ opened, onClose, entity }: Readonly<EntityFormProps
           customEndpoint: values.customEndpoint || undefined,
         },
       });
-      notifications.show({
+      notify.info({
         title: 'Updated',
         message: `Entity ${values.name} updated successfully`,
-        color: 'blue',
       });
     } else {
       // Create new entity
       addEntity(toPascalCase(values.name));
-      notifications.show({
+      notify.success({
         title: 'Created',
         message: `Entity ${values.name} created successfully`,
-        color: 'green',
       });
     }
     onClose();

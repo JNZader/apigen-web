@@ -25,7 +25,6 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
 import {
   IconArrowRight,
   IconBrandAws,
@@ -45,6 +44,7 @@ import {
 } from '../store/projectStore';
 import type { SerializationFormat, ServiceConnectionDesign } from '../types';
 import { COMMUNICATION_COLORS } from '../types';
+import { notify } from '../utils/notifications';
 
 type BrokerFilter = 'all' | 'Kafka' | 'RabbitMQ';
 
@@ -160,10 +160,9 @@ export function EventMessageDesigner() {
 
   const handleDeleteConnection = (connectionId: string) => {
     removeServiceConnection(connectionId);
-    notifications.show({
+    notify.warning({
       title: 'Event connection deleted',
       message: 'The event/message connection has been removed',
-      color: 'orange',
     });
   };
 
@@ -190,10 +189,9 @@ export function EventMessageDesigner() {
       },
     });
 
-    notifications.show({
+    notify.success({
       title: 'Event connection updated',
       message: 'The event/message configuration has been saved',
-      color: 'green',
     });
 
     closeDrawer();

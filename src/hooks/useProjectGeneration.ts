@@ -1,8 +1,8 @@
-import { notifications } from '@mantine/notifications';
 import { saveAs } from 'file-saver';
 import { useCallback, useRef, useState } from 'react';
 import { generateProject as generateWithServer } from '../api/generatorApi';
 import { useProjectStore } from '../store/projectStore';
+import { notify } from '../utils/notifications';
 import { buildProjectConfig } from '../utils/projectConfigBuilder';
 import { generateSQL } from '../utils/sqlGenerator';
 
@@ -33,10 +33,9 @@ export function useProjectGeneration() {
     }
 
     if (entities.length === 0) {
-      notifications.show({
+      notify.warning({
         title: 'No entities',
         message: 'Add at least one entity before downloading',
-        color: 'yellow',
       });
       return false;
     }
@@ -58,10 +57,9 @@ export function useProjectGeneration() {
 
       saveAs(blob, `${project.artifactId}.zip`);
 
-      notifications.show({
+      notify.success({
         title: 'Generated with APiGen',
         message: `Project ${project.artifactId}.zip generated successfully using apigen templates`,
-        color: 'green',
       });
       return true;
     } catch (err) {
@@ -71,10 +69,9 @@ export function useProjectGeneration() {
         : errorMessage;
 
       setError(displayMessage);
-      notifications.show({
+      notify.error({
         title: 'Server Error',
         message: displayMessage,
-        color: 'red',
       });
       return false;
     } finally {
