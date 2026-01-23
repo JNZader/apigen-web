@@ -271,9 +271,7 @@ describe('DesignerPage', () => {
   });
 
   describe('Service Creation Modal', () => {
-    it('should validate service name before creating', async () => {
-      const user = userEvent.setup();
-
+    it('should validate service name before creating', () => {
       // Add a service so the canvas shows service-related UI
       const service = createMockService({ name: 'TestService' });
       useServiceStore.setState({ services: [service] });

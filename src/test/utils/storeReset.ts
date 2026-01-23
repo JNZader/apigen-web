@@ -62,17 +62,14 @@ export function resetAllStores(): void {
   // Reset layout store
   useLayoutStore.setState({
     canvasView: CANVAS_VIEWS.ENTITIES,
-    layoutPreference: 'dagre',
+    layoutPreference: 'compact',
     needsAutoLayout: false,
     entityServiceFilter: 'all',
   });
 
   // Reset canvas UI store
   useCanvasUIStore.setState({
-    isConnecting: false,
-    connectionSource: null,
-    hoveredEntityId: null,
-    hoveredServiceId: null,
+    expandedEntityIds: new Set(),
   });
 
   // Reset project store
@@ -126,15 +123,12 @@ export function resetServiceStores(): void {
 export function resetCanvasStores(): void {
   useLayoutStore.setState({
     canvasView: CANVAS_VIEWS.ENTITIES,
-    layoutPreference: 'dagre',
+    layoutPreference: 'compact',
     needsAutoLayout: false,
     entityServiceFilter: 'all',
   });
   useCanvasUIStore.setState({
-    isConnecting: false,
-    connectionSource: null,
-    hoveredEntityId: null,
-    hoveredServiceId: null,
+    expandedEntityIds: new Set(),
   });
 }
 
