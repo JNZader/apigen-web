@@ -4,6 +4,7 @@ import { useRelationStore } from '../../../store/relationStore';
 import { useServiceConnectionStore } from '../../../store/serviceConnectionStore';
 import { createMockRelation, createMockServiceConnection } from '../../../test/factories';
 import { resetAllStores } from '../../../test/utils';
+import type { CanvasView } from '../../../utils/canvasConstants';
 import { CANVAS_VIEWS } from '../../../utils/canvasConstants';
 import { useCanvasEdges } from './useCanvasEdges';
 
@@ -198,13 +199,9 @@ describe('useCanvasEdges', () => {
       useServiceConnectionStore.setState({ serviceConnections: [connection] });
 
       const { rerender } = renderHook(
-        ({
-          canvasView,
-        }: {
-          canvasView: typeof CANVAS_VIEWS.ENTITIES | typeof CANVAS_VIEWS.SERVICES;
-        }) => useCanvasEdges({ canvasView }),
+        ({ canvasView }: { canvasView: CanvasView }) => useCanvasEdges({ canvasView }),
         {
-          initialProps: { canvasView: CANVAS_VIEWS.ENTITIES },
+          initialProps: { canvasView: CANVAS_VIEWS.ENTITIES as CanvasView },
         },
       );
 
@@ -213,7 +210,7 @@ describe('useCanvasEdges', () => {
       expect(edges[0].type).toBe('relation');
 
       // Switch to services view
-      rerender({ canvasView: CANVAS_VIEWS.SERVICES });
+      rerender({ canvasView: CANVAS_VIEWS.SERVICES as CanvasView });
 
       // Should now have service connection edges
       edges = mockSetEdges.mock.calls[mockSetEdges.mock.calls.length - 1][0];
