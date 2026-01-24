@@ -5,7 +5,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // Use 2 workers per shard in CI (sharding handles parallelization across machines)
+  workers: process.env.CI ? 2 : undefined,
   reporter: 'html',
   timeout: 60000,
   expect: {
