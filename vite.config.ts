@@ -44,6 +44,10 @@ export default defineConfig({
     commonjsOptions: {
       include: [/node_modules/],
       transformMixedEsModules: true,
+      // Handle dynamic requires in dagre
+      dynamicRequireTargets: [
+        'node_modules/@dagrejs/graphlib/**/*.js',
+      ],
     },
 
     // Optimize chunk splitting for better caching
