@@ -6,12 +6,12 @@ import { test as base, expect, type Page } from '@playwright/test';
  * and its internal elements may not be immediately available.
  */
 async function waitForReactFlow(page: Page): Promise<void> {
-  // First wait for the main container
-  await page.waitForSelector('.react-flow', { state: 'attached', timeout: 15000 });
+  // Wait for the main React Flow container with longer timeout for CI
+  await page.waitForSelector('.react-flow', { state: 'visible', timeout: 30000 });
 
   // Wait for React Flow to render its internal components
   // The viewport indicates React Flow has initialized
-  await page.waitForSelector('.react-flow__viewport', { state: 'attached', timeout: 10000 });
+  await page.waitForSelector('.react-flow__viewport', { state: 'attached', timeout: 15000 });
 
   // Give React Flow a moment to finish initializing controls and other elements
   await page.waitForTimeout(500);
@@ -39,10 +39,13 @@ export const test = base.extend<{
   reactFlowPage: Page;
 }>({
   reactFlowPage: async ({ page }, use) => {
+    // Navigate to the page
     await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
 
-    // Close any modals
+    // Wait for the page to be fully loaded (network idle)
+    await page.waitForLoadState('networkidle');
+
+    // Close any modals that might appear
     await closeModals(page);
 
     // Wait for React Flow to be ready
@@ -60,7 +63,7 @@ export { expect };
  */
 export async function setupReactFlowPage(page: Page): Promise<void> {
   await page.goto('/');
-  await page.waitForLoadState('domcontentloaded');
+  await page.waitForLoadState('networkidle');
   await closeModals(page);
   await waitForReactFlow(page);
 }
