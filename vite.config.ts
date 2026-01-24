@@ -98,6 +98,8 @@ export default defineConfig({
       '@mantine/notifications',
       '@xyflow/react',
       'zustand',
+      '@dagrejs/dagre',
+      '@dagrejs/graphlib',
     ],
   },
 
