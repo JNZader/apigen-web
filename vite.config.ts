@@ -33,6 +33,8 @@ export default defineConfig({
       '@types': resolve(__dirname, 'src/types'),
       '@utils': resolve(__dirname, 'src/utils'),
       '@api': resolve(__dirname, 'src/api'),
+      // Fix dagre ESM compatibility - resolve graphlib explicitly
+      '@dagrejs/graphlib': resolve(__dirname, 'node_modules/@dagrejs/graphlib/dist/graphlib.js'),
     },
   },
 
