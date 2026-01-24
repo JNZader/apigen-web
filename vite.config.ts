@@ -40,6 +40,12 @@ export default defineConfig({
     // Disable source maps in production for smaller bundles
     sourcemap: false,
 
+    // Handle CommonJS modules in production build
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+    },
+
     // Optimize chunk splitting for better caching
     rollupOptions: {
       output: {
