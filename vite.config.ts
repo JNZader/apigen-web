@@ -33,7 +33,8 @@ export default defineConfig({
       '@types': resolve(__dirname, 'src/types'),
       '@utils': resolve(__dirname, 'src/utils'),
       '@api': resolve(__dirname, 'src/api'),
-      // Fix dagre ESM compatibility - resolve graphlib explicitly
+      // Fix dagre ESM compatibility - use pre-bundled versions
+      '@dagrejs/dagre': resolve(__dirname, 'node_modules/@dagrejs/dagre/dist/dagre.js'),
       '@dagrejs/graphlib': resolve(__dirname, 'node_modules/@dagrejs/graphlib/dist/graphlib.js'),
     },
   },
@@ -46,10 +47,8 @@ export default defineConfig({
     commonjsOptions: {
       include: [/node_modules/],
       transformMixedEsModules: true,
-      // Handle dynamic requires in dagre
-      dynamicRequireTargets: [
-        'node_modules/@dagrejs/graphlib/**/*.js',
-      ],
+      // Ignore dynamic requires - dagre handles this at runtime
+      ignoreDynamicRequires: true,
     },
 
     // Optimize chunk splitting for better caching
