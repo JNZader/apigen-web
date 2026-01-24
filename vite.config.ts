@@ -13,7 +13,7 @@ const CHUNK_MAPPING: Array<{ patterns: string[]; chunk: string }> = [
   { patterns: ['zustand'], chunk: 'state' },
   { patterns: ['node_modules/zod'], chunk: 'validation' },
   { patterns: ['jszip', 'file-saver', 'html-to-image'], chunk: 'file-utils' },
-  { patterns: ['elkjs'], chunk: 'elk' },
+  { patterns: ['elkjs/lib/elk.bundled'], chunk: 'elk' },
   { patterns: ['nanoid'], chunk: 'nanoid' },
 ];
 
@@ -99,8 +99,9 @@ export default defineConfig({
       '@mantine/notifications',
       '@xyflow/react',
       'zustand',
-      'elkjs',
+      'elkjs/lib/elk.bundled.js',
     ],
+    exclude: ['web-worker'],
   },
 
   // Server configuration
