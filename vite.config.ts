@@ -13,7 +13,7 @@ const CHUNK_MAPPING: Array<{ patterns: string[]; chunk: string }> = [
   { patterns: ['zustand'], chunk: 'state' },
   { patterns: ['node_modules/zod'], chunk: 'validation' },
   { patterns: ['jszip', 'file-saver', 'html-to-image'], chunk: 'file-utils' },
-  { patterns: ['@dagrejs/dagre'], chunk: 'dagre' },
+  { patterns: ['elkjs'], chunk: 'elk' },
   { patterns: ['nanoid'], chunk: 'nanoid' },
 ];
 
@@ -33,9 +33,6 @@ export default defineConfig({
       '@types': resolve(__dirname, 'src/types'),
       '@utils': resolve(__dirname, 'src/utils'),
       '@api': resolve(__dirname, 'src/api'),
-      // Fix dagre ESM compatibility - use pre-bundled versions
-      '@dagrejs/dagre': resolve(__dirname, 'node_modules/@dagrejs/dagre/dist/dagre.js'),
-      '@dagrejs/graphlib': resolve(__dirname, 'node_modules/@dagrejs/graphlib/dist/graphlib.js'),
     },
   },
 
@@ -43,13 +40,6 @@ export default defineConfig({
     // Disable source maps in production for smaller bundles
     sourcemap: false,
 
-    // Handle CommonJS modules in production build
-    commonjsOptions: {
-      include: [/node_modules/],
-      transformMixedEsModules: true,
-      // Ignore dynamic requires - dagre handles this at runtime
-      ignoreDynamicRequires: true,
-    },
 
     // Optimize chunk splitting for better caching
     rollupOptions: {
@@ -109,8 +99,7 @@ export default defineConfig({
       '@mantine/notifications',
       '@xyflow/react',
       'zustand',
-      '@dagrejs/dagre',
-      '@dagrejs/graphlib',
+      'elkjs',
     ],
   },
 

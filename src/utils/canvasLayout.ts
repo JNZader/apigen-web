@@ -1,12 +1,18 @@
 /**
- * Canvas layout utilities using dagre for optimal entity positioning.
- * Dagre arranges nodes in a directed graph to minimize edge crossings.
+ * Canvas layout utilities using ELK (Eclipse Layout Kernel) for optimal entity positioning.
+ * ELK arranges nodes in a directed graph to minimize edge crossings.
  */
 
-import Dagre from '@dagrejs/dagre';
+import ELK, {
+  type LayoutOptions as ElkLayoutOptions,
+  type ElkNode,
+} from 'elkjs/lib/elk.bundled.js';
 import type { EntityDesign, ServiceConnectionDesign, ServiceDesign } from '../types';
 import type { RelationDesign } from '../types/relation';
 import { CANVAS, ENTITY_NODE, SERVICE_NODE } from './canvasConstants';
+
+// Create ELK instance
+const elk = new ELK();
 
 interface LayoutOptions {
   direction: 'TB' | 'BT' | 'LR' | 'RL'; // Top-Bottom, Bottom-Top, Left-Right, Right-Left
@@ -36,16 +42,27 @@ const FIELD_HEIGHT = ENTITY_NODE.FIELD_HEIGHT;
 const GRAPH_MARGIN = CANVAS.GRAPH_MARGIN;
 const GRID_GAP = CANVAS.GRID_GAP;
 
+// Map our direction format to ELK direction format
+function mapDirection(direction: LayoutOptions['direction']): string {
+  const directionMap: Record<string, string> = {
+    TB: 'DOWN',
+    BT: 'UP',
+    LR: 'RIGHT',
+    RL: 'LEFT',
+  };
+  return directionMap[direction] || 'RIGHT';
+}
+
 /**
  * Calculate optimal positions for entities based on their relationships.
- * Uses dagre algorithm which minimizes edge crossings and creates
+ * Uses ELK algorithm which minimizes edge crossings and creates
  * a hierarchical layout based on the graph structure.
  */
-export function calculateAutoLayout(
+export async function calculateAutoLayout(
   entities: EntityDesign[],
   relations: RelationDesign[],
   options: Partial<LayoutOptions> = {},
-): Map<string, { x: number; y: number }> {
+): Promise<Map<string, { x: number; y: number }>> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const positions = new Map<string, { x: number; y: number }>();
 
@@ -58,59 +75,78 @@ export function calculateAutoLayout(
     return calculateGridLayout(entities);
   }
 
-  // Create dagre graph
-  const g = new Dagre.graphlib.Graph();
-  g.setDefaultEdgeLabel(() => ({}));
+  // Build ELK graph structure
+  const graph: ElkNode = {
+    id: 'root',
+    layoutOptions: {
+      'elk.algorithm': 'layered',
+      'elk.direction': mapDirection(opts.direction),
+      'elk.spacing.nodeNode': String(opts.nodeSpacing),
+      'elk.layered.spacing.nodeNodeBetweenLayers': String(opts.rankSpacing),
+      'elk.padding': `[top=${GRAPH_MARGIN},left=${GRAPH_MARGIN},bottom=${GRAPH_MARGIN},right=${GRAPH_MARGIN}]`,
+    } as ElkLayoutOptions,
+    children: entities.map((entity) => {
+      // Calculate dynamic height based on number of fields
+      const dynamicHeight = Math.max(
+        NODE_HEIGHT,
+        NODE_BASE_HEIGHT + entity.fields.length * FIELD_HEIGHT,
+      );
+      return {
+        id: entity.id,
+        width: NODE_WIDTH,
+        height: dynamicHeight,
+      };
+    }),
+    edges: relations
+      .filter((relation) => {
+        // Check both entities exist
+        const sourceExists = entities.some((e) => e.id === relation.sourceEntityId);
+        const targetExists = entities.some((e) => e.id === relation.targetEntityId);
+        return sourceExists && targetExists;
+      })
+      .map((relation, index) => ({
+        id: `e${index}`,
+        sources: [relation.sourceEntityId],
+        targets: [relation.targetEntityId],
+      })),
+  };
 
-  // Configure the graph
-  g.setGraph({
-    rankdir: opts.direction,
-    nodesep: opts.nodeSpacing,
-    ranksep: opts.rankSpacing,
-    marginx: GRAPH_MARGIN,
-    marginy: GRAPH_MARGIN,
-  });
+  try {
+    // Run the layout algorithm
+    const layoutedGraph = await elk.layout(graph);
 
-  // Add nodes
-  entities.forEach((entity) => {
-    // Calculate dynamic height based on number of fields
-    const dynamicHeight = Math.max(
-      NODE_HEIGHT,
-      NODE_BASE_HEIGHT + entity.fields.length * FIELD_HEIGHT,
-    );
-    g.setNode(entity.id, {
-      width: NODE_WIDTH,
-      height: dynamicHeight,
-    });
-  });
-
-  // Add edges (relations)
-  relations.forEach((relation) => {
-    // Check both entities exist
-    const sourceExists = entities.some((e) => e.id === relation.sourceEntityId);
-    const targetExists = entities.some((e) => e.id === relation.targetEntityId);
-
-    if (sourceExists && targetExists) {
-      g.setEdge(relation.sourceEntityId, relation.targetEntityId);
+    // Extract positions
+    if (layoutedGraph.children) {
+      for (const node of layoutedGraph.children) {
+        if (node.x !== undefined && node.y !== undefined) {
+          positions.set(node.id, {
+            x: node.x,
+            y: node.y,
+          });
+        }
+      }
     }
-  });
-
-  // Run the layout algorithm
-  Dagre.layout(g);
-
-  // Extract positions
-  g.nodes().forEach((nodeId) => {
-    const node = g.node(nodeId);
-    if (node) {
-      // Dagre returns center position, convert to top-left
-      positions.set(nodeId, {
-        x: node.x - NODE_WIDTH / 2,
-        y: node.y - (node.height || NODE_HEIGHT) / 2,
-      });
-    }
-  });
+  } catch (error) {
+    console.error('ELK layout error:', error);
+    // Fallback to grid layout on error
+    return calculateGridLayout(entities);
+  }
 
   return positions;
+}
+
+/**
+ * Synchronous version that returns grid layout - for backwards compatibility.
+ * Prefer using calculateAutoLayout directly for proper ELK layouts.
+ */
+export function calculateAutoLayoutSync(
+  entities: EntityDesign[],
+  _relations: RelationDesign[],
+  _options: Partial<LayoutOptions> = {},
+): Map<string, { x: number; y: number }> {
+  // For sync usage, return grid layout immediately
+  // The async version should be preferred for ELK layouts
+  return calculateGridLayout(entities);
 }
 
 /**
@@ -165,14 +201,14 @@ export const LAYOUT_PRESETS = {
 
 /**
  * Calculate optimal positions for services based on their connections.
- * Uses dagre algorithm to create a hierarchical layout that respects
+ * Uses ELK algorithm to create a hierarchical layout that respects
  * the communication flow between services.
  */
-export function calculateServiceLayout(
+export async function calculateServiceLayout(
   services: ServiceDesign[],
   connections: ServiceConnectionDesign[],
   options: Partial<LayoutOptions> = {},
-): Map<string, { x: number; y: number }> {
+): Promise<Map<string, { x: number; y: number }>> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const positions = new Map<string, { x: number; y: number }>();
 
@@ -185,53 +221,54 @@ export function calculateServiceLayout(
     return calculateServiceGridLayout(services);
   }
 
-  // Create dagre graph
-  const g = new Dagre.graphlib.Graph();
-  g.setDefaultEdgeLabel(() => ({}));
-
-  // Configure the graph with more spacing for services (they're larger)
-  g.setGraph({
-    rankdir: opts.direction,
-    nodesep: opts.nodeSpacing * 1.5, // More spacing between services
-    ranksep: opts.rankSpacing * 1.2,
-    marginx: GRAPH_MARGIN,
-    marginy: GRAPH_MARGIN,
-  });
-
-  // Add service nodes with their actual dimensions
-  for (const service of services) {
-    g.setNode(service.id, {
+  // Build ELK graph structure
+  const graph: ElkNode = {
+    id: 'root',
+    layoutOptions: {
+      'elk.algorithm': 'layered',
+      'elk.direction': mapDirection(opts.direction),
+      'elk.spacing.nodeNode': String(opts.nodeSpacing * 1.5), // More spacing between services
+      'elk.layered.spacing.nodeNodeBetweenLayers': String(opts.rankSpacing * 1.2),
+      'elk.padding': `[top=${GRAPH_MARGIN},left=${GRAPH_MARGIN},bottom=${GRAPH_MARGIN},right=${GRAPH_MARGIN}]`,
+    } as ElkLayoutOptions,
+    children: services.map((service) => ({
+      id: service.id,
       width: service.width || SERVICE_NODE.DEFAULT_WIDTH,
       height: service.height || SERVICE_NODE.DEFAULT_HEIGHT,
-    });
-  }
+    })),
+    edges: connections
+      .filter((connection) => {
+        const sourceExists = services.some((s) => s.id === connection.sourceServiceId);
+        const targetExists = services.some((s) => s.id === connection.targetServiceId);
+        return sourceExists && targetExists;
+      })
+      .map((connection, index) => ({
+        id: `e${index}`,
+        sources: [connection.sourceServiceId],
+        targets: [connection.targetServiceId],
+      })),
+  };
 
-  // Add edges (service connections)
-  for (const connection of connections) {
-    const sourceExists = services.some((s) => s.id === connection.sourceServiceId);
-    const targetExists = services.some((s) => s.id === connection.targetServiceId);
+  try {
+    // Run the layout algorithm
+    const layoutedGraph = await elk.layout(graph);
 
-    if (sourceExists && targetExists) {
-      g.setEdge(connection.sourceServiceId, connection.targetServiceId);
+    // Extract positions
+    if (layoutedGraph.children) {
+      for (const node of layoutedGraph.children) {
+        const service = services.find((s) => s.id === node.id);
+        if (node.x !== undefined && node.y !== undefined && service) {
+          positions.set(node.id, {
+            x: node.x,
+            y: node.y,
+          });
+        }
+      }
     }
-  }
-
-  // Run the layout algorithm
-  Dagre.layout(g);
-
-  // Extract positions
-  for (const nodeId of g.nodes()) {
-    const node = g.node(nodeId);
-    const service = services.find((s) => s.id === nodeId);
-    if (node && service) {
-      const width = service.width || SERVICE_NODE.DEFAULT_WIDTH;
-      const height = service.height || SERVICE_NODE.DEFAULT_HEIGHT;
-      // Dagre returns center position, convert to top-left
-      positions.set(nodeId, {
-        x: node.x - width / 2,
-        y: node.y - height / 2,
-      });
-    }
+  } catch (error) {
+    console.error('ELK layout error:', error);
+    // Fallback to grid layout on error
+    return calculateServiceGridLayout(services);
   }
 
   return positions;

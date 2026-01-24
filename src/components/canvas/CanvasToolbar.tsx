@@ -66,9 +66,9 @@ export function CanvasToolbar({
   const { setCanvasView } = useCanvasViewActions();
   const { updateEntityPositions, updateServicePositions, setLayoutPreference } = useLayoutActions();
 
-  // Auto-layout with dagre algorithm
+  // Auto-layout with ELK algorithm
   const handleAutoLayout = useCallback(
-    (preset: keyof typeof LAYOUT_PRESETS = 'horizontal') => {
+    async (preset: keyof typeof LAYOUT_PRESETS = 'horizontal') => {
       if (canvasView === CANVAS_VIEWS.ENTITIES) {
         if (entities.length === 0) {
           notify.warning({
@@ -78,7 +78,7 @@ export function CanvasToolbar({
           return;
         }
 
-        const positions = calculateAutoLayout(entities, relations, LAYOUT_PRESETS[preset]);
+        const positions = await calculateAutoLayout(entities, relations, LAYOUT_PRESETS[preset]);
         updateEntityPositions(positions);
         setLayoutPreference(preset);
 
@@ -95,8 +95,8 @@ export function CanvasToolbar({
           return;
         }
 
-        // Layout services using dagre (respects connections and dimensions)
-        const servicePositions = calculateServiceLayout(
+        // Layout services using ELK (respects connections and dimensions)
+        const servicePositions = await calculateServiceLayout(
           services,
           serviceConnections,
           LAYOUT_PRESETS[preset],

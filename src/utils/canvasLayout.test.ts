@@ -93,13 +93,13 @@ function createMockConnection(
 
 describe('canvasLayout utilities', () => {
   describe('calculateAutoLayout', () => {
-    it('should return empty map for empty entities', () => {
-      const positions = calculateAutoLayout([], []);
+    it('should return empty map for empty entities', async () => {
+      const positions = await calculateAutoLayout([], []);
 
       expect(positions.size).toBe(0);
     });
 
-    it('should calculate grid layout for entities without relations', () => {
+    it('should calculate grid layout for entities without relations', async () => {
       const entities = [
         createMockEntity('1'),
         createMockEntity('2'),
@@ -107,7 +107,7 @@ describe('canvasLayout utilities', () => {
         createMockEntity('4'),
       ];
 
-      const positions = calculateAutoLayout(entities, []);
+      const positions = await calculateAutoLayout(entities, []);
 
       expect(positions.size).toBe(4);
       // All entities should have positions
@@ -120,10 +120,10 @@ describe('canvasLayout utilities', () => {
       }
     });
 
-    it('should arrange entities in grid layout when no relations', () => {
+    it('should arrange entities in grid layout when no relations', async () => {
       const entities = [createMockEntity('1'), createMockEntity('2')];
 
-      const positions = calculateAutoLayout(entities, []);
+      const positions = await calculateAutoLayout(entities, []);
 
       const pos1 = positions.get('1')!;
       const pos2 = positions.get('2')!;
@@ -132,11 +132,11 @@ describe('canvasLayout utilities', () => {
       expect(pos1.x !== pos2.x || pos1.y !== pos2.y).toBe(true);
     });
 
-    it('should calculate dagre layout for entities with relations', () => {
+    it('should calculate ELK layout for entities with relations', async () => {
       const entities = [createMockEntity('1'), createMockEntity('2'), createMockEntity('3')];
       const relations = [createMockRelation('1', '2'), createMockRelation('2', '3')];
 
-      const positions = calculateAutoLayout(entities, relations);
+      const positions = await calculateAutoLayout(entities, relations);
 
       expect(positions.size).toBe(3);
       // All entities should have positions
@@ -145,28 +145,28 @@ describe('canvasLayout utilities', () => {
       }
     });
 
-    it('should handle relations with missing entities', () => {
+    it('should handle relations with missing entities', async () => {
       const entities = [createMockEntity('1'), createMockEntity('2')];
       const relations = [
         createMockRelation('1', '2'),
         createMockRelation('2', '999'), // non-existent entity
       ];
 
-      const positions = calculateAutoLayout(entities, relations);
+      const positions = await calculateAutoLayout(entities, relations);
 
       expect(positions.size).toBe(2);
       expect(positions.has('1')).toBe(true);
       expect(positions.has('2')).toBe(true);
     });
 
-    it('should accept custom layout options', () => {
+    it('should accept custom layout options', async () => {
       const entities = [createMockEntity('1'), createMockEntity('2')];
       const relations = [createMockRelation('1', '2')];
 
-      const positionsLR = calculateAutoLayout(entities, relations, {
+      const positionsLR = await calculateAutoLayout(entities, relations, {
         direction: 'LR',
       });
-      const positionsTB = calculateAutoLayout(entities, relations, {
+      const positionsTB = await calculateAutoLayout(entities, relations, {
         direction: 'TB',
       });
 
@@ -175,34 +175,42 @@ describe('canvasLayout utilities', () => {
       expect(positionsTB.size).toBe(2);
     });
 
-    it('should handle entities with many fields', () => {
+    it('should handle entities with many fields', async () => {
       const entities = [
         createMockEntity('1', 10), // 10 fields
         createMockEntity('2', 5),
       ];
       const relations = [createMockRelation('1', '2')];
 
-      const positions = calculateAutoLayout(entities, relations);
+      const positions = await calculateAutoLayout(entities, relations);
 
       expect(positions.size).toBe(2);
     });
 
-    it('should handle single entity', () => {
+    it('should handle single entity', async () => {
       const entities = [createMockEntity('1')];
 
-      const positions = calculateAutoLayout(entities, []);
+      const positions = await calculateAutoLayout(entities, []);
 
       expect(positions.size).toBe(1);
       const pos = positions.get('1');
       expect(pos).toBeDefined();
     });
 
-    it('should use different spacing options', () => {
+    it('should use different spacing options', async () => {
       const entities = [createMockEntity('1'), createMockEntity('2'), createMockEntity('3')];
       const relations = [createMockRelation('1', '2'), createMockRelation('2', '3')];
 
-      const compactPositions = calculateAutoLayout(entities, relations, LAYOUT_PRESETS.compact);
-      const spaciousPositions = calculateAutoLayout(entities, relations, LAYOUT_PRESETS.spacious);
+      const compactPositions = await calculateAutoLayout(
+        entities,
+        relations,
+        LAYOUT_PRESETS.compact,
+      );
+      const spaciousPositions = await calculateAutoLayout(
+        entities,
+        relations,
+        LAYOUT_PRESETS.spacious,
+      );
 
       expect(compactPositions.size).toBe(3);
       expect(spaciousPositions.size).toBe(3);
@@ -210,16 +218,16 @@ describe('canvasLayout utilities', () => {
   });
 
   describe('calculateServiceLayout', () => {
-    it('should return empty map for empty services', () => {
-      const positions = calculateServiceLayout([], []);
+    it('should return empty map for empty services', async () => {
+      const positions = await calculateServiceLayout([], []);
 
       expect(positions.size).toBe(0);
     });
 
-    it('should calculate grid layout for services without connections', () => {
+    it('should calculate grid layout for services without connections', async () => {
       const services = [createMockService('1'), createMockService('2'), createMockService('3')];
 
-      const positions = calculateServiceLayout(services, []);
+      const positions = await calculateServiceLayout(services, []);
 
       expect(positions.size).toBe(3);
       for (const service of services) {
@@ -231,32 +239,32 @@ describe('canvasLayout utilities', () => {
       }
     });
 
-    it('should calculate dagre layout for services with connections', () => {
+    it('should calculate ELK layout for services with connections', async () => {
       const services = [createMockService('1'), createMockService('2'), createMockService('3')];
       const connections = [createMockConnection('1', '2'), createMockConnection('2', '3')];
 
-      const positions = calculateServiceLayout(services, connections);
+      const positions = await calculateServiceLayout(services, connections);
 
       expect(positions.size).toBe(3);
     });
 
-    it('should handle connections with missing services', () => {
+    it('should handle connections with missing services', async () => {
       const services = [createMockService('1'), createMockService('2')];
       const connections = [
         createMockConnection('1', '2'),
         createMockConnection('2', '999'), // non-existent service
       ];
 
-      const positions = calculateServiceLayout(services, connections);
+      const positions = await calculateServiceLayout(services, connections);
 
       expect(positions.size).toBe(2);
     });
 
-    it('should accept custom layout options', () => {
+    it('should accept custom layout options', async () => {
       const services = [createMockService('1'), createMockService('2')];
       const connections = [createMockConnection('1', '2')];
 
-      const positions = calculateServiceLayout(services, connections, {
+      const positions = await calculateServiceLayout(services, connections, {
         direction: 'TB',
         nodeSpacing: 100,
         rankSpacing: 200,
@@ -265,21 +273,21 @@ describe('canvasLayout utilities', () => {
       expect(positions.size).toBe(2);
     });
 
-    it('should handle services with custom dimensions', () => {
+    it('should handle services with custom dimensions', async () => {
       const services = [
         { ...createMockService('1'), width: 500, height: 400 },
         { ...createMockService('2'), width: 300, height: 200 },
       ];
 
-      const positions = calculateServiceLayout(services, []);
+      const positions = await calculateServiceLayout(services, []);
 
       expect(positions.size).toBe(2);
     });
 
-    it('should handle single service', () => {
+    it('should handle single service', async () => {
       const services = [createMockService('1')];
 
-      const positions = calculateServiceLayout(services, []);
+      const positions = await calculateServiceLayout(services, []);
 
       expect(positions.size).toBe(1);
       const pos = positions.get('1');

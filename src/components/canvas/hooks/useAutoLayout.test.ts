@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMockEntity } from '../../../test/factories';
 import type { RelationDesign } from '../../../types/relation';
@@ -10,7 +10,7 @@ vi.mock('../../../utils/canvasLayout', () => ({
     const positions = new Map<string, { x: number; y: number }>();
     positions.set('entity-1', { x: 100, y: 100 });
     positions.set('entity-2', { x: 400, y: 100 });
-    return positions;
+    return Promise.resolve(positions);
   }),
   LAYOUT_PRESETS: {
     compact: { nodeSpacing: 200, rankSpacing: 150, direction: 'TB' },
@@ -64,7 +64,7 @@ describe('useAutoLayout', () => {
     expect(mockSetNeedsAutoLayout).not.toHaveBeenCalled();
   });
 
-  it('should trigger layout when needsAutoLayout is true and entities exist', () => {
+  it('should trigger layout when needsAutoLayout is true and entities exist', async () => {
     const entities = [createMockEntity({ name: 'User' }), createMockEntity({ name: 'Product' })];
 
     renderHook(() =>
@@ -75,11 +75,13 @@ describe('useAutoLayout', () => {
       }),
     );
 
-    expect(mockUpdateEntityPositions).toHaveBeenCalledTimes(1);
-    expect(mockSetNeedsAutoLayout).toHaveBeenCalledWith(false);
+    await waitFor(() => {
+      expect(mockUpdateEntityPositions).toHaveBeenCalledTimes(1);
+      expect(mockSetNeedsAutoLayout).toHaveBeenCalledWith(false);
+    });
   });
 
-  it('should pass positions map to updateEntityPositions', () => {
+  it('should pass positions map to updateEntityPositions', async () => {
     const entities = [createMockEntity({ name: 'User' }), createMockEntity({ name: 'Product' })];
 
     renderHook(() =>
@@ -90,13 +92,15 @@ describe('useAutoLayout', () => {
       }),
     );
 
-    const positionsArg = mockUpdateEntityPositions.mock.calls[0][0];
-    expect(positionsArg).toBeInstanceOf(Map);
-    expect(positionsArg.get('entity-1')).toEqual({ x: 100, y: 100 });
-    expect(positionsArg.get('entity-2')).toEqual({ x: 400, y: 100 });
+    await waitFor(() => {
+      const positionsArg = mockUpdateEntityPositions.mock.calls[0][0];
+      expect(positionsArg).toBeInstanceOf(Map);
+      expect(positionsArg.get('entity-1')).toEqual({ x: 100, y: 100 });
+      expect(positionsArg.get('entity-2')).toEqual({ x: 400, y: 100 });
+    });
   });
 
-  it('should reset needsAutoLayout flag after applying layout', () => {
+  it('should reset needsAutoLayout flag after applying layout', async () => {
     const entities = [createMockEntity({ name: 'User' })];
 
     renderHook(() =>
@@ -107,10 +111,12 @@ describe('useAutoLayout', () => {
       }),
     );
 
-    expect(mockSetNeedsAutoLayout).toHaveBeenCalledWith(false);
+    await waitFor(() => {
+      expect(mockSetNeedsAutoLayout).toHaveBeenCalledWith(false);
+    });
   });
 
-  it('should re-trigger layout when needsAutoLayout changes from false to true', () => {
+  it('should re-trigger layout when needsAutoLayout changes from false to true', async () => {
     const entities = [createMockEntity({ name: 'User' })];
 
     const { rerender } = renderHook(
@@ -127,10 +133,12 @@ describe('useAutoLayout', () => {
 
     rerender({ needsAutoLayout: true });
 
-    expect(mockUpdateEntityPositions).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(mockUpdateEntityPositions).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it('should use different layout presets', () => {
+  it('should use different layout presets', async () => {
     const entities = [createMockEntity({ name: 'User' })];
 
     const { rerender } = renderHook(
@@ -144,7 +152,9 @@ describe('useAutoLayout', () => {
       { initialProps: { layoutPreference: 'compact' } },
     );
 
-    expect(mockUpdateEntityPositions).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(mockUpdateEntityPositions).toHaveBeenCalledTimes(1);
+    });
 
     // Reset and trigger with different preset
     mockUpdateEntityPositions.mockClear();
@@ -152,7 +162,9 @@ describe('useAutoLayout', () => {
 
     rerender({ layoutPreference: 'spacious' });
 
-    // Should recalculate with new preset
-    expect(mockUpdateEntityPositions).toHaveBeenCalled();
+    await waitFor(() => {
+      // Should recalculate with new preset
+      expect(mockUpdateEntityPositions).toHaveBeenCalled();
+    });
   });
 });

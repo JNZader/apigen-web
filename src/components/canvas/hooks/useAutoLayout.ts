@@ -15,7 +15,7 @@ interface UseAutoLayoutOptions {
 
 /**
  * Hook that automatically applies layout when needed (e.g., after importing entities).
- * Triggers layout calculation using dagre algorithm when needsAutoLayout flag is set.
+ * Triggers layout calculation using ELK algorithm when needsAutoLayout flag is set.
  */
 export function useAutoLayout({
   entities,
@@ -27,9 +27,16 @@ export function useAutoLayout({
 }: UseAutoLayoutOptions): void {
   useEffect(() => {
     if (needsAutoLayout && entities.length > 0) {
-      const positions = calculateAutoLayout(entities, relations, LAYOUT_PRESETS[layoutPreference]);
-      updateEntityPositions(positions);
-      setNeedsAutoLayout(false);
+      // Run async layout and update positions
+      calculateAutoLayout(entities, relations, LAYOUT_PRESETS[layoutPreference])
+        .then((positions) => {
+          updateEntityPositions(positions);
+          setNeedsAutoLayout(false);
+        })
+        .catch((error) => {
+          console.error('Auto layout failed:', error);
+          setNeedsAutoLayout(false);
+        });
     }
   }, [
     needsAutoLayout,
