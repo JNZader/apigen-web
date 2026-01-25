@@ -177,3 +177,32 @@ export {
   defaultRabbitMQConfig,
   getDefaultGoChiOptions,
 } from './gochi';
+// RUST/AXUM EXPORTS
+// ============================================================================
+
+export type {
+  AxumMiddlewareConfig,
+  AxumServerConfig,
+  EdgeAiConfig,
+  EdgeAnomalyConfig,
+  EdgeConfig,
+  EdgeGatewayConfig,
+  RustAxumOptions,
+  RustPreset,
+} from './rust';
+
+export {
+  cloudPresetDefaults,
+  defaultAxumMiddlewareConfig,
+  defaultAxumServerConfig,
+  defaultEdgeAiConfig,
+  defaultEdgeAnomalyConfig,
+  defaultEdgeConfig,
+  defaultEdgeGatewayConfig,
+  defaultRustAxumOptions,
+  edgeAiPresetDefaults,
+  edgeAnomalyPresetDefaults,
+  edgeGatewayPresetDefaults,
+  getRustPresetDefaults,
+  RUST_PRESET_DEFAULTS,
+} from './rust';
