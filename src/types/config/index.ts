@@ -146,3 +146,33 @@ export {
   defaultMultiTenancyConfig,
   defaultRateLimitConfig,
 } from './microservices';
+
+// ============================================================================
+// FEATURE PACK 2025 EXPORTS
+// ============================================================================
+
+export type {
+  AzureStorageConfig,
+  FeaturePackConfig,
+  GcsStorageConfig,
+  JteConfig,
+  LocalStorageConfig,
+  MailConfig,
+  PasswordResetConfig,
+  S3StorageConfig,
+  SmtpEncryption,
+  SocialLoginConfig,
+  SocialProvider,
+  SocialProviderConfig,
+  StorageConfig,
+  StorageProvider,
+} from './featurepack';
+
+export {
+  defaultFeaturePackConfig,
+  defaultJteConfig,
+  defaultMailConfig,
+  defaultPasswordResetConfig,
+  defaultSocialLoginConfig,
+  defaultStorageConfig,
+} from './featurepack';
