@@ -1,6 +1,13 @@
 export { useResetOnboarding } from '../components/Onboarding';
 export { useEntityDeletion } from './useEntityDeletion';
 export { useHistory } from './useHistory';
+export { useLanguageFeatureSync } from './useLanguageFeatureSync';
+export type {
+  DisabledFeaturesResult,
+  EnabledDependenciesResult,
+  DisabledDependentsResult,
+  LanguageFeatureSyncResult,
+} from './useLanguageFeatureSync';
 export {
   formatShortcut,
   KEYBOARD_SHORTCUTS,

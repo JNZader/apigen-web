@@ -21,6 +21,7 @@ import {
   IconHash,
 } from '@tabler/icons-react';
 import { useState } from 'react';
+import { useLanguageFeatureSync } from '../../hooks';
 import { useTargetConfig, useTargetConfigActions } from '../../store';
 import {
   type Framework,
@@ -72,6 +73,7 @@ const FRAMEWORK_ICONS: Record<Framework, React.ReactNode> = {
 export function LanguageSelector({ onLanguageChange }: Readonly<LanguageSelectorProps>) {
   const targetConfig = useTargetConfig();
   const { setTargetConfig } = useTargetConfigActions();
+  const { handleLanguageChange: syncFeatures } = useLanguageFeatureSync();
   const [hoveredLanguage, setHoveredLanguage] = useState<Language | null>(null);
 
   const handleLanguageSelect = (language: Language) => {
@@ -86,6 +88,9 @@ export function LanguageSelector({ onLanguageChange }: Readonly<LanguageSelector
       frameworkVersion: frameworkMeta.defaultVersion,
     });
 
+    // Sync features - disable incompatible ones
+    syncFeatures(language, framework);
+
     onLanguageChange?.(language, framework);
   };
 
@@ -96,6 +101,9 @@ export function LanguageSelector({ onLanguageChange }: Readonly<LanguageSelector
       framework,
       frameworkVersion: frameworkMeta.defaultVersion,
     });
+
+    // Sync features - disable incompatible ones for new framework
+    syncFeatures(targetConfig.language, framework);
 
     onLanguageChange?.(targetConfig.language, framework);
   };

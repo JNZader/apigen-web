@@ -1,131 +1,252 @@
-import { Divider, Stack, Switch, Title } from '@mantine/core';
+import { Badge, Divider, Group, Stack, Switch, Text, Title, Tooltip } from '@mantine/core';
+import { IconAlertCircle } from '@tabler/icons-react';
+import { useLanguageFeatureSync } from '../../hooks';
+import { useTargetConfig } from '../../store';
+import type { FeatureKey } from '../../types/config/featureCompatibility';
+import { LANGUAGE_METADATA } from '../../types/target';
 import type { SettingsFormProps } from './types';
 
+interface FeatureSwitchProps {
+  readonly form: SettingsFormProps['form'];
+  readonly feature: FeatureKey;
+  readonly label: string;
+  readonly description: string;
+  readonly isSupported: boolean;
+  readonly languageLabel: string;
+}
+
+function FeatureSwitch({
+  form,
+  feature,
+  label,
+  description,
+  isSupported,
+  languageLabel,
+}: FeatureSwitchProps) {
+  if (!isSupported) {
+    return (
+      <Tooltip
+        label={`${label} is not available for ${languageLabel}`}
+        position="left"
+        withArrow
+        multiline
+        w={220}
+      >
+        <Group wrap="nowrap" gap="xs" style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+          <Switch
+            label={
+              <Group gap="xs">
+                <Text>{label}</Text>
+                <Badge size="xs" color="gray" variant="light">
+                  N/A
+                </Badge>
+              </Group>
+            }
+            description={description}
+            disabled
+            checked={false}
+          />
+          <IconAlertCircle size={16} color="var(--mantine-color-gray-5)" />
+        </Group>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <Switch
+      label={label}
+      description={description}
+      {...form.getInputProps(`features.${feature}`, { type: 'checkbox' })}
+    />
+  );
+}
+
 export function FeaturesSettingsForm({ form }: SettingsFormProps) {
+  const targetConfig = useTargetConfig();
+  const { isFeatureSupported } = useLanguageFeatureSync();
+  const languageLabel = LANGUAGE_METADATA[targetConfig.language].label;
+
   return (
     <Stack>
       <Title order={6}>Core Features</Title>
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="hateoas"
         label="HATEOAS Links"
         description="Include hypermedia links in responses"
-        {...form.getInputProps('features.hateoas', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('hateoas')}
+        languageLabel={languageLabel}
       />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="swagger"
         label="Swagger/OpenAPI"
         description="Generate API documentation"
-        {...form.getInputProps('features.swagger', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('swagger')}
+        languageLabel={languageLabel}
       />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="softDelete"
         label="Soft Delete"
         description="Logical deletion instead of physical"
-        {...form.getInputProps('features.softDelete', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('softDelete')}
+        languageLabel={languageLabel}
       />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="auditing"
         label="Auditing"
         description="Track createdAt, updatedAt, createdBy, updatedBy"
-        {...form.getInputProps('features.auditing', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('auditing')}
+        languageLabel={languageLabel}
       />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="virtualThreads"
         label="Virtual Threads"
         description="Use Java 21+ virtual threads"
-        {...form.getInputProps('features.virtualThreads', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('virtualThreads')}
+        languageLabel={languageLabel}
       />
 
       <Divider label="Pagination & Caching" labelPosition="left" />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="caching"
         label="Caching"
         description="Enable response caching"
-        {...form.getInputProps('features.caching', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('caching')}
+        languageLabel={languageLabel}
       />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="cursorPagination"
         label="Cursor Pagination"
         description="Enable cursor-based pagination"
-        {...form.getInputProps('features.cursorPagination', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('cursorPagination')}
+        languageLabel={languageLabel}
       />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="etagSupport"
         label="ETag Support"
         description="Enable ETags for caching"
-        {...form.getInputProps('features.etagSupport', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('etagSupport')}
+        languageLabel={languageLabel}
       />
 
       <Divider label="Advanced Features" labelPosition="left" />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="rateLimiting"
         label="Rate Limiting"
         description="Enable request rate limiting"
-        {...form.getInputProps('features.rateLimiting', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('rateLimiting')}
+        languageLabel={languageLabel}
       />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="i18n"
         label="Internationalization (i18n)"
         description="Multi-language support"
-        {...form.getInputProps('features.i18n', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('i18n')}
+        languageLabel={languageLabel}
       />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="webhooks"
         label="Webhooks"
         description="Send event notifications"
-        {...form.getInputProps('features.webhooks', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('webhooks')}
+        languageLabel={languageLabel}
       />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="bulkOperations"
         label="Bulk Operations"
         description="Import/export in bulk"
-        {...form.getInputProps('features.bulkOperations', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('bulkOperations')}
+        languageLabel={languageLabel}
       />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="batchOperations"
         label="Batch Operations"
         description="Batch CRUD operations"
-        {...form.getInputProps('features.batchOperations', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('batchOperations')}
+        languageLabel={languageLabel}
       />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="domainEvents"
         label="Domain Events"
         description="Publish domain events"
-        {...form.getInputProps('features.domainEvents', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('domainEvents')}
+        languageLabel={languageLabel}
       />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="sseUpdates"
         label="SSE Updates"
         description="Server-Sent Events for real-time updates"
-        {...form.getInputProps('features.sseUpdates', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('sseUpdates')}
+        languageLabel={languageLabel}
       />
 
       <Divider label="Architecture" labelPosition="left" />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="multiTenancy"
         label="Multi-Tenancy"
         description="Support multiple tenants"
-        {...form.getInputProps('features.multiTenancy', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('multiTenancy')}
+        languageLabel={languageLabel}
       />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="eventSourcing"
         label="Event Sourcing"
         description="Store events as source of truth"
-        {...form.getInputProps('features.eventSourcing', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('eventSourcing')}
+        languageLabel={languageLabel}
       />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="apiVersioning"
         label="API Versioning"
         description="Support multiple API versions"
-        {...form.getInputProps('features.apiVersioning', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('apiVersioning')}
+        languageLabel={languageLabel}
       />
 
       <Divider label="Deployment" labelPosition="left" />
 
-      <Switch
+      <FeatureSwitch
+        form={form}
+        feature="docker"
         label="Docker"
         description="Generate Dockerfile"
-        {...form.getInputProps('features.docker', { type: 'checkbox' })}
+        isSupported={isFeatureSupported('docker')}
+        languageLabel={languageLabel}
       />
     </Stack>
   );
