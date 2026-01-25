@@ -1,6 +1,5 @@
-import type { ProjectConfig, ServiceDesign, TargetConfig, Language, Framework } from '../types';
+import type { ProjectConfig, ServiceDesign, TargetConfig, Language } from '../types';
 import { isFrameworkCompatible, createDefaultTargetConfig } from '../types/target';
-import { defaultFeaturePackConfig } from '../types/config/featurepack';
 import { defaultRustAxumOptions, getRustPresetDefaults } from '../types/config/rust';
 import { getDefaultGoChiOptions } from '../types/config/gochi';
 

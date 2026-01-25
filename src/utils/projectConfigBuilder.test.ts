@@ -43,7 +43,6 @@ function createProjectWithTarget(
 ): ProjectConfig {
   return {
     ...defaultProjectConfig,
-    targetConfig: createDefaultTargetConfig(language),
     ...overrides,
     // Ensure framework is set correctly
     targetConfig: {
