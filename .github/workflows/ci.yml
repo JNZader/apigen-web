@@ -4,7 +4,8 @@ on:
   push:
     branches: [master, develop]
   pull_request:
-    branches: [master, develop]
+    # GGA runs on all PRs, other jobs only on master/develop
+    branches: ['**']
 
 # Cancel redundant runs on same branch/PR
 concurrency:
@@ -41,6 +42,8 @@ jobs:
   quality:
     name: Code Quality
     runs-on: ubuntu-latest
+    # Only run on pushes or PRs to master/develop
+    if: github.event_name == 'push' || github.base_ref == 'master' || github.base_ref == 'develop'
     steps:
       - uses: actions/checkout@v4
 
