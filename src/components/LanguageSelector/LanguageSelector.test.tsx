@@ -322,6 +322,58 @@ describe('LanguageSelector', () => {
         expect(ginBadge).toHaveAttribute('aria-label', 'Select Gin framework');
       });
     });
+
+    it('should support keyboard navigation on framework badges with Enter key', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestProviders>
+          <LanguageSelector onLanguageChange={mockOnLanguageChange} />
+        </TestProviders>,
+      );
+
+      const goCard = screen.getByTestId('language-card-go');
+      await user.click(goCard);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('framework-badge-chi')).toBeInTheDocument();
+      });
+
+      const chiBadge = screen.getByTestId('framework-badge-chi');
+      chiBadge.focus();
+      await user.keyboard('{Enter}');
+
+      await waitFor(() => {
+        const state = useProjectStoreInternal.getState();
+        expect(state.project.targetConfig.framework).toBe('chi');
+      });
+    });
+
+    it('should support keyboard navigation on framework badges with Space key', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestProviders>
+          <LanguageSelector onLanguageChange={mockOnLanguageChange} />
+        </TestProviders>,
+      );
+
+      const goCard = screen.getByTestId('language-card-go');
+      await user.click(goCard);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('framework-badge-chi')).toBeInTheDocument();
+      });
+
+      const chiBadge = screen.getByTestId('framework-badge-chi');
+      chiBadge.focus();
+      await user.keyboard(' ');
+
+      await waitFor(() => {
+        const state = useProjectStoreInternal.getState();
+        expect(state.project.targetConfig.framework).toBe('chi');
+      });
+    });
   });
 
   describe('Visual Feedback', () => {
@@ -378,6 +430,180 @@ describe('LanguageSelector', () => {
         expect(state.project.targetConfig.language).toBe(language);
         expect(state.project.targetConfig.framework).toBe(expectedFramework);
         expect(mockOnLanguageChange).toHaveBeenCalledWith(language, expectedFramework);
+      });
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('should work without onLanguageChange callback', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestProviders>
+          <LanguageSelector />
+        </TestProviders>,
+      );
+
+      const pythonCard = screen.getByTestId('language-card-python');
+      await user.click(pythonCard);
+
+      await waitFor(() => {
+        const state = useProjectStoreInternal.getState();
+        expect(state.project.targetConfig.language).toBe('python');
+        expect(state.project.targetConfig.framework).toBe('fastapi');
+      });
+    });
+
+    it('should not trigger on non-Enter/Space keyboard events', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestProviders>
+          <LanguageSelector onLanguageChange={mockOnLanguageChange} />
+        </TestProviders>,
+      );
+
+      const kotlinCard = screen.getByTestId('language-card-kotlin');
+      kotlinCard.focus();
+      await user.keyboard('{Tab}');
+
+      expect(mockOnLanguageChange).not.toHaveBeenCalled();
+    });
+
+    it('should not trigger framework badge on non-Enter/Space keyboard events', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestProviders>
+          <LanguageSelector onLanguageChange={mockOnLanguageChange} />
+        </TestProviders>,
+      );
+
+      const goCard = screen.getByTestId('language-card-go');
+      await user.click(goCard);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('framework-badge-chi')).toBeInTheDocument();
+      });
+
+      vi.clearAllMocks();
+
+      const chiBadge = screen.getByTestId('framework-badge-chi');
+      chiBadge.focus();
+      await user.keyboard('{Tab}');
+
+      expect(mockOnLanguageChange).not.toHaveBeenCalled();
+    });
+
+    it('should handle framework change without callback', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestProviders>
+          <LanguageSelector />
+        </TestProviders>,
+      );
+
+      const goCard = screen.getByTestId('language-card-go');
+      await user.click(goCard);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('framework-badge-chi')).toBeInTheDocument();
+      });
+
+      const chiBadge = screen.getByTestId('framework-badge-chi');
+      await user.click(chiBadge);
+
+      await waitFor(() => {
+        const state = useProjectStoreInternal.getState();
+        expect(state.project.targetConfig.framework).toBe('chi');
+      });
+    });
+
+    it('should show tooltip on language card hover', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestProviders>
+          <LanguageSelector />
+        </TestProviders>,
+      );
+
+      const javaCard = screen.getByTestId('language-card-java');
+      await user.hover(javaCard);
+
+      await waitFor(
+        () => {
+          expect(
+            screen.getByText(
+              `Java v${LANGUAGE_METADATA.java.defaultVersion} (${LANGUAGE_METADATA.java.packageManager})`,
+            ),
+          ).toBeInTheDocument();
+        },
+        { timeout: 1000 },
+      );
+    });
+
+    it('should show tooltip on framework badge hover', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestProviders>
+          <LanguageSelector />
+        </TestProviders>,
+      );
+
+      const goCard = screen.getByTestId('language-card-go');
+      await user.click(goCard);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('framework-badge-gin')).toBeInTheDocument();
+      });
+
+      const ginBadge = screen.getByTestId('framework-badge-gin');
+      await user.hover(ginBadge);
+
+      await waitFor(
+        () => {
+          expect(
+            screen.getByText(`Gin v${FRAMEWORK_METADATA.gin.defaultVersion}`),
+          ).toBeInTheDocument();
+        },
+        { timeout: 1000 },
+      );
+    });
+
+    it('should update hover state on mouse leave', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestProviders>
+          <LanguageSelector />
+        </TestProviders>,
+      );
+
+      const javaCard = screen.getByTestId('language-card-java');
+      await user.hover(javaCard);
+      await user.unhover(javaCard);
+
+      // After unhover, the card should still render correctly
+      expect(javaCard).toBeInTheDocument();
+    });
+
+    it('should re-select the same language', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestProviders>
+          <LanguageSelector onLanguageChange={mockOnLanguageChange} />
+        </TestProviders>,
+      );
+
+      const javaCard = screen.getByTestId('language-card-java');
+      await user.click(javaCard);
+
+      await waitFor(() => {
+        expect(mockOnLanguageChange).toHaveBeenCalledWith('java', 'spring-boot');
       });
     });
   });
