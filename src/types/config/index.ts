@@ -146,3 +146,34 @@ export {
   defaultMultiTenancyConfig,
   defaultRateLimitConfig,
 } from './microservices';
+
+// ============================================================================
+// GO/CHI EXPORTS
+// ============================================================================
+
+export type {
+  GoChiCacheConfig,
+  GoChiCacheType,
+  GoChiMessagingConfig,
+  GoChiMessagingType,
+  GoChiOptions,
+  GoChiRedisConfig,
+  KafkaConfig,
+  MemcachedConfig,
+  MemoryCacheConfig,
+  NatsConfig,
+  RabbitMQConfig,
+} from './gochi';
+
+export {
+  defaultGoChiCacheConfig,
+  defaultGoChiMessagingConfig,
+  defaultGoChiOptions,
+  defaultGoChiRedisConfig,
+  defaultKafkaConfig,
+  defaultMemcachedConfig,
+  defaultMemoryCacheConfig,
+  defaultNatsConfig,
+  defaultRabbitMQConfig,
+  getDefaultGoChiOptions,
+} from './gochi';
