@@ -4,10 +4,14 @@ import { useShallow } from 'zustand/shallow';
 import {
   defaultProjectConfig,
   type EntityDesign,
+  type FeaturePackConfig,
   type FieldDesign,
+  type GoChiOptions,
   type ProjectConfig,
+  type RustAxumOptions,
   type ServiceConnectionDesign,
   type ServiceDesign,
+  type TargetConfig,
 } from '../types';
 import type { RelationDesign } from '../types/relation';
 import { CANVAS_VIEWS } from '../utils/canvasConstants';
@@ -65,6 +69,16 @@ interface ProjectState {
   resetProject: () => void;
   exportProject: () => string;
   importProject: (json: string) => void;
+
+  // Target Config Actions
+  setTargetConfig: (config: Partial<TargetConfig>) => void;
+
+  // Feature Pack 2025 Actions
+  setFeaturePackConfig: (config: Partial<FeaturePackConfig>) => void;
+
+  // Language-specific Options Actions
+  setRustOptions: (options: Partial<RustAxumOptions>) => void;
+  setGoChiOptions: (options: Partial<GoChiOptions>) => void;
 }
 
 // ============================================================================
@@ -85,6 +99,54 @@ export const useProjectStoreInternal = create<ProjectState>()(
       setProject: (updates) =>
         set((state) => ({
           project: { ...state.project, ...updates },
+        })),
+
+      /**
+       * Updates the target configuration (language, framework, versions)
+       * @param config - Partial target configuration to merge
+       */
+      setTargetConfig: (config) =>
+        set((state) => ({
+          project: {
+            ...state.project,
+            targetConfig: { ...state.project.targetConfig, ...config },
+          },
+        })),
+
+      /**
+       * Updates the Feature Pack 2025 configuration
+       * @param config - Partial feature pack configuration to merge
+       */
+      setFeaturePackConfig: (config) =>
+        set((state) => ({
+          project: {
+            ...state.project,
+            featurePackConfig: { ...state.project.featurePackConfig, ...config },
+          },
+        })),
+
+      /**
+       * Updates Rust/Axum specific options
+       * @param options - Partial Rust options to merge
+       */
+      setRustOptions: (options) =>
+        set((state) => ({
+          project: {
+            ...state.project,
+            rustOptions: { ...state.project.rustOptions, ...options },
+          },
+        })),
+
+      /**
+       * Updates Go/Chi specific options
+       * @param options - Partial Go/Chi options to merge
+       */
+      setGoChiOptions: (options) =>
+        set((state) => ({
+          project: {
+            ...state.project,
+            goChiOptions: { ...state.project.goChiOptions, ...options },
+          },
         })),
 
       /**
@@ -214,6 +276,16 @@ export const useProjectStore = Object.assign(
       exportProject: projectState.exportProject,
       importProject: projectState.importProject,
 
+      // Target Config Actions
+      setTargetConfig: projectState.setTargetConfig,
+
+      // Feature Pack 2025 Actions
+      setFeaturePackConfig: projectState.setFeaturePackConfig,
+
+      // Language-specific Options Actions
+      setRustOptions: projectState.setRustOptions,
+      setGoChiOptions: projectState.setGoChiOptions,
+
       // Entity state
       entities: entityState.entities,
       selectedEntityId: entityState.selectedEntityId,
@@ -281,6 +353,16 @@ export const useProjectStore = Object.assign(
         resetProject: projectState.resetProject,
         exportProject: projectState.exportProject,
         importProject: projectState.importProject,
+
+        // Target Config Actions
+        setTargetConfig: projectState.setTargetConfig,
+
+        // Feature Pack 2025 Actions
+        setFeaturePackConfig: projectState.setFeaturePackConfig,
+
+        // Language-specific Options Actions
+        setRustOptions: projectState.setRustOptions,
+        setGoChiOptions: projectState.setGoChiOptions,
 
         // Entity state
         entities: entityState.entities,
@@ -387,6 +469,16 @@ interface CombinedProjectState {
   resetProject: () => void;
   exportProject: () => string;
   importProject: (json: string) => void;
+
+  // Target Config Actions
+  setTargetConfig: (config: Partial<TargetConfig>) => void;
+
+  // Feature Pack 2025 Actions
+  setFeaturePackConfig: (config: Partial<FeaturePackConfig>) => void;
+
+  // Language-specific Options Actions
+  setRustOptions: (options: Partial<RustAxumOptions>) => void;
+  setGoChiOptions: (options: Partial<GoChiOptions>) => void;
 
   // Entity
   entities: EntityDesign[];
@@ -512,5 +604,86 @@ export const useProjectActions = () =>
       resetProject: state.resetProject,
       exportProject: state.exportProject,
       importProject: state.importProject,
+    })),
+  );
+
+// ============================================================================
+// Atomic Selectors for Target Config & Feature Pack 2025
+// ============================================================================
+
+/**
+ * Selector for accessing the target configuration (language, framework, versions)
+ * @returns The current target configuration
+ */
+export const useTargetConfig = () =>
+  useProjectStoreInternal((state) => state.project.targetConfig);
+
+/**
+ * Selector for accessing the Feature Pack 2025 configuration
+ * @returns The current Feature Pack configuration
+ */
+export const useFeaturePackConfig = () =>
+  useProjectStoreInternal((state) => state.project.featurePackConfig);
+
+/**
+ * Selector for accessing Rust/Axum specific options
+ * @returns The current Rust/Axum options
+ */
+export const useRustOptions = () =>
+  useProjectStoreInternal((state) => state.project.rustOptions);
+
+/**
+ * Selector for accessing Go/Chi specific options
+ * @returns The current Go/Chi options
+ */
+export const useGoChiOptions = () =>
+  useProjectStoreInternal((state) => state.project.goChiOptions);
+
+/**
+ * Selector for target config actions that don't cause unnecessary re-renders
+ * @returns Object containing setTargetConfig action
+ */
+export const useTargetConfigActions = () =>
+  useProjectStoreInternal(
+    useShallow((state) => ({
+      setTargetConfig: state.setTargetConfig,
+    })),
+  );
+
+/**
+ * Selector for Feature Pack 2025 actions that don't cause unnecessary re-renders
+ * @returns Object containing setFeaturePackConfig action
+ */
+export const useFeaturePackActions = () =>
+  useProjectStoreInternal(
+    useShallow((state) => ({
+      setFeaturePackConfig: state.setFeaturePackConfig,
+    })),
+  );
+
+/**
+ * Selector for language-specific option actions that don't cause unnecessary re-renders
+ * @returns Object containing setRustOptions and setGoChiOptions actions
+ */
+export const useLanguageOptionsActions = () =>
+  useProjectStoreInternal(
+    useShallow((state) => ({
+      setRustOptions: state.setRustOptions,
+      setGoChiOptions: state.setGoChiOptions,
+    })),
+  );
+
+/**
+ * Combined selector for all config-related actions (for convenience)
+ * @returns Object containing all config update actions
+ */
+export const useAllConfigActions = () =>
+  useProjectStoreInternal(
+    useShallow((state) => ({
+      setProject: state.setProject,
+      setTargetConfig: state.setTargetConfig,
+      setFeaturePackConfig: state.setFeaturePackConfig,
+      setRustOptions: state.setRustOptions,
+      setGoChiOptions: state.setGoChiOptions,
     })),
   );

@@ -4,29 +4,10 @@
  * Includes client-side rate limiting to prevent API abuse.
  */
 
+import { z } from 'zod';
+
 import { API_CONFIG } from '../config/constants';
-import type {
-  ApiVersioningConfig,
-  BatchConfig,
-  BulkConfig,
-  CacheConfig,
-  CorsConfig,
-  DatabaseConfig,
-  EventSourcingConfig,
-  FeatureFlagsConfig,
-  GatewayConfig,
-  GraphQLConfig,
-  GrpcConfig,
-  I18nConfig,
-  MultiTenancyConfig,
-  ObservabilityConfig,
-  ProjectFeatures,
-  ProjectModules,
-  RateLimitConfig,
-  ResilienceConfig,
-  SecurityConfig,
-  WebhooksConfig,
-} from '../types';
+import type { ProjectConfig } from '../types';
 import { RateLimitError, strictRateLimiter } from '../utils/rateLimiter';
 import { type ApiClient, createApiClient } from './apiClient';
 import {
@@ -49,41 +30,138 @@ const apiClient: ApiClient = createApiClient({
   },
 });
 
-export interface ProjectConfig {
-  name: string;
-  groupId: string;
-  artifactId: string;
-  javaVersion?: string;
-  springBootVersion?: string;
-  modules?: Partial<ProjectModules>;
-  features?: Partial<ProjectFeatures>;
-  database?: Partial<DatabaseConfig>;
-  securityConfig?: Partial<SecurityConfig>;
-  rateLimitConfig?: Partial<RateLimitConfig>;
-  cacheConfig?: Partial<CacheConfig>;
-  featureFlags?: Partial<FeatureFlagsConfig>;
-  i18nConfig?: Partial<I18nConfig>;
-  webhooksConfig?: Partial<WebhooksConfig>;
-  bulkConfig?: Partial<BulkConfig>;
-  batchConfig?: Partial<BatchConfig>;
-  multiTenancyConfig?: Partial<MultiTenancyConfig>;
-  eventSourcingConfig?: Partial<EventSourcingConfig>;
-  apiVersioningConfig?: Partial<ApiVersioningConfig>;
-  observabilityConfig?: Partial<ObservabilityConfig>;
-  resilienceConfig?: Partial<ResilienceConfig>;
-  corsConfig?: Partial<CorsConfig>;
-  graphqlConfig?: Partial<GraphQLConfig>;
-  grpcConfig?: Partial<GrpcConfig>;
-  gatewayConfig?: Partial<GatewayConfig>;
-}
+// ============================================================================
+// ZOD SCHEMAS FOR REQUEST VALIDATION
+// ============================================================================
 
+/**
+ * Target configuration schema for multi-language support.
+ */
+const TargetConfigSchema = z.object({
+  language: z.enum(['java', 'kotlin', 'python', 'typescript', 'php', 'go', 'rust', 'csharp']),
+  framework: z.enum([
+    'spring-boot',
+    'fastapi',
+    'nestjs',
+    'laravel',
+    'gin',
+    'chi',
+    'axum',
+    'aspnet-core',
+  ]),
+  languageVersion: z.string(),
+  frameworkVersion: z.string(),
+});
+
+/**
+ * Project modules schema.
+ */
+const ProjectModulesSchema = z.object({
+  core: z.boolean(),
+  security: z.boolean(),
+  graphql: z.boolean(),
+  grpc: z.boolean(),
+  gateway: z.boolean(),
+});
+
+/**
+ * Project features schema (includes Feature Pack 2025).
+ */
+const ProjectFeaturesSchema = z.object({
+  hateoas: z.boolean(),
+  swagger: z.boolean(),
+  softDelete: z.boolean(),
+  auditing: z.boolean(),
+  caching: z.boolean(),
+  rateLimiting: z.boolean(),
+  virtualThreads: z.boolean(),
+  docker: z.boolean(),
+  i18n: z.boolean(),
+  webhooks: z.boolean(),
+  bulkOperations: z.boolean(),
+  batchOperations: z.boolean(),
+  multiTenancy: z.boolean(),
+  eventSourcing: z.boolean(),
+  apiVersioning: z.boolean(),
+  cursorPagination: z.boolean(),
+  etagSupport: z.boolean(),
+  domainEvents: z.boolean(),
+  sseUpdates: z.boolean(),
+  // Feature Pack 2025
+  socialLogin: z.boolean(),
+  passwordReset: z.boolean(),
+  mailService: z.boolean(),
+  fileStorage: z.boolean(),
+  jteTemplates: z.boolean(),
+});
+
+/**
+ * Minimal project config schema for request validation.
+ * Uses passthrough() to allow additional configuration fields.
+ */
+const ProjectConfigSchema = z
+  .object({
+    name: z.string().min(1),
+    groupId: z.string().min(1),
+    artifactId: z.string().min(1),
+    packageName: z.string().min(1),
+    javaVersion: z.enum(['21', '25']).optional(),
+    springBootVersion: z.literal('4.0.0').optional(),
+    targetConfig: TargetConfigSchema.optional(),
+    modules: ProjectModulesSchema.partial().optional(),
+    features: ProjectFeaturesSchema.partial().optional(),
+  })
+  .passthrough();
+
+/**
+ * Generate request schema with Zod validation.
+ */
+export const GenerateRequestSchema = z.object({
+  project: ProjectConfigSchema,
+  sql: z.string().min(1, 'SQL schema is required'),
+});
+
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+/**
+ * Generate request type inferred from Zod schema.
+ * Uses the centralized ProjectConfig type for full type safety.
+ */
 export interface GenerateRequest {
-  project: ProjectConfig;
+  /** Project configuration with all settings */
+  project: Partial<ProjectConfig> & {
+    name: string;
+    groupId: string;
+    artifactId: string;
+    packageName: string;
+  };
+  /** SQL schema for code generation */
   sql: string;
 }
 
+/**
+ * @deprecated Use GenerateRequest instead. This type alias is kept for backward compatibility.
+ */
+export type LegacyGenerateRequest = GenerateRequest;
+
 // Re-export types from schemas for backwards compatibility
 export type { GenerateResponse, GenerationStats, HealthResponse } from './schemas';
+
+// ============================================================================
+// API FUNCTIONS
+// ============================================================================
+
+/**
+ * Validate a GenerateRequest using the Zod schema.
+ * @param request - The request to validate
+ * @returns The validated request
+ * @throws ZodError if validation fails
+ */
+export function validateGenerateRequest(request: GenerateRequest): GenerateRequest {
+  return GenerateRequestSchema.parse(request) as GenerateRequest;
+}
 
 /**
  * Check if the APiGen Server is available.
@@ -108,7 +186,10 @@ export async function validateSchema(
   request: GenerateRequest,
   signal?: AbortSignal,
 ): Promise<GenerateResponse> {
-  const response = await apiClient.post<GenerateResponse>('/api/validate', request, {
+  // Validate request before sending
+  const validatedRequest = validateGenerateRequest(request);
+
+  const response = await apiClient.post<GenerateResponse>('/api/validate', validatedRequest, {
     schema: GenerateResponseSchema,
     signal,
   });
@@ -125,6 +206,9 @@ export async function generateProject(
   request: GenerateRequest,
   signal?: AbortSignal,
 ): Promise<Blob> {
+  // Validate request before sending
+  const validatedRequest = validateGenerateRequest(request);
+
   // Check rate limit before making expensive generation request
   if (!strictRateLimiter.canMakeRequest()) {
     const retryAfter = strictRateLimiter.getTimeUntilReset();
@@ -134,7 +218,7 @@ export async function generateProject(
   // Record the request before making it
   strictRateLimiter.recordRequest();
 
-  const response = await apiClient.post<Blob>('/api/generate', request, {
+  const response = await apiClient.post<Blob>('/api/generate', validatedRequest, {
     responseType: 'blob',
     signal,
     timeoutMs: API_CONFIG.GENERATION_TIMEOUT,
@@ -155,6 +239,10 @@ export async function isServerAvailable(signal?: AbortSignal): Promise<boolean> 
     return false;
   }
 }
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
 
 export { RateLimitError } from '../utils/rateLimiter';
 // Export error types for use in components

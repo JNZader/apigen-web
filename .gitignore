@@ -51,3 +51,7 @@ test-results/
 # Misc
 cookies.txt
 nul
+.mcp.json
+docs/Templates/*
+.gga
+AGENTS.md
