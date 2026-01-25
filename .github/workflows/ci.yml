@@ -31,6 +31,16 @@ jobs:
           chmod +x /tmp/gga/bin/gga
           echo "/tmp/gga/bin" >> $GITHUB_PATH
 
+      - name: Create GGA config
+        run: |
+          cat > .gga << 'EOF'
+          PROVIDER="gemini"
+          FILE_PATTERNS="*.ts,*.tsx,*.js,*.jsx"
+          EXCLUDE_PATTERNS="*.test.ts,*.spec.ts,*.test.tsx,*.spec.tsx,*.d.ts"
+          RULES_FILE="AGENTS.md"
+          STRICT_MODE="false"
+          EOF
+
       - name: Run AI Review
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
