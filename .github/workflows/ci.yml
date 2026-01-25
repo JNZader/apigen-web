@@ -47,13 +47,24 @@ jobs:
           RULES_FILE="AGENTS.md"
           STRICT_MODE="false"
           EOF
+          # Remove leading spaces from heredoc
+          sed -i 's/^[[:space:]]*//' .gga
+          echo "=== GGA Config ==="
+          cat .gga
 
       - name: Run AI Review
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
+          # Verify gemini is available and API key is set
+          echo "Gemini CLI version:"
+          gemini --version || echo "Version check failed"
+          echo "API Key set: ${GEMINI_API_KEY:+yes}"
+
           # Stage changed files for review
           git diff --name-only origin/${{ github.base_ref }}...HEAD | xargs -r git add
+
+          # Run GGA with verbose output
           gga run --ci || true  # Don't fail the build, just report
 
   quality:
