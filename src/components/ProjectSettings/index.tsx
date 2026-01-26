@@ -75,6 +75,46 @@ interface ProjectSettingsProps {
   readonly onClose: () => void;
 }
 
+// =============================================================================
+// Feature Pack 2025 Forms - Re-exports for external use
+// =============================================================================
+
+// Feature Pack Forms
+export { SocialLoginSettingsForm } from './SocialLoginSettingsForm';
+export { MailServiceSettingsForm } from './MailServiceSettingsForm';
+export { FileStorageSettingsForm } from './FileStorageSettingsForm';
+export { PasswordResetSettingsForm } from './PasswordResetSettingsForm';
+export { JteTemplatesSettingsForm } from './JteTemplatesSettingsForm';
+
+// Containers
+export { FeaturePackSection } from './FeaturePackSection';
+
+// Core Settings Forms
+export { BasicSettingsForm } from './BasicSettingsForm';
+export { CacheSettingsForm } from './CacheSettingsForm';
+export { CorsSettingsForm } from './CorsSettingsForm';
+export { DatabaseSettingsForm } from './DatabaseSettingsForm';
+export { FeaturesSettingsForm } from './FeaturesSettingsForm';
+export { GatewaySettingsForm } from './GatewaySettingsForm';
+export { GraphQLSettingsForm } from './GraphQLSettingsForm';
+export { GrpcSettingsForm } from './GrpcSettingsForm';
+export { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
+export { RateLimitSettingsForm } from './RateLimitSettingsForm';
+export { ResilienceSettingsForm } from './ResilienceSettingsForm';
+export { SecuritySettingsForm } from './SecuritySettingsForm';
+
+// Types
+export type { SettingsFormProps } from './types';
+
+// Future: Language Selector components (Phase 1)
+// export { LanguageSelector } from './LanguageSelector';
+// export { FrameworkCard } from './FrameworkCard';
+// export { FeatureMatrix } from './FeatureMatrix';
+
+// =============================================================================
+// Main ProjectSettings Component
+// =============================================================================
+
 export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
   const project = useProject();
   const { setProject } = useProjectActions();
