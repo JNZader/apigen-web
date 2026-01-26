@@ -8,7 +8,9 @@ import {
   IconDatabase,
   IconEye,
   IconFileText,
+  IconFolder,
   IconGlobe,
+  IconMail,
   IconNetwork,
   IconRefresh,
   IconRocket,
@@ -16,6 +18,7 @@ import {
   IconSettings,
   IconShield,
   IconShieldCheck,
+  IconTemplate,
 } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useProject, useProjectActions } from '../../store';
@@ -28,9 +31,12 @@ import { CacheSettingsForm } from './CacheSettingsForm';
 import { CorsSettingsForm } from './CorsSettingsForm';
 import { DatabaseSettingsForm } from './DatabaseSettingsForm';
 import { FeaturesSettingsForm } from './FeaturesSettingsForm';
+import { FileStorageSettingsForm } from './FileStorageSettingsForm';
 import { GatewaySettingsForm } from './GatewaySettingsForm';
 import { GraphQLSettingsForm } from './GraphQLSettingsForm';
 import { GrpcSettingsForm } from './GrpcSettingsForm';
+import { JteTemplatesSettingsForm } from './JteTemplatesSettingsForm';
+import { MailServiceSettingsForm } from './MailServiceSettingsForm';
 import { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
 import { RateLimitSettingsForm } from './RateLimitSettingsForm';
 import { ResilienceSettingsForm } from './ResilienceSettingsForm';
@@ -141,6 +147,9 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             <Tabs.Tab value="cache" leftSection={<IconRefresh size={16} />}>
               Cache
             </Tabs.Tab>
+            <Tabs.Tab value="file-storage" leftSection={<IconFolder size={16} />}>
+              File Storage
+            </Tabs.Tab>
             <Tabs.Tab value="features" leftSection={<IconRocket size={16} />}>
               Features
             </Tabs.Tab>
@@ -161,6 +170,11 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             </Tabs.Tab>
             <Tabs.Tab value="gateway" leftSection={<IconRouter size={16} />}>
               Gateway
+            </Tabs.Tab>
+            <Tabs.Tab value="jte" leftSection={<IconTemplate size={16} />}>
+              JTE Templates
+            <Tabs.Tab value="mail" leftSection={<IconMail size={16} />}>
+              Mail Service
             </Tabs.Tab>
           </Tabs.List>
 
@@ -222,6 +236,12 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             </ScrollArea>
           </Tabs.Panel>
 
+          <Tabs.Panel value="file-storage" pl="md">
+            <ScrollArea h={600}>
+              <FileStorageSettingsForm form={form} />
+            </ScrollArea>
+          </Tabs.Panel>
+
           <Tabs.Panel value="features" pl="md">
             <ScrollArea h={600}>
               <FeaturesSettingsForm form={form} />
@@ -261,6 +281,15 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
           <Tabs.Panel value="gateway" pl="md">
             <ScrollArea h={600}>
               <GatewaySettingsForm form={form} />
+            </ScrollArea>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="jte" pl="md">
+            <ScrollArea h={600}>
+              <JteTemplatesSettingsForm form={form} />
+          <Tabs.Panel value="mail" pl="md">
+            <ScrollArea h={600}>
+              <MailServiceSettingsForm form={form} />
             </ScrollArea>
           </Tabs.Panel>
         </Tabs>
