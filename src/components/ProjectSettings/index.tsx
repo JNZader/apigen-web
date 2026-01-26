@@ -17,6 +17,7 @@ import {
   IconSettings,
   IconShield,
   IconShieldCheck,
+  IconTemplate,
 } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useProject, useProjectActions } from '../../store';
@@ -32,6 +33,7 @@ import { FeaturesSettingsForm } from './FeaturesSettingsForm';
 import { GatewaySettingsForm } from './GatewaySettingsForm';
 import { GraphQLSettingsForm } from './GraphQLSettingsForm';
 import { GrpcSettingsForm } from './GrpcSettingsForm';
+import { JteTemplatesSettingsForm } from './JteTemplatesSettingsForm';
 import { MailServiceSettingsForm } from './MailServiceSettingsForm';
 import { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
 import { RateLimitSettingsForm } from './RateLimitSettingsForm';
@@ -164,6 +166,8 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             <Tabs.Tab value="gateway" leftSection={<IconRouter size={16} />}>
               Gateway
             </Tabs.Tab>
+            <Tabs.Tab value="jte" leftSection={<IconTemplate size={16} />}>
+              JTE Templates
             <Tabs.Tab value="mail" leftSection={<IconMail size={16} />}>
               Mail Service
             </Tabs.Tab>
@@ -269,6 +273,9 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             </ScrollArea>
           </Tabs.Panel>
 
+          <Tabs.Panel value="jte" pl="md">
+            <ScrollArea h={600}>
+              <JteTemplatesSettingsForm form={form} />
           <Tabs.Panel value="mail" pl="md">
             <ScrollArea h={600}>
               <MailServiceSettingsForm form={form} />
