@@ -1,0 +1,16 @@
+language: "es"
+reviews:
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - ".*"  # Revisar PRs a cualquier branch
+  path_filters:
+    - "!**/*.test.ts"
+    - "!**/*.test.tsx"
+    - "!**/node_modules/**"
+  review_instructions: |
+    - Seguir convenciones de CLAUDE.md
+    - Usar conventional commits
+    - Verificar tipos TypeScript
+    - Revisar imports no usados
