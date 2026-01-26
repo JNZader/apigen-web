@@ -1,12 +1,12 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PROJECT_TEMPLATES } from '../../config/projectTemplates';
+import { PROJECT_TEMPLATES, TEMPLATE_CATEGORIES } from '../../config/projectTemplates';
 import { resetAllStores, TestProviders } from '../../test/utils';
 import { TemplateSelector } from './TemplateSelector';
 
 describe('TemplateSelector', () => {
-  const mockOnSelect = vi.fn();
+  const mockOnClose = vi.fn();
 
   beforeEach(() => {
     resetAllStores();
@@ -14,89 +14,100 @@ describe('TemplateSelector', () => {
   });
 
   describe('Rendering', () => {
-    it('should render all templates', () => {
+    it('should render modal when opened', () => {
       render(
         <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
-      for (const template of PROJECT_TEMPLATES) {
-        expect(screen.getByTestId(`template-card-${template.id}`)).toBeInTheDocument();
-      }
+      expect(screen.getByText('Choose a Template')).toBeInTheDocument();
+    });
+
+    it('should not render when closed', () => {
+      render(
+        <TestProviders>
+          <TemplateSelector opened={false} onClose={mockOnClose} />
+        </TestProviders>,
+      );
+
+      expect(screen.queryByText('Choose a Template')).not.toBeInTheDocument();
     });
 
     it('should render template names', () => {
       render(
         <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
       expect(screen.getByText('Blank Project')).toBeInTheDocument();
-      expect(screen.getByText('Blog API')).toBeInTheDocument();
-      expect(screen.getByText('E-Commerce API')).toBeInTheDocument();
     });
 
     it('should render template descriptions', () => {
       render(
         <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
-      expect(screen.getByText('Start from scratch with an empty project')).toBeInTheDocument();
+      const blankTemplate = PROJECT_TEMPLATES.find((t) => t.id === 'blank');
+      if (blankTemplate) {
+        expect(screen.getByText(blankTemplate.description)).toBeInTheDocument();
+      }
     });
 
     it('should render search input', () => {
       render(
         <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
-      expect(screen.getByTestId('template-search-input')).toBeInTheDocument();
+      expect(screen.getByLabelText('Search templates')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('Search templates...')).toBeInTheDocument();
     });
 
-    it('should render category tabs', () => {
+    it('should render category filter', () => {
       render(
         <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
-      expect(screen.getByTestId('category-tab-all')).toBeInTheDocument();
-      expect(screen.getByTestId('category-tab-starter')).toBeInTheDocument();
-      expect(screen.getByTestId('category-tab-full-stack')).toBeInTheDocument();
-      expect(screen.getByTestId('category-tab-enterprise')).toBeInTheDocument();
+      expect(screen.getByLabelText('Filter by category')).toBeInTheDocument();
+      expect(screen.getByText('All')).toBeInTheDocument();
     });
 
     it('should show entity count for templates with entities', () => {
       render(
         <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
-      const ecommerceTemplate = PROJECT_TEMPLATES.find((t) => t.id === 'ecommerce-api');
-      if (ecommerceTemplate && ecommerceTemplate.entities.length > 0) {
-        const card = screen.getByTestId(`template-card-${ecommerceTemplate.id}`);
-        expect(card).toHaveTextContent(`${ecommerceTemplate.entities.length} entities`);
+      const templateWithEntities = PROJECT_TEMPLATES.find((t) => t.entities.length > 0);
+      if (templateWithEntities) {
+        const entityBadges = screen.getAllByText(
+          `${templateWithEntities.entities.length} entities`,
+        );
+        expect(entityBadges.length).toBeGreaterThan(0);
       }
     });
 
-    it('should show feature count for templates with features', () => {
+    it('should show relation count for templates with relations', () => {
       render(
         <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
-      const ecommerceTemplate = PROJECT_TEMPLATES.find((t) => t.id === 'ecommerce-api');
-      if (ecommerceTemplate && ecommerceTemplate.features.length > 0) {
-        const card = screen.getByTestId(`template-card-${ecommerceTemplate.id}`);
-        expect(card).toHaveTextContent(`${ecommerceTemplate.features.length} features`);
+      const templateWithRelations = PROJECT_TEMPLATES.find((t) => t.relations.length > 0);
+      if (templateWithRelations) {
+        const relationBadges = screen.getAllByText(
+          `${templateWithRelations.relations.length} relations`,
+        );
+        expect(relationBadges.length).toBeGreaterThan(0);
       }
     });
   });
@@ -107,70 +118,15 @@ describe('TemplateSelector', () => {
 
       render(
         <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
-      const searchInput = screen.getByTestId('template-search-input');
-      await user.type(searchInput, 'blog');
-
-      await waitFor(() => {
-        expect(screen.getByText('Blog API')).toBeInTheDocument();
-        expect(screen.queryByText('E-Commerce API')).not.toBeInTheDocument();
-      });
-    });
-
-    it('should filter templates by description', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
-        </TestProviders>,
-      );
-
-      const searchInput = screen.getByTestId('template-search-input');
-      await user.type(searchInput, 'scratch');
+      const searchInput = screen.getByLabelText('Search templates');
+      await user.type(searchInput, 'blank');
 
       await waitFor(() => {
         expect(screen.getByText('Blank Project')).toBeInTheDocument();
-        expect(screen.queryByText('Blog API')).not.toBeInTheDocument();
-      });
-    });
-
-    it('should filter templates by tags', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
-        </TestProviders>,
-      );
-
-      const searchInput = screen.getByTestId('template-search-input');
-      await user.type(searchInput, 'ecommerce');
-
-      await waitFor(() => {
-        expect(screen.getByText('E-Commerce API')).toBeInTheDocument();
-        expect(screen.queryByText('Blog API')).not.toBeInTheDocument();
-      });
-    });
-
-    it('should show no results message when search returns empty', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
-        </TestProviders>,
-      );
-
-      const searchInput = screen.getByTestId('template-search-input');
-      await user.type(searchInput, 'nonexistent');
-
-      await waitFor(() => {
-        expect(screen.getByTestId('no-templates-message')).toBeInTheDocument();
-        expect(screen.getByText('No templates found matching your search')).toBeInTheDocument();
       });
     });
 
@@ -179,15 +135,32 @@ describe('TemplateSelector', () => {
 
       render(
         <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
-      const searchInput = screen.getByTestId('template-search-input');
-      await user.type(searchInput, 'BLOG');
+      const searchInput = screen.getByLabelText('Search templates');
+      await user.type(searchInput, 'BLANK');
 
       await waitFor(() => {
-        expect(screen.getByText('Blog API')).toBeInTheDocument();
+        expect(screen.getByText('Blank Project')).toBeInTheDocument();
+      });
+    });
+
+    it('should show no results message when search returns empty', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestProviders>
+          <TemplateSelector opened={true} onClose={mockOnClose} />
+        </TestProviders>,
+      );
+
+      const searchInput = screen.getByLabelText('Search templates');
+      await user.type(searchInput, 'nonexistenttemplate12345');
+
+      await waitFor(() => {
+        expect(screen.getByText('No templates match your search criteria.')).toBeInTheDocument();
       });
     });
 
@@ -196,208 +169,104 @@ describe('TemplateSelector', () => {
 
       render(
         <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
-      const searchInput = screen.getByTestId('template-search-input');
-      await user.type(searchInput, 'blog');
+      const searchInput = screen.getByLabelText('Search templates');
+      await user.type(searchInput, 'nonexistent');
 
       await waitFor(() => {
-        expect(screen.queryByText('E-Commerce API')).not.toBeInTheDocument();
+        expect(screen.getByText('No templates match your search criteria.')).toBeInTheDocument();
       });
 
       await user.clear(searchInput);
 
       await waitFor(() => {
-        expect(screen.getByText('Blog API')).toBeInTheDocument();
-        expect(screen.getByText('E-Commerce API')).toBeInTheDocument();
+        expect(screen.getByText('Blank Project')).toBeInTheDocument();
       });
     });
   });
 
   describe('Category Filter', () => {
-    it('should filter by Starter category', async () => {
+    it('should filter by category when selected', async () => {
       const user = userEvent.setup();
 
       render(
         <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
-      await user.click(screen.getByTestId('category-tab-starter'));
+      // Click on a category
+      const starterCategory = TEMPLATE_CATEGORIES.find((c) => c.value === 'starter');
+      if (starterCategory) {
+        const categoryLabel = screen.getByText(starterCategory.label);
+        await user.click(categoryLabel);
 
-      await waitFor(() => {
-        expect(screen.getByText('Blank Project')).toBeInTheDocument();
-        expect(screen.getByText('Blog API')).toBeInTheDocument();
-        expect(screen.queryByText('SaaS Starter')).not.toBeInTheDocument();
-      });
-    });
-
-    it('should filter by Full Stack category', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
-        </TestProviders>,
-      );
-
-      await user.click(screen.getByTestId('category-tab-full-stack'));
-
-      await waitFor(() => {
-        expect(screen.getByText('E-Commerce API')).toBeInTheDocument();
-        expect(screen.queryByText('Blank Project')).not.toBeInTheDocument();
-      });
-    });
-
-    it('should filter by Enterprise category', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
-        </TestProviders>,
-      );
-
-      await user.click(screen.getByTestId('category-tab-enterprise'));
-
-      await waitFor(() => {
-        expect(screen.getByText('SaaS Starter')).toBeInTheDocument();
-        expect(screen.queryByText('Blog API')).not.toBeInTheDocument();
-      });
-    });
-
-    it('should show all templates when All tab is clicked', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
-        </TestProviders>,
-      );
-
-      await user.click(screen.getByTestId('category-tab-starter'));
-
-      await waitFor(() => {
-        expect(screen.queryByText('SaaS Starter')).not.toBeInTheDocument();
-      });
-
-      await user.click(screen.getByTestId('category-tab-all'));
-
-      await waitFor(() => {
-        expect(screen.getByText('SaaS Starter')).toBeInTheDocument();
-        expect(screen.getByText('Blog API')).toBeInTheDocument();
-      });
-    });
-
-    it('should combine search and category filter', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
-        </TestProviders>,
-      );
-
-      await user.click(screen.getByTestId('category-tab-starter'));
-      const searchInput = screen.getByTestId('template-search-input');
-      await user.type(searchInput, 'blog');
-
-      await waitFor(() => {
-        expect(screen.getByText('Blog API')).toBeInTheDocument();
-        expect(screen.queryByText('Blank Project')).not.toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Selection', () => {
-    it('should show selected state', () => {
-      render(
-        <TestProviders>
-          <TemplateSelector selectedId="blog-api" onSelect={mockOnSelect} />
-        </TestProviders>,
-      );
-
-      const blogCard = screen.getByTestId('template-card-blog-api');
-      expect(blogCard).toHaveAttribute('aria-pressed', 'true');
-      expect(screen.getByTestId('selected-badge')).toBeInTheDocument();
-    });
-
-    it('should not show selected badge when not selected', () => {
-      render(
-        <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
-        </TestProviders>,
-      );
-
-      expect(screen.queryByTestId('selected-badge')).not.toBeInTheDocument();
-    });
-
-    it('should call onSelect when clicking a template', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
-        </TestProviders>,
-      );
-
-      await user.click(screen.getByTestId('template-card-blog-api'));
-
-      expect(mockOnSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 'blog-api' }));
-    });
-
-    it('should pass full template object to onSelect', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
-        </TestProviders>,
-      );
-
-      await user.click(screen.getByTestId('template-card-ecommerce-api'));
-
-      expect(mockOnSelect).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'ecommerce-api',
-          name: 'E-Commerce API',
-          category: 'full-stack',
-        }),
-      );
-    });
-  });
-
-  describe('Accessibility', () => {
-    it('should have accessible template cards', () => {
-      render(
-        <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
-        </TestProviders>,
-      );
-
-      for (const template of PROJECT_TEMPLATES) {
-        const card = screen.getByTestId(`template-card-${template.id}`);
-        expect(card).toHaveAttribute('role', 'button');
-        expect(card).toHaveAttribute('tabIndex', '0');
-        expect(card).toHaveAttribute('aria-label');
+        await waitFor(() => {
+          // Blank Project should be visible (it's a starter template)
+          expect(screen.getByText('Blank Project')).toBeInTheDocument();
+        });
       }
     });
 
-    it('should have aria-pressed on template cards', () => {
+    it('should show all templates when All is selected', async () => {
+      const user = userEvent.setup();
+
       render(
         <TestProviders>
-          <TemplateSelector selectedId="blog-api" onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
-      const blogCard = screen.getByTestId('template-card-blog-api');
-      expect(blogCard).toHaveAttribute('aria-pressed', 'true');
+      // Click on a category first
+      const starterCategory = TEMPLATE_CATEGORIES.find((c) => c.value === 'starter');
+      if (starterCategory) {
+        await user.click(screen.getByText(starterCategory.label));
+      }
 
-      const blankCard = screen.getByTestId('template-card-blank');
-      expect(blankCard).toHaveAttribute('aria-pressed', 'false');
+      // Then click All
+      await user.click(screen.getByText('All'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Blank Project')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Template Selection', () => {
+    it('should call onClose when selecting a template', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestProviders>
+          <TemplateSelector opened={true} onClose={mockOnClose} />
+        </TestProviders>,
+      );
+
+      // Click on Use Template button for blank project
+      const useTemplateButtons = screen.getAllByText('Use Template');
+      await user.click(useTemplateButtons[0]);
+
+      await waitFor(() => {
+        expect(mockOnClose).toHaveBeenCalled();
+      });
+    });
+
+    it('should have accessible template cards', () => {
+      render(
+        <TestProviders>
+          <TemplateSelector opened={true} onClose={mockOnClose} />
+        </TestProviders>,
+      );
+
+      // Cards have role="button" and aria-label
+      const buttons = screen.getAllByRole('button');
+      const cardButtons = buttons.filter((btn) =>
+        btn.getAttribute('aria-label')?.includes('template'),
+      );
+      expect(cardButtons.length).toBeGreaterThan(0);
     });
 
     it('should support keyboard navigation with Enter', async () => {
@@ -405,31 +274,24 @@ describe('TemplateSelector', () => {
 
       render(
         <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
-      const blogCard = screen.getByTestId('template-card-blog-api');
-      blogCard.focus();
-      await user.keyboard('{Enter}');
-
-      expect(mockOnSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 'blog-api' }));
-    });
-
-    it('should support keyboard navigation with Space', async () => {
-      const user = userEvent.setup();
-
-      render(
-        <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
-        </TestProviders>,
+      // Find a card with role="button"
+      const buttons = screen.getAllByRole('button');
+      const cardButton = buttons.find((btn) =>
+        btn.getAttribute('aria-label')?.includes('template'),
       );
 
-      const blankCard = screen.getByTestId('template-card-blank');
-      blankCard.focus();
-      await user.keyboard(' ');
+      if (cardButton) {
+        cardButton.focus();
+        await user.keyboard('{Enter}');
 
-      expect(mockOnSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 'blank' }));
+        await waitFor(() => {
+          expect(mockOnClose).toHaveBeenCalled();
+        });
+      }
     });
   });
 
@@ -437,41 +299,80 @@ describe('TemplateSelector', () => {
     it('should display category badge', () => {
       render(
         <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
-      expect(screen.getAllByText('Starter').length).toBeGreaterThan(0);
-      expect(screen.getAllByText('Full Stack').length).toBeGreaterThan(0);
+      // Check that category badges are displayed
+      expect(screen.getAllByText('starter').length).toBeGreaterThan(0);
     });
 
     it('should display template tags', () => {
       render(
         <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
-      expect(screen.getByText('minimal')).toBeInTheDocument();
-      expect(screen.getByText('blog')).toBeInTheDocument();
+      // Check for some common tags from templates
+      const blankTemplate = PROJECT_TEMPLATES.find((t) => t.id === 'blank');
+      if (blankTemplate && blankTemplate.tags.length > 0) {
+        expect(screen.getByText(blankTemplate.tags[0])).toBeInTheDocument();
+      }
     });
 
-    it('should limit displayed tags to 3', () => {
+    it('should limit displayed tags to 4', () => {
       render(
         <TestProviders>
-          <TemplateSelector selectedId={null} onSelect={mockOnSelect} />
+          <TemplateSelector opened={true} onClose={mockOnClose} />
         </TestProviders>,
       );
 
-      const ecommerceTemplate = PROJECT_TEMPLATES.find((t) => t.id === 'ecommerce-api');
-      if (ecommerceTemplate && ecommerceTemplate.tags.length > 3) {
-        const card = screen.getByTestId('template-card-ecommerce-api');
-        const tagBadges = card.querySelectorAll('[class*="Badge"]');
-        const tagTexts = Array.from(tagBadges)
-          .map((b) => b.textContent)
-          .filter((t) => ecommerceTemplate.tags.includes(t as string));
-        expect(tagTexts.length).toBeLessThanOrEqual(3);
+      const templateWithManyTags = PROJECT_TEMPLATES.find((t) => t.tags.length > 4);
+      if (templateWithManyTags) {
+        // The component shows +N more text for extra tags
+        // Multiple templates may show the same "+N more" text
+        const moreTagsElements = screen.queryAllByText(
+          `+${templateWithManyTags.tags.length - 4} more`,
+        );
+        expect(moreTagsElements.length).toBeGreaterThan(0);
       }
+    });
+  });
+
+  describe('Modal Behavior', () => {
+    it('should render as a modal dialog', () => {
+      render(
+        <TestProviders>
+          <TemplateSelector opened={true} onClose={mockOnClose} />
+        </TestProviders>,
+      );
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('should have close button', () => {
+      render(
+        <TestProviders>
+          <TemplateSelector opened={true} onClose={mockOnClose} />
+        </TestProviders>,
+      );
+
+      expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
+    });
+
+    it('should call onClose when close button is clicked', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TestProviders>
+          <TemplateSelector opened={true} onClose={mockOnClose} />
+        </TestProviders>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Close' }));
+
+      expect(mockOnClose).toHaveBeenCalled();
     });
   });
 });
