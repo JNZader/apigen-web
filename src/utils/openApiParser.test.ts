@@ -407,6 +407,199 @@ info:
 components:
   schemas:
     User:
+import { describe, expect, it } from 'vitest';
+import {
+	detectFormat,
+	parseContent,
+	parseOpenApi,
+	validateOpenApi,
+} from './openApiParser';
+
+// ============================================================================
+// Test Data
+// ============================================================================
+
+const sampleOpenApiJson = `{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Sample API",
+    "version": "1.0.0"
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "age": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 150
+          }
+        }
+      }
+    }
+  }
+}`;
+
+const sampleOpenApiYaml = `openapi: "3.0.3"
+info:
+  title: Sample API
+  version: "1.0.0"
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - email
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        age:
+          type: integer
+          minimum: 0
+          maximum: 150`;
+
+const sampleSwaggerYaml = `swagger: "2.0"
+info:
+  title: Sample API
+  version: "1.0.0"
+definitions:
+  Product:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      price:
+        type: number
+        format: double`;
+
+const yamlWithRelations = `openapi: "3.0.3"
+info:
+  title: API with Relations
+  version: "1.0.0"
+components:
+  schemas:
+    Author:
+      type: object
+      properties:
+        name:
+          type: string
+    Book:
+      type: object
+      properties:
+        title:
+          type: string
+        author:
+          $ref: '#/components/schemas/Author'
+    Library:
+      type: object
+      properties:
+        name:
+          type: string
+        books:
+          type: array
+          items:
+            $ref: '#/components/schemas/Book'`;
+
+// ============================================================================
+// Format Detection Tests
+// ============================================================================
+
+describe('openApiParser', () => {
+	describe('detectFormat', () => {
+		it('should detect JSON format when content starts with {', () => {
+			expect(detectFormat('{"openapi": "3.0.0"}')).toBe('json');
+		});
+
+		it('should detect JSON format when content starts with [', () => {
+			expect(detectFormat('[{"type": "object"}]')).toBe('json');
+		});
+
+		it('should detect YAML format when content starts with ---', () => {
+			expect(detectFormat('---\nopenapi: "3.0.0"')).toBe('yaml');
+		});
+
+		it('should detect YAML format when content starts with openapi:', () => {
+			expect(detectFormat('openapi: "3.0.0"')).toBe('yaml');
+		});
+
+		it('should detect YAML format when content starts with swagger:', () => {
+			expect(detectFormat('swagger: "2.0"')).toBe('yaml');
+		});
+
+		it('should detect YAML format when content starts with #', () => {
+			expect(detectFormat('# API Definition\nopenapi: "3.0.0"')).toBe('yaml');
+		});
+
+		it('should handle whitespace before content', () => {
+			expect(detectFormat('  \n  {"openapi": "3.0.0"}')).toBe('json');
+			expect(detectFormat('  \n  openapi: "3.0.0"')).toBe('yaml');
+		});
+
+		it('should fallback to YAML for ambiguous content', () => {
+			expect(detectFormat('some: value')).toBe('yaml');
+		});
+	});
+
+	// ============================================================================
+	// Parse Content Tests
+	// ============================================================================
+
+	describe('parseContent', () => {
+		it('should parse JSON content correctly', () => {
+			const doc = parseContent(sampleOpenApiJson);
+			expect(doc.openapi).toBe('3.0.3');
+			expect(doc.info?.title).toBe('Sample API');
+		});
+
+		it('should parse YAML content correctly', () => {
+			const doc = parseContent(sampleOpenApiYaml);
+			expect(doc.openapi).toBe('3.0.3');
+			expect(doc.info?.title).toBe('Sample API');
+		});
+
+		it('should parse YAML with explicit format', () => {
+			const doc = parseContent(sampleOpenApiYaml, 'yaml');
+			expect(doc.openapi).toBe('3.0.3');
+		});
+
+		it('should parse Swagger 2.x YAML', () => {
+			const doc = parseContent(sampleSwaggerYaml);
+			expect(doc.swagger).toBe('2.0');
+			expect(doc.definitions).toBeDefined();
+		});
+
+		it('should throw on invalid JSON', () => {
+			expect(() => parseContent('{invalid json}', 'json')).toThrow();
+		});
+
+		it('should handle YAML with anchors and aliases', () => {
+			const yamlWithAnchors = `
+openapi: "3.0.3"
+info:
+  title: Test
+  version: "1.0"
+components:
+  schemas:
+    Base: &base
       type: object
       properties:
         id:
@@ -503,4 +696,506 @@ components:
       expect(result.valid).toBe(true);
     });
   });
+    Extended:
+      <<: *base
+      properties:
+        name:
+          type: string`;
+
+			const doc = parseContent(yamlWithAnchors);
+			expect(doc.openapi).toBe('3.0.3');
+		});
+	});
+
+	// ============================================================================
+	// Parse OpenAPI Tests
+	// ============================================================================
+
+	describe('parseOpenApi', () => {
+		it('should parse entities from OpenAPI 3.x JSON', () => {
+			const result = parseOpenApi(sampleOpenApiJson);
+
+			expect(result.entities).toHaveLength(1);
+			expect(result.entities[0].name).toBe('User');
+			expect(result.warnings).toHaveLength(0);
+		});
+
+		it('should parse entities from OpenAPI 3.x YAML', () => {
+			const result = parseOpenApi(sampleOpenApiYaml);
+
+			expect(result.entities).toHaveLength(1);
+			expect(result.entities[0].name).toBe('User');
+			expect(result.warnings).toHaveLength(0);
+		});
+
+		it('should parse entities from Swagger 2.x', () => {
+			const result = parseOpenApi(sampleSwaggerYaml);
+
+			expect(result.entities).toHaveLength(1);
+			expect(result.entities[0].name).toBe('Product');
+		});
+
+		it('should map string type correctly', () => {
+			const result = parseOpenApi(sampleOpenApiYaml);
+			const entity = result.entities[0];
+			const nameField = entity.fields.find((f) => f.name === 'name');
+
+			expect(nameField?.type).toBe('String');
+		});
+
+		it('should map integer type correctly', () => {
+			const result = parseOpenApi(sampleOpenApiYaml);
+			const entity = result.entities[0];
+			const ageField = entity.fields.find((f) => f.name === 'age');
+
+			expect(ageField?.type).toBe('Integer');
+		});
+
+		it('should map int64 format to Long', () => {
+			const result = parseOpenApi(sampleSwaggerYaml);
+			const entity = result.entities[0];
+			const idField = entity.fields.find((f) => f.name === 'id');
+
+			expect(idField?.type).toBe('Long');
+		});
+
+		it('should map double format correctly', () => {
+			const result = parseOpenApi(sampleSwaggerYaml);
+			const entity = result.entities[0];
+			const priceField = entity.fields.find((f) => f.name === 'price');
+
+			expect(priceField?.type).toBe('Double');
+		});
+
+		it('should create Size validation from minLength/maxLength', () => {
+			const result = parseOpenApi(sampleOpenApiYaml);
+			const entity = result.entities[0];
+			const nameField = entity.fields.find((f) => f.name === 'name');
+
+			const sizeValidation = nameField?.validations.find((v) => v.type === 'Size');
+			expect(sizeValidation).toBeDefined();
+			expect(sizeValidation?.value).toBe('1,100');
+		});
+
+		it('should create Min/Max validations from minimum/maximum', () => {
+			const result = parseOpenApi(sampleOpenApiYaml);
+			const entity = result.entities[0];
+			const ageField = entity.fields.find((f) => f.name === 'age');
+
+			const minValidation = ageField?.validations.find((v) => v.type === 'Min');
+			const maxValidation = ageField?.validations.find((v) => v.type === 'Max');
+
+			expect(minValidation?.value).toBe(0);
+			expect(maxValidation?.value).toBe(150);
+		});
+
+		it('should create Email validation for email format', () => {
+			const result = parseOpenApi(sampleOpenApiYaml);
+			const entity = result.entities[0];
+			const emailField = entity.fields.find((f) => f.name === 'email');
+
+			const emailValidation = emailField?.validations.find(
+				(v) => v.type === 'Email',
+			);
+			expect(emailValidation).toBeDefined();
+		});
+
+		it('should add NotNull validation for required fields', () => {
+			const result = parseOpenApi(sampleOpenApiYaml);
+			const entity = result.entities[0];
+			const emailField = entity.fields.find((f) => f.name === 'email');
+
+			const notNullValidation = emailField?.validations.find(
+				(v) => v.type === 'NotNull',
+			);
+			expect(notNullValidation).toBeDefined();
+		});
+
+		it('should set nullable correctly based on required', () => {
+			const result = parseOpenApi(sampleOpenApiYaml);
+			const entity = result.entities[0];
+
+			const emailField = entity.fields.find((f) => f.name === 'email');
+			const nameField = entity.fields.find((f) => f.name === 'name');
+
+			expect(emailField?.nullable).toBe(false);
+			expect(nameField?.nullable).toBe(true);
+		});
+
+		it('should create relations from $ref', () => {
+			const result = parseOpenApi(yamlWithRelations);
+
+			expect(result.entities).toHaveLength(3);
+			expect(result.relations.length).toBeGreaterThan(0);
+
+			const bookToAuthor = result.relations.find(
+				(r) => r.sourceFieldName === 'author',
+			);
+			expect(bookToAuthor).toBeDefined();
+			expect(bookToAuthor?.type).toBe('ManyToOne');
+		});
+
+		it('should create OneToMany relations from array $ref', () => {
+			const result = parseOpenApi(yamlWithRelations);
+
+			const libraryToBooks = result.relations.find(
+				(r) => r.sourceFieldName === 'books',
+			);
+			expect(libraryToBooks).toBeDefined();
+			expect(libraryToBooks?.type).toBe('OneToMany');
+		});
+
+		it('should generate snake_case table names', () => {
+			const yaml = `openapi: "3.0.3"
+info:
+  title: Test
+  version: "1.0"
+components:
+  schemas:
+    UserProfile:
+      type: object
+      properties:
+        displayName:
+          type: string`;
+
+			const result = parseOpenApi(yaml);
+			expect(result.entities[0].tableName).toBe('user_profile');
+		});
+
+		it('should generate PascalCase entity names', () => {
+			const yaml = `openapi: "3.0.3"
+info:
+  title: Test
+  version: "1.0"
+components:
+  schemas:
+    user_profile:
+      type: object
+      properties:
+        name:
+          type: string`;
+
+			const result = parseOpenApi(yaml);
+			expect(result.entities[0].name).toBe('UserProfile');
+		});
+
+		it('should handle empty schemas with warning', () => {
+			const yaml = `openapi: "3.0.3"
+info:
+  title: Empty
+  version: "1.0"
+components:
+  schemas: {}`;
+
+			const result = parseOpenApi(yaml);
+			expect(result.entities).toHaveLength(0);
+			expect(result.warnings.length).toBeGreaterThan(0);
+		});
+
+		it('should warn about unresolved references', () => {
+			const yaml = `openapi: "3.0.3"
+info:
+  title: Test
+  version: "1.0"
+components:
+  schemas:
+    Order:
+      type: object
+      properties:
+        customer:
+          $ref: '#/components/schemas/Customer'`;
+
+			const result = parseOpenApi(yaml);
+			expect(result.warnings.some((w) => w.includes('Customer'))).toBe(true);
+		});
+
+		it('should position entities in a grid', () => {
+			const result = parseOpenApi(yamlWithRelations);
+
+			// First entity at (50, 50)
+			expect(result.entities[0].position.x).toBe(50);
+			expect(result.entities[0].position.y).toBe(50);
+
+			// All entities should have valid positions
+			for (const entity of result.entities) {
+				expect(entity.position.x).toBeGreaterThanOrEqual(0);
+				expect(entity.position.y).toBeGreaterThanOrEqual(0);
+			}
+		});
+
+		it('should handle date/time formats', () => {
+			const yaml = `openapi: "3.0.3"
+info:
+  title: Test
+  version: "1.0"
+components:
+  schemas:
+    Event:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        timestamp:
+          type: string
+          format: date-time`;
+
+			const result = parseOpenApi(yaml);
+			const entity = result.entities[0];
+
+			const dateField = entity.fields.find((f) => f.name === 'date');
+			const timestampField = entity.fields.find((f) => f.name === 'timestamp');
+
+			expect(dateField?.type).toBe('LocalDate');
+			expect(timestampField?.type).toBe('LocalDateTime');
+		});
+
+		it('should handle uuid format', () => {
+			const yaml = `openapi: "3.0.3"
+info:
+  title: Test
+  version: "1.0"
+components:
+  schemas:
+    Resource:
+      type: object
+      properties:
+        externalId:
+          type: string
+          format: uuid`;
+
+			const result = parseOpenApi(yaml);
+			const entity = result.entities[0];
+			const field = entity.fields.find((f) => f.name === 'externalId');
+
+			expect(field?.type).toBe('UUID');
+		});
+
+		it('should handle pattern validation', () => {
+			const yaml = `openapi: "3.0.3"
+info:
+  title: Test
+  version: "1.0"
+components:
+  schemas:
+    Phone:
+      type: object
+      properties:
+        number:
+          type: string
+          pattern: "^\\+[0-9]{10,15}$"`;
+
+			const result = parseOpenApi(yaml);
+			const entity = result.entities[0];
+			const field = entity.fields.find((f) => f.name === 'number');
+
+			const patternValidation = field?.validations.find(
+				(v) => v.type === 'Pattern',
+			);
+			expect(patternValidation).toBeDefined();
+			expect(patternValidation?.value).toBe('^\\+[0-9]{10,15}$');
+		});
+	});
+
+	// ============================================================================
+	// Validation Tests
+	// ============================================================================
+
+	describe('validateOpenApi', () => {
+		it('should validate correct OpenAPI 3.x document', () => {
+			const result = validateOpenApi(sampleOpenApiJson);
+			expect(result.valid).toBe(true);
+			expect(result.errors).toHaveLength(0);
+		});
+
+		it('should validate correct YAML document', () => {
+			const result = validateOpenApi(sampleOpenApiYaml);
+			expect(result.valid).toBe(true);
+			expect(result.errors).toHaveLength(0);
+		});
+
+		it('should report missing openapi version', () => {
+			const invalidDoc = `{
+        "info": { "title": "Test", "version": "1.0" },
+        "components": { "schemas": { "User": { "type": "object" } } }
+      }`;
+
+			const result = validateOpenApi(invalidDoc);
+			expect(result.valid).toBe(false);
+			expect(result.errors.some((e) => e.message.includes('version'))).toBe(true);
+		});
+
+		it('should report missing info section', () => {
+			const invalidDoc = `{
+        "openapi": "3.0.3",
+        "components": { "schemas": { "User": { "type": "object" } } }
+      }`;
+
+			const result = validateOpenApi(invalidDoc);
+			expect(result.valid).toBe(false);
+			expect(result.errors.some((e) => e.message.includes('info'))).toBe(true);
+		});
+
+		it('should report missing schemas', () => {
+			const invalidDoc = `{
+        "openapi": "3.0.3",
+        "info": { "title": "Test", "version": "1.0" }
+      }`;
+
+			const result = validateOpenApi(invalidDoc);
+			expect(result.valid).toBe(false);
+			expect(result.errors.some((e) => e.message.includes('schemas'))).toBe(true);
+		});
+
+		it('should report parse errors for invalid syntax', () => {
+			const result = validateOpenApi('{invalid json}', 'json');
+			expect(result.valid).toBe(false);
+			expect(result.errors.some((e) => e.message.includes('Parse error'))).toBe(
+				true,
+			);
+		});
+
+		it('should validate Swagger 2.x with definitions', () => {
+			const result = validateOpenApi(sampleSwaggerYaml);
+			expect(result.valid).toBe(true);
+		});
+	});
+
+	// ============================================================================
+	// YAML-Specific Tests
+	// ============================================================================
+
+	describe('YAML-specific parsing', () => {
+		it('should handle YAML multiline strings', () => {
+			const yaml = `openapi: "3.0.3"
+info:
+  title: Test
+  description: |
+    This is a multiline
+    description that spans
+    multiple lines
+  version: "1.0"
+components:
+  schemas:
+    Note:
+      type: object
+      description: |
+        A note entity with
+        multiline description
+      properties:
+        content:
+          type: string`;
+
+			const result = parseOpenApi(yaml);
+			expect(result.entities[0].description).toContain('multiline');
+		});
+
+		it('should handle YAML comments', () => {
+			const yaml = `# This is a comment
+openapi: "3.0.3"
+info:
+  title: Test # inline comment
+  version: "1.0"
+# Another comment
+components:
+  schemas:
+    # Schema comment
+    Item:
+      type: object
+      properties:
+        name:
+          type: string`;
+
+			const result = parseOpenApi(yaml);
+			expect(result.entities).toHaveLength(1);
+			expect(result.entities[0].name).toBe('Item');
+		});
+
+		it('should handle YAML flow style', () => {
+			const yaml = `openapi: "3.0.3"
+info: {title: Test, version: "1.0"}
+components:
+  schemas:
+    Point:
+      type: object
+      required: [x, y]
+      properties:
+        x: {type: number}
+        y: {type: number}`;
+
+			const result = parseOpenApi(yaml);
+			expect(result.entities).toHaveLength(1);
+
+			const entity = result.entities[0];
+			expect(entity.fields).toHaveLength(2);
+		});
+
+		it('should handle YAML document separator', () => {
+			const yaml = `---
+openapi: "3.0.3"
+info:
+  title: Test
+  version: "1.0"
+components:
+  schemas:
+    Simple:
+      type: object
+      properties:
+        value:
+          type: string`;
+
+			const result = parseOpenApi(yaml);
+			expect(result.entities).toHaveLength(1);
+		});
+
+		it('should handle nullable property in YAML', () => {
+			const yaml = `openapi: "3.0.3"
+info:
+  title: Test
+  version: "1.0"
+components:
+  schemas:
+    Contact:
+      type: object
+      properties:
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: false`;
+
+			const result = parseOpenApi(yaml);
+			const entity = result.entities[0];
+
+			const phoneField = entity.fields.find((f) => f.name === 'phone');
+			const emailField = entity.fields.find((f) => f.name === 'email');
+
+			expect(phoneField?.nullable).toBe(true);
+			expect(emailField?.nullable).toBe(false);
+		});
+
+		it('should handle boolean types in YAML', () => {
+			const yaml = `openapi: "3.0.3"
+info:
+  title: Test
+  version: "1.0"
+components:
+  schemas:
+    Settings:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        active:
+          type: boolean`;
+
+			const result = parseOpenApi(yaml);
+			const entity = result.entities[0];
+
+			for (const field of entity.fields) {
+				expect(field.type).toBe('Boolean');
+			}
+		});
+	});
 });
