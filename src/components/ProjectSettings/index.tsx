@@ -10,15 +10,14 @@ import {
   IconFileText,
   IconFolder,
   IconGlobe,
-  IconMail,
   IconNetwork,
+  IconPackage,
   IconRefresh,
   IconRocket,
   IconRouter,
   IconSettings,
   IconShield,
   IconShieldCheck,
-  IconTemplate,
 } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useProject, useProjectActions } from '../../store';
@@ -35,8 +34,7 @@ import { FileStorageSettingsForm } from './FileStorageSettingsForm';
 import { GatewaySettingsForm } from './GatewaySettingsForm';
 import { GraphQLSettingsForm } from './GraphQLSettingsForm';
 import { GrpcSettingsForm } from './GrpcSettingsForm';
-import { JteTemplatesSettingsForm } from './JteTemplatesSettingsForm';
-import { MailServiceSettingsForm } from './MailServiceSettingsForm';
+import { FeaturePackSection } from './FeaturePackSection';
 import { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
 import { RateLimitSettingsForm } from './RateLimitSettingsForm';
 import { ResilienceSettingsForm } from './ResilienceSettingsForm';
@@ -208,10 +206,8 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             <Tabs.Tab value="gateway" leftSection={<IconRouter size={16} />}>
               Gateway
             </Tabs.Tab>
-            <Tabs.Tab value="jte" leftSection={<IconTemplate size={16} />}>
-              JTE Templates
-            <Tabs.Tab value="mail" leftSection={<IconMail size={16} />}>
-              Mail Service
+            <Tabs.Tab value="feature-pack" leftSection={<IconPackage size={16} />}>
+              Feature Pack
             </Tabs.Tab>
           </Tabs.List>
 
@@ -321,12 +317,9 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             </ScrollArea>
           </Tabs.Panel>
 
-          <Tabs.Panel value="jte" pl="md">
+          <Tabs.Panel value="feature-pack" pl="md">
             <ScrollArea h={600}>
-              <JteTemplatesSettingsForm form={form} />
-          <Tabs.Panel value="mail" pl="md">
-            <ScrollArea h={600}>
-              <MailServiceSettingsForm form={form} />
+              <FeaturePackSection form={form} />
             </ScrollArea>
           </Tabs.Panel>
         </Tabs>
