@@ -1,11 +1,11 @@
 // Re-export from the new location for backwards compatibility
 export {
-  PROJECT_TEMPLATES,
   applyTemplate,
   filterTemplates,
   getAllTags,
-  TEMPLATE_CATEGORIES,
+  PROJECT_TEMPLATES,
   type ProjectTemplate,
-  type TemplateRelation,
+  TEMPLATE_CATEGORIES,
   type TemplateCategory,
+  type TemplateRelation,
 } from '../config/projectTemplates';

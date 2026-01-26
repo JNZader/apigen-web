@@ -133,7 +133,11 @@ export function LanguageStep({ onLanguageChange }: Readonly<LanguageStepProps>) 
                     style={{
                       ...styles,
                       cursor: 'pointer',
-                      transform: isSelected ? 'scale(1.02)' : isHovered ? 'scale(1.01)' : 'scale(1)',
+                      transform: isSelected
+                        ? 'scale(1.02)'
+                        : isHovered
+                          ? 'scale(1.01)'
+                          : 'scale(1)',
                       transition: 'all 0.2s ease',
                     }}
                     shadow={isSelected ? 'md' : 'sm'}
@@ -141,9 +145,13 @@ export function LanguageStep({ onLanguageChange }: Readonly<LanguageStepProps>) 
                     radius="md"
                     withBorder
                     bd={
-                      isSelected ? `2px solid var(--mantine-color-${color.split('.')[0]}-6)` : undefined
+                      isSelected
+                        ? `2px solid var(--mantine-color-${color.split('.')[0]}-6)`
+                        : undefined
                     }
-                    bg={isSelected ? `var(--mantine-color-${color.split('.')[0]}-light)` : undefined}
+                    bg={
+                      isSelected ? `var(--mantine-color-${color.split('.')[0]}-light)` : undefined
+                    }
                     onClick={() => handleLanguageSelect(language)}
                     onMouseEnter={() => setHoveredLanguage(language)}
                     onMouseLeave={() => setHoveredLanguage(null)}

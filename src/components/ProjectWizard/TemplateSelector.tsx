@@ -1,4 +1,3 @@
-import { useMemo, useState } from 'react';
 import {
   Badge,
   Button,
@@ -23,16 +22,17 @@ import {
   IconShoppingCart,
   IconUsers,
 } from '@tabler/icons-react';
+import { useMemo, useState } from 'react';
 import {
+  applyTemplate,
   filterTemplates,
   PROJECT_TEMPLATES,
-  TEMPLATE_CATEGORIES,
   type ProjectTemplate,
+  TEMPLATE_CATEGORIES,
   type TemplateCategory,
 } from '../../config/projectTemplates';
 import { useEntities, useEntityActions, useRelationActions, useServiceActions } from '../../store';
 import { notify } from '../../utils/notifications';
-import { applyTemplate } from '../../config/projectTemplates';
 
 interface TemplateSelectorProps {
   readonly opened: boolean;

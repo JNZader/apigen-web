@@ -28,10 +28,7 @@ import {
   IconSettings,
 } from '@tabler/icons-react';
 import { useFeatures, useProject, useTargetConfig } from '../../../store';
-import {
-  FEATURE_LABELS,
-  type FeatureKey,
-} from '../../../types/config/featureCompatibility';
+import { FEATURE_LABELS, type FeatureKey } from '../../../types/config/featureCompatibility';
 import type { ProjectFeatures } from '../../../types/project';
 import { FRAMEWORK_METADATA, LANGUAGE_METADATA, type Language } from '../../../types/target';
 

@@ -1,20 +1,6 @@
-import {
-  Box,
-  Button,
-  Group,
-  Modal,
-  Progress,
-  Stack,
-  Stepper,
-  Text,
-} from '@mantine/core';
+import { Box, Button, Group, Modal, Progress, Stack, Stepper, Text } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import {
-  IconArrowLeft,
-  IconArrowRight,
-  IconCheck,
-  IconWand,
-} from '@tabler/icons-react';
+import { IconArrowLeft, IconArrowRight, IconCheck, IconWand } from '@tabler/icons-react';
 import { useCallback, useState } from 'react';
 import { useProjectActions } from '../../store';
 import { defaultProjectConfig, type ProjectConfig } from '../../types';
@@ -169,11 +155,7 @@ export function ProjectWizard({ opened, onClose, onComplete }: ProjectWizardProp
               Cancel
             </Button>
             {isLastStep ? (
-              <Button
-                color="teal"
-                onClick={handleComplete}
-                leftSection={<IconCheck size={16} />}
-              >
+              <Button color="teal" onClick={handleComplete} leftSection={<IconCheck size={16} />}>
                 Create Project
               </Button>
             ) : (

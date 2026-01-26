@@ -296,8 +296,7 @@ export function FeaturesStep() {
   );
 
   const enabledCount = Object.values(features).filter(Boolean).length;
-  const supportedCount =
-    Object.keys(features).length - unsupportedFeatures.length;
+  const supportedCount = Object.keys(features).length - unsupportedFeatures.length;
 
   return (
     <Stack gap="xl">
