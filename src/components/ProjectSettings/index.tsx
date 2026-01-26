@@ -9,6 +9,7 @@ import {
   IconEye,
   IconFileText,
   IconGlobe,
+  IconMail,
   IconNetwork,
   IconRefresh,
   IconRocket,
@@ -31,6 +32,7 @@ import { FeaturesSettingsForm } from './FeaturesSettingsForm';
 import { GatewaySettingsForm } from './GatewaySettingsForm';
 import { GraphQLSettingsForm } from './GraphQLSettingsForm';
 import { GrpcSettingsForm } from './GrpcSettingsForm';
+import { MailServiceSettingsForm } from './MailServiceSettingsForm';
 import { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
 import { RateLimitSettingsForm } from './RateLimitSettingsForm';
 import { ResilienceSettingsForm } from './ResilienceSettingsForm';
@@ -162,6 +164,9 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             <Tabs.Tab value="gateway" leftSection={<IconRouter size={16} />}>
               Gateway
             </Tabs.Tab>
+            <Tabs.Tab value="mail" leftSection={<IconMail size={16} />}>
+              Mail Service
+            </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="language" pl="md">
@@ -261,6 +266,12 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
           <Tabs.Panel value="gateway" pl="md">
             <ScrollArea h={600}>
               <GatewaySettingsForm form={form} />
+            </ScrollArea>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="mail" pl="md">
+            <ScrollArea h={600}>
+              <MailServiceSettingsForm form={form} />
             </ScrollArea>
           </Tabs.Panel>
         </Tabs>
