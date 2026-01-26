@@ -86,6 +86,9 @@ export { FileStorageSettingsForm } from './FileStorageSettingsForm';
 export { PasswordResetSettingsForm } from './PasswordResetSettingsForm';
 export { JteTemplatesSettingsForm } from './JteTemplatesSettingsForm';
 
+// Containers
+export { FeaturePackSection } from './FeaturePackSection';
+
 // Core Settings Forms
 export { BasicSettingsForm } from './BasicSettingsForm';
 export { CacheSettingsForm } from './CacheSettingsForm';
