@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useProjectStoreInternal } from '@/store';
 import { render, resetAllStores, screen, userEvent, waitFor } from '@/test/utils';
-import type { ProjectConfig } from '@/types';
+import type { ProjectFeatures, TargetConfig } from '@/types';
 import { FeaturePackSection } from './FeaturePackSection';
 
 // Use a longer delay to test loading state
@@ -28,13 +28,15 @@ vi.mock('./JteTemplatesSettingsForm', () => ({
   JteTemplatesSettingsForm: () => <div data-testid="jte-form">JTE Form</div>,
 }));
 
-const setProjectState = (overrides: Partial<ProjectConfig>) => {
+const setProjectState = (overrides: {
+  targetConfig?: Partial<TargetConfig>;
+  features?: Partial<ProjectFeatures>;
+}) => {
   const baseProject = useProjectStoreInternal.getState().project;
 
   useProjectStoreInternal.setState({
     project: {
       ...baseProject,
-      ...overrides,
       targetConfig: { ...baseProject.targetConfig, ...overrides.targetConfig },
       features: { ...baseProject.features, ...overrides.features },
     },
@@ -87,7 +89,7 @@ describe('FeaturePackSection', () => {
 
   it('hides JTE tab for TypeScript', () => {
     setProjectState({
-      targetConfig: { language: 'typescript', framework: 'express' },
+      targetConfig: { language: 'typescript', framework: 'nestjs' },
     });
 
     render(<FeaturePackSection />);

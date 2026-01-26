@@ -61,7 +61,7 @@ function FeatureSwitch({
   );
 }
 
-export function FeaturesSettingsForm({ form }: SettingsFormProps) {
+export function FeaturesSettingsForm({ form }: Readonly<SettingsFormProps>) {
   const targetConfig = useTargetConfig();
   const { isFeatureSupported } = useLanguageFeatureSync();
   const languageLabel = LANGUAGE_METADATA[targetConfig.language].label;

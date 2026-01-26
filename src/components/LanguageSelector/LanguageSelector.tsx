@@ -70,6 +70,15 @@ const FRAMEWORK_ICONS: Record<Framework, React.ReactNode> = {
   'aspnet-core': <IconCode size={16} />,
 };
 
+/**
+ * Get card transform scale based on selection and hover state.
+ */
+function getCardTransform(isSelected: boolean, isHovered: boolean): string {
+  if (isSelected) return 'scale(1.02)';
+  if (isHovered) return 'scale(1.01)';
+  return 'scale(1)';
+}
+
 export function LanguageSelector({ onLanguageChange }: Readonly<LanguageSelectorProps>) {
   const targetConfig = useTargetConfig();
   const { setTargetConfig } = useTargetConfigActions();
@@ -229,7 +238,7 @@ function LanguageCard({
         style={{
           ...style,
           cursor: 'pointer',
-          transform: isSelected ? 'scale(1.02)' : isHovered ? 'scale(1.01)' : 'scale(1)',
+          transform: getCardTransform(isSelected, isHovered),
           transition: 'all 0.2s ease',
         }}
         shadow={isSelected ? 'md' : 'sm'}

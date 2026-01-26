@@ -71,10 +71,10 @@ function writeToConsole(entry: LogEntry): void {
 
   const logMessage = entry.context ? `[${entry.context}] ${entry.message}` : entry.message;
 
-  if (entry.data !== undefined) {
-    consoleMethod(logMessage, entry.data);
-  } else {
+  if (entry.data === undefined) {
     consoleMethod(logMessage);
+  } else {
+    consoleMethod(logMessage, entry.data);
   }
 }
 
@@ -117,12 +117,7 @@ export function warn(message: string, context?: string, data?: unknown): void {
   writeToConsole(entry);
 }
 
-export function error(
-  message: string,
-  error?: Error | unknown,
-  context?: string,
-  data?: unknown,
-): void {
+export function error(message: string, error?: unknown, context?: string, data?: unknown): void {
   if (!shouldLog('error')) return;
 
   const errorMessage = error instanceof Error ? error.message : String(error);

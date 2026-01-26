@@ -11,7 +11,7 @@ import { generateSQL } from '../utils/sqlGenerator';
 
 // Helper function to create service artifact ID
 function createServiceArtifactId(serviceName: string): string {
-  return `api-${serviceName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+  return `api-${serviceName.toLowerCase().replaceAll(/[^a-z0-9]/g, '-')}`;
 }
 
 interface ExportProgress {

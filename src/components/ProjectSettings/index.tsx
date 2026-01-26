@@ -95,18 +95,15 @@ export { FileStorageSettingsForm } from './FileStorageSettingsForm';
 export { GatewaySettingsForm } from './GatewaySettingsForm';
 export { GraphQLSettingsForm } from './GraphQLSettingsForm';
 export { GrpcSettingsForm } from './GrpcSettingsForm';
-export { JteTemplatesSettingsForm } from './JteTemplatesSettingsForm';
-export { MailServiceSettingsForm } from './MailServiceSettingsForm';
 export { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
-export { PasswordResetSettingsForm } from './PasswordResetSettingsForm';
 export { RateLimitSettingsForm } from './RateLimitSettingsForm';
 export { ResilienceSettingsForm } from './ResilienceSettingsForm';
 // Rust/Axum Settings
 export { RustOptionsPanel } from './RustOptionsPanel';
 export { RustPresetSelector } from './RustPresetSelector';
 export { SecuritySettingsForm } from './SecuritySettingsForm';
-// Feature Pack Forms
-export { SocialLoginSettingsForm } from './SocialLoginSettingsForm';
+// Note: JteTemplatesSettingsForm, MailServiceSettingsForm, PasswordResetSettingsForm,
+// and SocialLoginSettingsForm are lazy-loaded via FeaturePackSection for better code splitting
 
 // Types
 export type { SettingsFormProps } from './types';
@@ -349,7 +346,7 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
 
           <Tabs.Panel value="feature-pack" pl="md">
             <ScrollArea h={600}>
-              <FeaturePackSection form={form} />
+              <FeaturePackSection />
             </ScrollArea>
           </Tabs.Panel>
         </Tabs>
