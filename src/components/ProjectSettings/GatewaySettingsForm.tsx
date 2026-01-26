@@ -3,7 +3,7 @@ import type { GatewayRouteConfig } from '../../types';
 import { GatewayRouteDesigner } from '../GatewayRouteDesigner';
 import type { SettingsFormProps } from './types';
 
-export function GatewaySettingsForm({ form }: SettingsFormProps) {
+export function GatewaySettingsForm({ form }: Readonly<SettingsFormProps>) {
   return (
     <Stack>
       <Switch

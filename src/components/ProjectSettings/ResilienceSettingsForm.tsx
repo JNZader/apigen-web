@@ -1,7 +1,7 @@
 import { Collapse, Divider, NumberInput, Stack, Switch, Title } from '@mantine/core';
 import type { SettingsFormProps } from './types';
 
-export function ResilienceSettingsForm({ form }: SettingsFormProps) {
+export function ResilienceSettingsForm({ form }: Readonly<SettingsFormProps>) {
   return (
     <Stack>
       <Title order={6}>Circuit Breaker</Title>

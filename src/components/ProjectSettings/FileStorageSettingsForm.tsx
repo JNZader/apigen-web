@@ -54,7 +54,7 @@ function StorageTypeCard({ icon, title, description, selected, onClick }: Storag
   );
 }
 
-export function FileStorageSettingsForm({ form }: SettingsFormProps) {
+export function FileStorageSettingsForm({ form }: Readonly<SettingsFormProps>) {
   const storageEnabled = form.values.features?.fileStorage ?? false;
   const currentProvider = form.values.featurePackConfig?.storage?.provider ?? 'local';
 

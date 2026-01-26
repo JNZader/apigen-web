@@ -154,7 +154,7 @@ export const MailConfigSchema = z.object({
   username: z.string(),
   password: z.string(),
   encryption: SmtpEncryptionSchema,
-  fromAddress: z.string().email(),
+  fromAddress: z.email(),
   fromName: z.string(),
   connectionTimeoutMs: z.number().int().nonnegative(),
   readTimeoutMs: z.number().int().nonnegative(),
@@ -417,7 +417,7 @@ export type FeaturePackConfigSchemaType = z.infer<typeof FeaturePackConfigSchema
 
 /**
  * Project configuration schema for generation requests.
- * Uses passthrough to allow additional fields from the full ProjectConfig.
+ * Uses passthrough() to allow additional fields from the full ProjectConfig.
  */
 export const ProjectConfigSchema = z
   .object({

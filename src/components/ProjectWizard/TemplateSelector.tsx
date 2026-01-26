@@ -30,9 +30,9 @@ import {
   type ProjectTemplate,
   TEMPLATE_CATEGORIES,
   type TemplateCategory,
-} from '../data/templates';
-import { useEntities, useEntityActions, useRelationActions, useServiceActions } from '../store';
-import { notify } from '../utils/notifications';
+} from '../../config/projectTemplates';
+import { useEntities, useEntityActions, useRelationActions, useServiceActions } from '../../store';
+import { notify } from '../../utils/notifications';
 
 interface TemplateSelectorProps {
   readonly opened: boolean;

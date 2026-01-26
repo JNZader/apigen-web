@@ -24,15 +24,17 @@ import {
   IconPlus,
 } from '@tabler/icons-react';
 import { saveAs } from 'file-saver';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { DesignerCanvas } from '../components/canvas/DesignerCanvas';
 import { EntityCard } from '../components/EntityCard';
 import { EntityDetailPanel } from '../components/EntityDetailPanel';
 import { EntityForm } from '../components/EntityForm';
 import { EntityList } from '../components/EntityList';
 import { EventMessageDesigner } from '../components/EventMessageDesigner';
+import { KeyboardShortcutsModal } from '../components/KeyboardShortcutsModal';
 import { Layout } from '../components/Layout';
 import { MultiServiceExport } from '../components/MultiServiceExport';
+import { ProjectWizard } from '../components/ProjectWizard';
 import { RelationForm } from '../components/RelationForm';
 import { SectionErrorBoundary } from '../components/SectionErrorBoundary';
 import { ServiceConfigPanel } from '../components/ServiceConfigPanel';
@@ -41,6 +43,8 @@ import { useDesignerPageData, useProjectStore, useServiceActions } from '../stor
 import { notify } from '../utils/notifications';
 
 type ViewMode = 'canvas' | 'grid';
+
+const WIZARD_STORAGE_KEY = 'apigen-wizard-seen';
 
 export function DesignerPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('canvas');
@@ -55,6 +59,8 @@ export function DesignerPage() {
     useDisclosure(false);
   const [serviceExportOpened, { open: openServiceExport, close: closeServiceExport }] =
     useDisclosure(false);
+  const [wizardOpened, { open: openWizard, close: closeWizard }] = useDisclosure(false);
+  const [shortcutsOpened, { open: openShortcuts, close: closeShortcuts }] = useDisclosure(false);
   const [editingEntity, setEditingEntity] = useState<string | null>(null);
   const [relationSource, setRelationSource] = useState<string>('');
   const [relationTarget, setRelationTarget] = useState<string>('');
@@ -81,6 +87,32 @@ export function DesignerPage() {
 
   // Service actions
   const { addService } = useServiceActions();
+
+  // Track if wizard check has run (to ensure it only runs once on mount)
+  const hasCheckedWizard = useRef(false);
+
+  // Auto-open wizard for new projects
+  useEffect(() => {
+    if (hasCheckedWizard.current) return;
+    hasCheckedWizard.current = true;
+
+    const hasSeenWizard = localStorage.getItem(WIZARD_STORAGE_KEY) === 'true';
+    const isNewProject = !project.name && entities.length === 0;
+
+    if (isNewProject && !hasSeenWizard) {
+      openWizard();
+    }
+  }, [project.name, entities.length, openWizard]);
+
+  // Wizard handlers
+  const handleWizardComplete = useCallback(() => {
+    localStorage.setItem(WIZARD_STORAGE_KEY, 'true');
+  }, []);
+
+  const handleWizardClose = useCallback(() => {
+    localStorage.setItem(WIZARD_STORAGE_KEY, 'true');
+    closeWizard();
+  }, [closeWizard]);
 
   // Event handlers
   const handleEditEntity = (entityId: string) => {
@@ -146,7 +178,9 @@ export function DesignerPage() {
       }
     },
     onEscape: () => {
-      if (entityFormOpened) {
+      if (shortcutsOpened) {
+        closeShortcuts();
+      } else if (entityFormOpened) {
         closeEntityForm();
         setEditingEntity(null);
       } else if (relationFormOpened) {
@@ -155,6 +189,7 @@ export function DesignerPage() {
         clearSelection();
       }
     },
+    onShowHelp: openShortcuts,
   });
 
   const sidebar = <EntityList onAddEntity={handleAddEntity} />;
@@ -227,6 +262,7 @@ export function DesignerPage() {
                   onAddRelation={handleAddRelation}
                   onAddService={handleAddService}
                   onConfigureService={handleConfigureService}
+                  onOpenWizard={openWizard}
                 />
               </SectionErrorBoundary>
             </Paper>
@@ -440,6 +476,16 @@ export function DesignerPage() {
       >
         <MultiServiceExport />
       </Drawer>
+
+      {/* Project wizard modal */}
+      <ProjectWizard
+        opened={wizardOpened}
+        onClose={handleWizardClose}
+        onComplete={handleWizardComplete}
+      />
+
+      {/* Keyboard shortcuts modal */}
+      <KeyboardShortcutsModal opened={shortcutsOpened} onClose={closeShortcuts} />
     </Layout>
   );
 }

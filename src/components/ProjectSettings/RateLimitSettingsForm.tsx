@@ -1,7 +1,7 @@
 import { Collapse, Divider, NumberInput, Select, Stack, Switch } from '@mantine/core';
 import type { SettingsFormProps } from './types';
 
-export function RateLimitSettingsForm({ form }: SettingsFormProps) {
+export function RateLimitSettingsForm({ form }: Readonly<SettingsFormProps>) {
   return (
     <Stack>
       <Switch
