@@ -14,7 +14,7 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure, useHotkeys } from '@mantine/hooks';
 import {
   IconArchive,
   IconInfoCircle,
@@ -31,9 +31,9 @@ import { EntityDetailPanel } from '../components/EntityDetailPanel';
 import { EntityForm } from '../components/EntityForm';
 import { EntityList } from '../components/EntityList';
 import { EventMessageDesigner } from '../components/EventMessageDesigner';
+import { KeyboardShortcutsModal } from '../components/KeyboardShortcutsModal';
 import { Layout } from '../components/Layout';
 import { MultiServiceExport } from '../components/MultiServiceExport';
-import { KeyboardShortcutsModal } from '../components/KeyboardShortcutsModal';
 import { ProjectWizard } from '../components/ProjectWizard';
 import { RelationForm } from '../components/RelationForm';
 import { SectionErrorBoundary } from '../components/SectionErrorBoundary';
@@ -61,6 +61,10 @@ export function DesignerPage() {
     useDisclosure(false);
   const [wizardOpened, { open: openWizard, close: closeWizard }] = useDisclosure(false);
   const [shortcutsOpened, { open: openShortcuts, close: closeShortcuts }] = useDisclosure(false);
+
+  // Keyboard shortcut to open help modal (? key)
+  useHotkeys([['shift+/', openShortcuts]]);
+
   const [editingEntity, setEditingEntity] = useState<string | null>(null);
   const [relationSource, setRelationSource] = useState<string>('');
   const [relationTarget, setRelationTarget] = useState<string>('');
