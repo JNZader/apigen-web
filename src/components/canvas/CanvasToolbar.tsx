@@ -9,13 +9,16 @@ import {
   Tooltip,
   useMantineColorScheme,
 } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import {
+  IconApi,
   IconCamera,
   IconChevronDown,
   IconLayoutDistributeHorizontal,
   IconPlus,
   IconServer,
   IconTable,
+  IconUpload,
 } from '@tabler/icons-react';
 import type { Node } from '@xyflow/react';
 import { getNodesBounds } from '@xyflow/react';
@@ -40,6 +43,7 @@ import {
 } from '../../utils/canvasLayout';
 import { notify } from '../../utils/notifications';
 import { EntityServiceTabs } from './EntityServiceTabs';
+import { OpenApiImportModal } from './OpenApiImportModal';
 
 interface CanvasToolbarProps {
   readonly nodes: Node[];
@@ -55,6 +59,8 @@ export function CanvasToolbar({
   onAddService,
 }: CanvasToolbarProps) {
   const { colorScheme } = useMantineColorScheme();
+  const [openApiModalOpened, { open: openOpenApiModal, close: closeOpenApiModal }] =
+    useDisclosure(false);
 
   const entities = useEntities();
   const relations = useRelations();
@@ -272,6 +278,33 @@ export function CanvasToolbar({
           </Menu.Dropdown>
         </Menu>
 
+        {/* Import Menu - only in entities view */}
+        {canvasView === CANVAS_VIEWS.ENTITIES && (
+          <Menu shadow="md" width={180}>
+            <Menu.Target>
+              <Tooltip label="Import entities">
+                <ActionIcon
+                  variant="default"
+                  size="md"
+                  aria-label="Import menu"
+                  aria-haspopup="menu"
+                >
+                  <IconUpload size={16} aria-hidden="true" />
+                </ActionIcon>
+              </Tooltip>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Label>Import From</Menu.Label>
+              <Menu.Item
+                leftSection={<IconApi size={14} />}
+                onClick={openOpenApiModal}
+              >
+                OpenAPI / Swagger
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        )}
+
         <Menu shadow="md" width={160}>
           <Menu.Target>
             <Tooltip label="Download diagram as image">
@@ -299,6 +332,13 @@ export function CanvasToolbar({
             `${services.length} services \u00B7 ${serviceConnections.length} connections`}
         </Text>
       </Group>
+
+      {/* OpenAPI Import Modal */}
+      <OpenApiImportModal
+        opened={openApiModalOpened}
+        onClose={closeOpenApiModal}
+        onImportComplete={() => handleAutoLayout('horizontal')}
+      />
     </Paper>
   );
 }
