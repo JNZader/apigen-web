@@ -16,6 +16,7 @@ import {
   IconSettings,
   IconShield,
   IconShieldCheck,
+  IconTemplate,
 } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useProject, useProjectActions } from '../../store';
@@ -31,6 +32,7 @@ import { FeaturesSettingsForm } from './FeaturesSettingsForm';
 import { GatewaySettingsForm } from './GatewaySettingsForm';
 import { GraphQLSettingsForm } from './GraphQLSettingsForm';
 import { GrpcSettingsForm } from './GrpcSettingsForm';
+import { JteTemplatesSettingsForm } from './JteTemplatesSettingsForm';
 import { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
 import { RateLimitSettingsForm } from './RateLimitSettingsForm';
 import { ResilienceSettingsForm } from './ResilienceSettingsForm';
@@ -162,6 +164,9 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             <Tabs.Tab value="gateway" leftSection={<IconRouter size={16} />}>
               Gateway
             </Tabs.Tab>
+            <Tabs.Tab value="jte" leftSection={<IconTemplate size={16} />}>
+              JTE Templates
+            </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="language" pl="md">
@@ -261,6 +266,12 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
           <Tabs.Panel value="gateway" pl="md">
             <ScrollArea h={600}>
               <GatewaySettingsForm form={form} />
+            </ScrollArea>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="jte" pl="md">
+            <ScrollArea h={600}>
+              <JteTemplatesSettingsForm form={form} />
             </ScrollArea>
           </Tabs.Panel>
         </Tabs>

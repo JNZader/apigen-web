@@ -209,6 +209,8 @@ export interface StorageConfig {
 export interface JteConfig {
   /** Enable JTE templates */
   enabled: boolean;
+  /** Selected template IDs to generate */
+  selectedTemplates: string[];
   /** Directory containing template files */
   templateDirectory: string;
   /** Template file extension */
@@ -341,6 +343,7 @@ export const defaultStorageConfig: StorageConfig = {
  */
 export const defaultJteConfig: JteConfig = {
   enabled: false,
+  selectedTemplates: [],
   templateDirectory: 'templates',
   templateExtension: '.jte',
   precompileTemplates: true,
