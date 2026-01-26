@@ -29,12 +29,12 @@ import { BasicSettingsForm } from './BasicSettingsForm';
 import { CacheSettingsForm } from './CacheSettingsForm';
 import { CorsSettingsForm } from './CorsSettingsForm';
 import { DatabaseSettingsForm } from './DatabaseSettingsForm';
+import { FeaturePackSection } from './FeaturePackSection';
 import { FeaturesSettingsForm } from './FeaturesSettingsForm';
 import { FileStorageSettingsForm } from './FileStorageSettingsForm';
 import { GatewaySettingsForm } from './GatewaySettingsForm';
 import { GraphQLSettingsForm } from './GraphQLSettingsForm';
 import { GrpcSettingsForm } from './GrpcSettingsForm';
-import { FeaturePackSection } from './FeaturePackSection';
 import { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
 import { RateLimitSettingsForm } from './RateLimitSettingsForm';
 import { ResilienceSettingsForm } from './ResilienceSettingsForm';
@@ -79,29 +79,27 @@ interface ProjectSettingsProps {
 // Feature Pack 2025 Forms - Re-exports for external use
 // =============================================================================
 
-// Feature Pack Forms
-export { SocialLoginSettingsForm } from './SocialLoginSettingsForm';
-export { MailServiceSettingsForm } from './MailServiceSettingsForm';
-export { FileStorageSettingsForm } from './FileStorageSettingsForm';
-export { PasswordResetSettingsForm } from './PasswordResetSettingsForm';
-export { JteTemplatesSettingsForm } from './JteTemplatesSettingsForm';
-
-// Containers
-export { FeaturePackSection } from './FeaturePackSection';
-
 // Core Settings Forms
 export { BasicSettingsForm } from './BasicSettingsForm';
 export { CacheSettingsForm } from './CacheSettingsForm';
 export { CorsSettingsForm } from './CorsSettingsForm';
 export { DatabaseSettingsForm } from './DatabaseSettingsForm';
+// Containers
+export { FeaturePackSection } from './FeaturePackSection';
 export { FeaturesSettingsForm } from './FeaturesSettingsForm';
+export { FileStorageSettingsForm } from './FileStorageSettingsForm';
 export { GatewaySettingsForm } from './GatewaySettingsForm';
 export { GraphQLSettingsForm } from './GraphQLSettingsForm';
 export { GrpcSettingsForm } from './GrpcSettingsForm';
+export { JteTemplatesSettingsForm } from './JteTemplatesSettingsForm';
+export { MailServiceSettingsForm } from './MailServiceSettingsForm';
 export { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
+export { PasswordResetSettingsForm } from './PasswordResetSettingsForm';
 export { RateLimitSettingsForm } from './RateLimitSettingsForm';
 export { ResilienceSettingsForm } from './ResilienceSettingsForm';
 export { SecuritySettingsForm } from './SecuritySettingsForm';
+// Feature Pack Forms
+export { SocialLoginSettingsForm } from './SocialLoginSettingsForm';
 
 // Types
 export type { SettingsFormProps } from './types';

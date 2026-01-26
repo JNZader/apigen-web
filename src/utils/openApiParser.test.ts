@@ -419,37 +419,28 @@ import {
 // Test Data
 // ============================================================================
 
-const sampleOpenApiJson = `{
+const sampleOpenApiJson = `
   "openapi": "3.0.3",
-  "info": {
+  "info": 
     "title": "Sample API",
-    "version": "1.0.0"
-  },
-  "components": {
-    "schemas": {
-      "User": {
+    "version": "1.0.0",
+  "components": 
+    "schemas": 
+      "User": 
         "type": "object",
         "required": ["email"],
-        "properties": {
-          "name": {
+        "properties": 
+          "name": 
             "type": "string",
             "minLength": 1,
-            "maxLength": 100
-          },
-          "email": {
+            "maxLength": 100,
+          "email": 
             "type": "string",
-            "format": "email"
-          },
-          "age": {
+            "format": "email",
+          "age": 
             "type": "integer",
             "minimum": 0,
-            "maximum": 150
-          }
-        }
-      }
-    }
-  }
-}`;
+            "maximum": 150`;
 
 const sampleOpenApiYaml = `openapi: "3.0.3"
 info:
@@ -621,21 +612,16 @@ components:
     });
 
     it('should preserve description from schema', () => {
-      const docWithDescription = `{
+      const docWithDescription = `
 				"openapi": "3.0.0",
-				"info": {"title": "Test", "version": "1.0"},
-				"components": {
-					"schemas": {
-						"User": {
+				"info": "title": "Test", "version": "1.0",
+				"components": 
+					"schemas": 
+						"User": 
 							"type": "object",
 							"description": "A user entity",
-							"properties": {
-								"id": {"type": "integer", "description": "User ID"}
-							}
-						}
-					}
-				}
-			}`;
+							"properties": 
+								"id": "type": "integer", "description": "User ID"`;
       const result = parseOpenApi(docWithDescription, 'json');
       expect(result.entities[0].description).toBe('A user entity');
       expect(result.entities[0].fields[0].description).toBe('User ID');
@@ -644,11 +630,10 @@ components:
 
   describe('validateOpenApi', () => {
     it('should validate a correct OpenAPI 3.x document', () => {
-      const validDoc = `{
+      const validDoc = `
 				"openapi": "3.0.0",
-				"info": {"title": "Test", "version": "1.0"},
-				"components": {"schemas": {"User": {"type": "object"}}}
-			}`;
+				"info": "title": "Test", "version": "1.0",
+				"components": "schemas": "User": "type": "object"`;
       const result = validateOpenApi(validDoc, 'json');
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
@@ -669,11 +654,10 @@ components:
     });
 
     it('should return error for empty schemas', () => {
-      const emptySchemas = `{
+      const emptySchemas = `
 				"openapi": "3.0.0",
-				"info": {"title": "Test", "version": "1.0"},
-				"components": {"schemas": {}}
-			}`;
+				"info": "title": "Test", "version": "1.0",
+				"components": "schemas": `;
       const result = validateOpenApi(emptySchemas, 'json');
       expect(result.valid).toBe(false);
       expect(result.errors.some((e) => e.message.includes('schemas'))).toBe(true);
@@ -687,11 +671,10 @@ components:
     });
 
     it('should validate Swagger 2.x documents', () => {
-      const swagger2Doc = `{
+      const swagger2Doc = `
 				"swagger": "2.0",
-				"info": {"title": "Test", "version": "1.0"},
-				"definitions": {"User": {"type": "object"}}
-			}`;
+				"info": "title": "Test", "version": "1.0",
+				"definitions": "User": "type": "object"`;
       const result = validateOpenApi(swagger2Doc, 'json');
       expect(result.valid).toBe(true);
     });
@@ -883,9 +866,7 @@ components:
 			const yaml = `openapi: "3.0.3"
 info:
   title: Empty
-  version: "1.0"
-components:
-  schemas: {}`;
+  version: "1.0"`;
 
 			const result = parseOpenApi(yaml);
 			expect(result.entities).toHaveLength(0);
@@ -1015,10 +996,9 @@ components:
 		});
 
 		it('should report missing openapi version', () => {
-			const invalidDoc = `{
-        "info": { "title": "Test", "version": "1.0" },
-        "components": { "schemas": { "User": { "type": "object" } } }
-      }`;
+			const invalidDoc = `
+        "info": "title": "Test", "version": "1.0" ,
+        "components": "schemas": "User": "type": "object" `;
 
 			const result = validateOpenApi(invalidDoc);
 			expect(result.valid).toBe(false);
@@ -1026,10 +1006,9 @@ components:
 		});
 
 		it('should report missing info section', () => {
-			const invalidDoc = `{
+			const invalidDoc = `
         "openapi": "3.0.3",
-        "components": { "schemas": { "User": { "type": "object" } } }
-      }`;
+        "components": "schemas": "User": "type": "object" `;
 
 			const result = validateOpenApi(invalidDoc);
 			expect(result.valid).toBe(false);
@@ -1037,10 +1016,9 @@ components:
 		});
 
 		it('should report missing schemas', () => {
-			const invalidDoc = `{
+			const invalidDoc = `
         "openapi": "3.0.3",
-        "info": { "title": "Test", "version": "1.0" }
-      }`;
+        "info": "title": "Test", "version": "1.0" `;
 
 			const result = validateOpenApi(invalidDoc);
 			expect(result.valid).toBe(false);
@@ -1112,16 +1090,12 @@ components:
 		});
 
 		it('should handle YAML flow style', () => {
-			const yaml = `openapi: "3.0.3"
-info: {title: Test, version: "1.0"}
+			const yaml = `openapi: "3.0.3"title: Test, version: "1.0"
 components:
   schemas:
     Point:
       type: object
-      required: [x, y]
-      properties:
-        x: {type: number}
-        y: {type: number}`;
+      required: [x, y]type: numbertype: number`;
 
 			const result = parseOpenApi(yaml);
 			expect(result.entities).toHaveLength(1);

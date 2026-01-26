@@ -1,8 +1,8 @@
 import {
   Alert,
+  Badge,
   Checkbox,
   Collapse,
-  Badge,
   Checkbox,
   Collapse,
   Divider,

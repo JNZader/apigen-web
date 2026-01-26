@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
 import type { EntityDesign, FieldDesign, JavaType, ValidationRule } from '../types';
-import type { RelationDesign, RelationType } from '../types/relation';
 import { toSnakeCase } from '../types';
+import type { RelationDesign, RelationType } from '../types/relation';
 import { ENTITY_GRID } from './canvasConstants';
 
 // ============================================================================
@@ -31,6 +31,7 @@ interface OpenApiPropertyObject {
   format?: string;
   description?: string;
 import * as yaml from 'js-yaml';
+
 import { nanoid } from 'nanoid';
 import type { EntityDesign, FieldDesign, JavaType } from '../types';
 import { toPascalCase, toSnakeCase } from '../types';
@@ -483,7 +484,7 @@ export function parseOpenApi(content: string): OpenApiParseResult {
   const entityIdMap = new Map<string, string>();
 
   // First pass: create all entities
-  let index = 0;
+  const index = 0;
   for (const [name, schema] of Object.entries(schemas)) {
     // Skip non-object schemas
     if (schema.type && schema.type !== 'object') {
@@ -559,7 +560,7 @@ function parseSchema(
   name: string,
   schema: OpenApiSchema,
   position: { x: number; y: number },
-): { entity: EntityDesign; refs: Array<{ fieldName: string; refName: string }> } {
+): entity: EntityDesign; refs: Array<{ fieldName: string; refName: string }> {
   const refs: Array<{ fieldName: string; refName: string }> = [];
   const fields: FieldDesign[] = [];
   const requiredFields = new Set(schema.required ?? []);

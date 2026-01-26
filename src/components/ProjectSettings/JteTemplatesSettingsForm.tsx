@@ -1,20 +1,16 @@
-import { Alert, Checkbox, Group, List, Paper, Stack, Switch, Text, ThemeIcon } from '@mantine/core';
-import { IconCheck, IconInfoCircle, IconTemplate } from '@tabler/icons-react';
-import { memo } from 'react';
-import { useFeaturePackConfig, useProjectStoreInternal, useTargetConfig } from '../../store';
-import {
+import { Alert, 
   Alert,
-  Badge,
+  Badge,Checkbox, 
   Checkbox,
-  Collapse,
-  Group,
-  Paper,
-  Stack,
-  Switch,
-  Text,
-} from '@mantine/core';
-import { IconAlertTriangle, IconTemplate } from '@tabler/icons-react';
-import { useTargetConfig } from '../../store';
+  Collapse,Group, 
+  Group,List, Paper, 
+  Paper,Stack, 
+  Stack,Switch, 
+  Switch,Text, 
+  Text,ThemeIcon, } from '@mantine/core';
+import { IconAlertTriangle, IconCheck, IconInfoCircle, IconTemplate, IconTemplate } from '@tabler/icons-react';
+import { memo } from 'react';
+import { useFeaturePackConfig, useProjectStoreInternal, useTargetConfig, useTargetConfig } from '../../store';
 import type { SettingsFormProps } from './types';
 
 const AVAILABLE_TEMPLATES = [
