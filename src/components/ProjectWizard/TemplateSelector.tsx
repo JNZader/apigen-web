@@ -1,153 +1,210 @@
+import { useMemo, useState } from 'react';
 import {
   Badge,
+  Button,
+  Card,
   Group,
-  Paper,
-  ScrollArea,
+  Modal,
+  SegmentedControl,
   SimpleGrid,
   Stack,
-  Tabs,
   Text,
   TextInput,
   ThemeIcon,
-  Tooltip,
 } from '@mantine/core';
+import { useDebouncedValue } from '@mantine/hooks';
+import { modals } from '@mantine/modals';
 import {
-  IconArticle,
-  IconBuilding,
-  IconChecklist,
+  IconArrowRight,
+  IconCheckbox,
   IconFile,
-  IconRocket,
+  IconNews,
   IconSearch,
-  IconServer,
   IconShoppingCart,
+  IconUsers,
 } from '@tabler/icons-react';
-import { memo, useMemo, useState } from 'react';
 import {
-  filterTemplatesByCategory,
+  filterTemplates,
   PROJECT_TEMPLATES,
+  TEMPLATE_CATEGORIES,
   type ProjectTemplate,
-  searchTemplates,
   type TemplateCategory,
-} from '@/config/projectTemplates';
+} from '../../config/projectTemplates';
+import { useEntities, useEntityActions, useRelationActions, useServiceActions } from '../../store';
+import { notify } from '../../utils/notifications';
+import { applyTemplate } from '../../config/projectTemplates';
 
 interface TemplateSelectorProps {
-  readonly selectedId: string | null;
-  readonly onSelect: (template: ProjectTemplate) => void;
+  readonly opened: boolean;
+  readonly onClose: () => void;
 }
 
 const ICON_MAP: Record<string, React.ReactNode> = {
-  file: <IconFile size={24} />,
-  article: <IconArticle size={24} />,
-  'shopping-cart': <IconShoppingCart size={24} />,
-  checklist: <IconChecklist size={24} />,
-  server: <IconServer size={24} />,
+  IconFile: <IconFile size={24} />,
+  IconShoppingCart: <IconShoppingCart size={24} />,
+  IconNews: <IconNews size={24} />,
+  IconCheckbox: <IconCheckbox size={24} />,
+  IconUsers: <IconUsers size={24} />,
 };
 
-const CATEGORY_CONFIG: Record<
-  TemplateCategory,
-  { label: string; color: string; icon: React.ReactNode }
-> = {
-  starter: { label: 'Starter', color: 'blue', icon: <IconRocket size={16} /> },
-  'full-stack': { label: 'Full Stack', color: 'green', icon: <IconServer size={16} /> },
-  microservice: { label: 'Microservice', color: 'violet', icon: <IconServer size={16} /> },
-  enterprise: { label: 'Enterprise', color: 'orange', icon: <IconBuilding size={16} /> },
+const COLOR_MAP: Record<string, string> = {
+  blank: 'gray',
+  ecommerce: 'blue',
+  blog: 'orange',
+  'task-manager': 'teal',
+  'user-management': 'violet',
 };
 
-export const TemplateSelector = memo(function TemplateSelector({
-  selectedId,
-  onSelect,
-}: TemplateSelectorProps) {
+const CATEGORY_COLOR_MAP: Record<TemplateCategory, string> = {
+  starter: 'green',
+  'full-stack': 'blue',
+  microservice: 'violet',
+};
+
+export function TemplateSelector({ opened, onClose }: Readonly<TemplateSelectorProps>) {
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [debouncedSearch] = useDebouncedValue(search, 200);
+  const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
+
+  const entities = useEntities();
+  const { setEntities } = useEntityActions();
+  const { setRelations } = useRelationActions();
+  const { clearServices } = useServiceActions();
 
   const filteredTemplates = useMemo(() => {
-    let templates = search ? searchTemplates(search) : PROJECT_TEMPLATES;
+    return filterTemplates(PROJECT_TEMPLATES, {
+      search: debouncedSearch,
+      category: selectedCategory,
+    });
+  }, [debouncedSearch, selectedCategory]);
 
-    if (activeCategory && activeCategory !== 'all') {
-      templates = filterTemplatesByCategory(templates, activeCategory as TemplateCategory);
+  const applySelectedTemplate = (template: ProjectTemplate) => {
+    // Clear services and their connections when applying any template
+    clearServices();
+
+    if (template.id === 'blank') {
+      setEntities([]);
+      setRelations([]);
+      notify.info({
+        title: 'Template Applied',
+        message: 'Started with a blank project',
+      });
+    } else {
+      try {
+        const { entities: newEntities, relations: newRelations } = applyTemplate(template);
+        setEntities(newEntities);
+        setRelations(newRelations);
+        notify.success({
+          title: 'Template Applied',
+          message: `Loaded ${template.name} template with ${newEntities.length} entities`,
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        notify.error({
+          title: 'Template Error',
+          message: `Failed to apply template: ${errorMessage}`,
+        });
+      }
     }
+    onClose();
+    setSearch('');
+    setSelectedCategory('all');
+  };
 
-    return templates;
-  }, [search, activeCategory]);
+  const handleSelectTemplate = (template: ProjectTemplate) => {
+    if (entities.length > 0) {
+      modals.openConfirmModal({
+        title: 'Replace Current Project',
+        children: 'This will replace all existing entities and relations. Continue?',
+        labels: { confirm: 'Replace', cancel: 'Cancel' },
+        confirmProps: { color: 'orange' },
+        onConfirm: () => applySelectedTemplate(template),
+      });
+    } else {
+      applySelectedTemplate(template);
+    }
+  };
+
+  const handleClose = () => {
+    onClose();
+    setSearch('');
+    setSelectedCategory('all');
+  };
+
+  const categoryOptions = [
+    { value: 'all', label: 'All' },
+    ...TEMPLATE_CATEGORIES.map((cat) => ({ value: cat.value, label: cat.label })),
+  ];
 
   return (
-    <Stack gap="md">
-      <TextInput
-        placeholder="Search templates..."
-        leftSection={<IconSearch size={16} />}
-        value={search}
-        onChange={(e) => setSearch(e.currentTarget.value)}
-        data-testid="template-search-input"
-      />
+    <Modal
+      opened={opened}
+      onClose={handleClose}
+      title={
+        <Text fw={600} size="lg">
+          Choose a Template
+        </Text>
+      }
+      size="xl"
+      closeButtonProps={{ 'aria-label': 'Close' }}
+    >
+      <Stack gap="md">
+        <Text c="dimmed" size="sm">
+          Start with a pre-configured template or create from scratch.
+        </Text>
 
-      <Tabs
-        value={activeCategory}
-        onChange={(value) => setActiveCategory(value ?? 'all')}
-        variant="pills"
-      >
-        <Tabs.List>
-          <Tabs.Tab value="all" data-testid="category-tab-all">
-            All
-          </Tabs.Tab>
-          {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
-            <Tabs.Tab
-              key={key}
-              value={key}
-              leftSection={config.icon}
-              data-testid={`category-tab-${key}`}
-            >
-              {config.label}
-            </Tabs.Tab>
-          ))}
-        </Tabs.List>
-      </Tabs>
+        <TextInput
+          placeholder="Search templates..."
+          leftSection={<IconSearch size={16} />}
+          value={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+          aria-label="Search templates"
+        />
 
-      <ScrollArea h={350}>
-        {filteredTemplates.length > 0 ? (
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+        <SegmentedControl
+          value={selectedCategory}
+          onChange={(value) => setSelectedCategory(value as TemplateCategory | 'all')}
+          data={categoryOptions}
+          fullWidth
+          aria-label="Filter by category"
+        />
+
+        {filteredTemplates.length === 0 ? (
+          <Text c="dimmed" ta="center" py="xl">
+            No templates match your search criteria.
+          </Text>
+        ) : (
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
             {filteredTemplates.map((template) => (
               <TemplateCard
                 key={template.id}
                 template={template}
-                selected={selectedId === template.id}
-                onSelect={() => onSelect(template)}
+                onSelect={() => handleSelectTemplate(template)}
               />
             ))}
           </SimpleGrid>
-        ) : (
-          <Paper withBorder p="xl" ta="center" data-testid="no-templates-message">
-            <Text c="dimmed">No templates found matching your search</Text>
-          </Paper>
         )}
-      </ScrollArea>
-    </Stack>
+      </Stack>
+    </Modal>
   );
-});
+}
 
 interface TemplateCardProps {
   readonly template: ProjectTemplate;
-  readonly selected: boolean;
   readonly onSelect: () => void;
 }
 
-const TemplateCard = memo(function TemplateCard({
-  template,
-  selected,
-  onSelect,
-}: TemplateCardProps) {
-  const categoryConfig = CATEGORY_CONFIG[template.category];
-  const icon = ICON_MAP[template.icon] || <IconFile size={24} />;
+function TemplateCard({ template, onSelect }: Readonly<TemplateCardProps>) {
+  const color = COLOR_MAP[template.id] || 'blue';
+  const categoryColor = CATEGORY_COLOR_MAP[template.category];
 
   return (
-    <Paper
-      withBorder
-      p="md"
+    <Card
+      shadow="sm"
+      padding="lg"
       radius="md"
-      style={{
-        cursor: 'pointer',
-        borderColor: selected ? 'var(--mantine-color-blue-5)' : undefined,
-        backgroundColor: selected ? 'var(--mantine-color-blue-0)' : undefined,
-      }}
+      withBorder
+      style={{ cursor: 'pointer' }}
       onClick={onSelect}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -157,61 +214,70 @@ const TemplateCard = memo(function TemplateCard({
       }}
       tabIndex={0}
       role="button"
-      aria-pressed={selected}
-      aria-label={`${template.name}: ${template.description}`}
-      data-testid={`template-card-${template.id}`}
+      aria-label={`${template.name} template: ${template.description}. ${template.entities.length} entities, ${template.relations.length} relations. Category: ${template.category}`}
     >
-      <Stack gap="xs">
+      <Stack gap="sm">
         <Group justify="space-between" wrap="nowrap">
           <Group gap="sm" wrap="nowrap">
-            <ThemeIcon size="lg" variant="light" color={categoryConfig.color}>
-              {icon}
+            <ThemeIcon size="lg" radius="md" color={color} variant="light">
+              {ICON_MAP[template.icon] || <IconFile size={24} />}
             </ThemeIcon>
             <div>
-              <Text fw={600} size="sm">
-                {template.name}
+              <Text fw={600}>{template.name}</Text>
+              <Text size="xs" c="dimmed">
+                {template.description}
               </Text>
-              <Badge size="xs" color={categoryConfig.color} variant="light">
-                {categoryConfig.label}
-              </Badge>
             </div>
           </Group>
-          {selected && (
-            <Badge color="blue" variant="filled" data-testid="selected-badge">
-              Selected
-            </Badge>
-          )}
         </Group>
 
-        <Text size="xs" c="dimmed" lineClamp={2}>
-          {template.description}
-        </Text>
-
         <Group gap={4}>
-          <Tooltip label="Entities">
-            <Badge size="xs" variant="outline" color="gray">
-              {template.entities.length} entities
-            </Badge>
-          </Tooltip>
-          {template.features.length > 0 && (
-            <Tooltip label="Features included">
-              <Badge size="xs" variant="outline" color="gray">
-                {template.features.length} features
+          <Badge size="xs" variant="filled" color={categoryColor}>
+            {template.category}
+          </Badge>
+          {template.entities.length > 0 && (
+            <>
+              <Badge size="xs" variant="light" color={color}>
+                {template.entities.length} entities
               </Badge>
-            </Tooltip>
+              <Badge size="xs" variant="outline" color="gray">
+                {template.relations.length} relations
+              </Badge>
+            </>
           )}
         </Group>
 
         {template.tags.length > 0 && (
           <Group gap={4}>
-            {template.tags.slice(0, 3).map((tag) => (
-              <Badge key={tag} size="xs" variant="dot">
+            {template.tags.slice(0, 4).map((tag) => (
+              <Badge key={tag} size="xs" variant="dot" color="gray">
                 {tag}
               </Badge>
             ))}
+            {template.tags.length > 4 && (
+              <Text size="xs" c="dimmed">
+                +{template.tags.length - 4} more
+              </Text>
+            )}
           </Group>
         )}
+
+        {template.entities.length > 0 && (
+          <Text size="xs" c="dimmed">
+            Includes: {template.entities.map((e) => e.name).join(', ')}
+          </Text>
+        )}
+
+        <Button
+          variant="light"
+          color={color}
+          size="xs"
+          rightSection={<IconArrowRight size={14} />}
+          fullWidth
+        >
+          Use Template
+        </Button>
       </Stack>
-    </Paper>
+    </Card>
   );
-});
+}
