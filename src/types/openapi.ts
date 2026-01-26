@@ -1,6 +1,10 @@
 /**
  * OpenAPI 3.x Document types
  */
+// ============================================================================
+// OpenAPI 3.x Document Types
+// ============================================================================
+
 export interface OpenApiDocument {
   openapi: string;
   info: OpenApiInfo;
@@ -8,6 +12,7 @@ export interface OpenApiDocument {
   paths?: Record<string, OpenApiPathItem>;
   components?: OpenApiComponents;
   tags?: OpenApiTag[];
+  externalDocs?: OpenApiExternalDocs;
 }
 
 export interface OpenApiInfo {
@@ -23,6 +28,20 @@ export interface OpenApiInfo {
     name: string;
     url?: string;
   };
+  termsOfService?: string;
+  contact?: OpenApiContact;
+  license?: OpenApiLicense;
+}
+
+export interface OpenApiContact {
+  name?: string;
+  url?: string;
+  email?: string;
+}
+
+export interface OpenApiLicense {
+  name: string;
+  url?: string;
 }
 
 export interface OpenApiServer {
@@ -36,6 +55,13 @@ export interface OpenApiServer {
       description?: string;
     }
   >;
+  variables?: Record<string, OpenApiServerVariable>;
+}
+
+export interface OpenApiServerVariable {
+  default: string;
+  enum?: string[];
+  description?: string;
 }
 
 export interface OpenApiTag {
@@ -44,6 +70,22 @@ export interface OpenApiTag {
 }
 
 export interface OpenApiPathItem {
+  externalDocs?: OpenApiExternalDocs;
+}
+
+export interface OpenApiExternalDocs {
+  url: string;
+  description?: string;
+}
+
+// ============================================================================
+// Path and Operation Types
+// ============================================================================
+
+export type HttpMethod = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head' | 'trace';
+
+export interface OpenApiPathItem {
+  $ref?: string;
   summary?: string;
   description?: string;
   get?: OpenApiOperation;
@@ -53,6 +95,12 @@ export interface OpenApiPathItem {
   delete?: OpenApiOperation;
   options?: OpenApiOperation;
   head?: OpenApiOperation;
+  delete?: OpenApiOperation;
+  patch?: OpenApiOperation;
+  options?: OpenApiOperation;
+  head?: OpenApiOperation;
+  trace?: OpenApiOperation;
+  servers?: OpenApiServer[];
   parameters?: OpenApiParameter[];
 }
 
@@ -60,29 +108,40 @@ export interface OpenApiOperation {
   summary?: string;
   description?: string;
   operationId?: string;
+  operationId?: string;
+  summary?: string;
+  description?: string;
   tags?: string[];
   parameters?: OpenApiParameter[];
   requestBody?: OpenApiRequestBody;
   responses: Record<string, OpenApiResponse>;
   deprecated?: boolean;
   security?: Array<Record<string, string[]>>;
+  security?: OpenApiSecurityRequirement[];
+  servers?: OpenApiServer[];
+  externalDocs?: OpenApiExternalDocs;
 }
 
 export interface OpenApiParameter {
   name: string;
   in: 'query' | 'path' | 'header' | 'cookie';
+  in: 'query' | 'header' | 'path' | 'cookie';
   description?: string;
   required?: boolean;
   deprecated?: boolean;
   schema?: OpenApiSchema;
   style?: string;
   explode?: boolean;
+  $ref?: string;
 }
 
 export interface OpenApiRequestBody {
   description?: string;
   content: Record<string, OpenApiMediaType>;
   required?: boolean;
+  required?: boolean;
+  content: Record<string, OpenApiMediaType>;
+  $ref?: string;
 }
 
 export interface OpenApiResponse {
@@ -95,6 +154,7 @@ export interface OpenApiHeader {
   description?: string;
   required?: boolean;
   schema?: OpenApiSchema;
+  $ref?: string;
 }
 
 export interface OpenApiMediaType {
@@ -103,11 +163,65 @@ export interface OpenApiMediaType {
   examples?: Record<string, OpenApiExample>;
 }
 
+export interface OpenApiHeader {
+  description?: string;
+  required?: boolean;
+  schema?: OpenApiSchema;
+}
+
 export interface OpenApiExample {
   summary?: string;
   description?: string;
   value?: unknown;
   externalValue?: string;
+}
+
+export type OpenApiSecurityRequirement = Record<string, string[]>;
+
+// ============================================================================
+// Schema and Component Types
+// ============================================================================
+
+export type OpenApiSchemaType = 'string' | 'number' | 'integer' | 'boolean' | 'array' | 'object';
+
+export interface OpenApiSchema {
+  type?: OpenApiSchemaType;
+  format?: string;
+  title?: string;
+  description?: string;
+  properties?: Record<string, OpenApiSchema>;
+  required?: string[];
+  items?: OpenApiSchema;
+  $ref?: string;
+  allOf?: OpenApiSchema[];
+  oneOf?: OpenApiSchema[];
+  anyOf?: OpenApiSchema[];
+  not?: OpenApiSchema;
+  enum?: (string | number | boolean | null)[];
+  default?: unknown;
+  nullable?: boolean;
+  readOnly?: boolean;
+  writeOnly?: boolean;
+  deprecated?: boolean;
+  example?: unknown;
+  // String validations
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+  // Number validations
+  minimum?: number;
+  maximum?: number;
+  exclusiveMinimum?: number;
+  exclusiveMaximum?: number;
+  multipleOf?: number;
+  // Array validations
+  minItems?: number;
+  maxItems?: number;
+  uniqueItems?: boolean;
+  // Object validations
+  minProperties?: number;
+  maxProperties?: number;
+  additionalProperties?: boolean | OpenApiSchema;
 }
 
 export interface OpenApiComponents {
@@ -200,6 +314,10 @@ export interface OpenApiSchema {
 /**
  * Parsed result types
  */
+// ============================================================================
+// Parser Result Types
+// ============================================================================
+
 export interface OpenApiParseResult {
   projectName: string;
   version: string;
@@ -240,6 +358,37 @@ export interface ParsedRelation {
   targetName: string;
   fieldName: string;
   type: 'ONE_TO_ONE' | 'ONE_TO_MANY' | 'MANY_TO_ONE' | 'MANY_TO_MANY';
+  source: 'schema' | 'inline';
+}
+
+export interface ParsedField {
+  originalName: string;
+  sanitizedName: string;
+  type: ParsedFieldType;
+  nullable: boolean;
+  description?: string;
+  validations: ParsedValidation[];
+  defaultValue?: unknown;
+}
+
+export type ParsedFieldType =
+  | { kind: 'primitive'; value: string }
+  | { kind: 'reference'; entityName: string }
+  | { kind: 'array'; itemType: ParsedFieldType }
+  | { kind: 'enum'; values: (string | number | boolean | null)[] };
+
+export interface ParsedValidation {
+  type: string;
+  value?: string | number;
+  message?: string;
+}
+
+export interface ParsedRelation {
+  sourceEntity: string;
+  targetEntity: string;
+  sourceField: string;
+  relationType: 'OneToOne' | 'OneToMany' | 'ManyToOne' | 'ManyToMany';
+  nullable: boolean;
 }
 
 export interface ParsedEndpoint {
@@ -291,3 +440,78 @@ export interface OpenApiImportOptions {
   /** Only include schemas matching these patterns */
   includePatterns?: string[];
 }
+  method: HttpMethod;
+  operationId?: string;
+  summary?: string;
+  tags: string[];
+  requestBodySchema?: string;
+  responseSchema?: string;
+  parameters: ParsedEndpointParameter[];
+}
+
+export interface ParsedEndpointParameter {
+  name: string;
+  in: 'query' | 'header' | 'path' | 'cookie';
+  required: boolean;
+  type: string;
+}
+
+// ============================================================================
+// Error and Warning Types
+// ============================================================================
+
+export type ParseErrorCode =
+  | 'INVALID_DOCUMENT'
+  | 'UNSUPPORTED_VERSION'
+  | 'MISSING_REQUIRED_FIELD'
+  | 'INVALID_REFERENCE'
+  | 'CIRCULAR_REFERENCE'
+  | 'PARSE_FAILED';
+
+export type ParseWarningCode =
+  | 'UNKNOWN_FORMAT'
+  | 'SKIPPED_PATTERN'
+  | 'UNSUPPORTED_FEATURE'
+  | 'NAME_COLLISION'
+  | 'EMPTY_SCHEMA'
+  | 'DEPRECATED_USAGE';
+
+export interface ParseError {
+  code: ParseErrorCode;
+  message: string;
+  path?: string;
+  details?: unknown;
+}
+
+export interface ParseWarning {
+  code: ParseWarningCode;
+  message: string;
+  path?: string;
+  details?: unknown;
+}
+
+// ============================================================================
+// Import Options Types
+// ============================================================================
+
+export interface OpenApiImportOptions {
+  includeEndpoints?: boolean;
+  detectRelations?: boolean;
+  entityPrefix?: string;
+  entitySuffix?: string;
+  skipPatterns?: string[];
+  includePatterns?: string[];
+  strictMode?: boolean;
+  preserveDescriptions?: boolean;
+}
+
+export const DEFAULT_IMPORT_OPTIONS: Required<OpenApiImportOptions> = {
+  includeEndpoints: true,
+  detectRelations: true,
+  entityPrefix: '',
+  entitySuffix: '',
+  skipPatterns: [],
+  includePatterns: [],
+  strictMode: false,
+  preserveDescriptions: true,
+};
