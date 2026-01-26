@@ -105,6 +105,7 @@ export { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
 export { RateLimitSettingsForm } from './RateLimitSettingsForm';
 export { ResilienceSettingsForm } from './ResilienceSettingsForm';
 export { SecuritySettingsForm } from './SecuritySettingsForm';
+export { RustOptionsPanel } from './RustOptionsPanel';
 
 // Types
 export type { SettingsFormProps } from './types';
