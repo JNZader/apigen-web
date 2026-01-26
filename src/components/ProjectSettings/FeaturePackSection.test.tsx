@@ -28,13 +28,17 @@ vi.mock('./JteTemplatesSettingsForm', () => ({
   JteTemplatesSettingsForm: () => <div data-testid="jte-form">JTE Form</div>,
 }));
 
-const setProjectState = (overrides: Partial<ProjectConfig>) => {
+interface PartialProjectOverrides {
+  targetConfig?: Partial<ProjectConfig['targetConfig']>;
+  features?: Partial<ProjectConfig['features']>;
+}
+
+const setProjectState = (overrides: PartialProjectOverrides) => {
   const baseProject = useProjectStoreInternal.getState().project;
 
   useProjectStoreInternal.setState({
     project: {
       ...baseProject,
-      ...overrides,
       targetConfig: { ...baseProject.targetConfig, ...overrides.targetConfig },
       features: { ...baseProject.features, ...overrides.features },
     },
@@ -87,7 +91,7 @@ describe('FeaturePackSection', () => {
 
   it('hides JTE tab for TypeScript', () => {
     setProjectState({
-      targetConfig: { language: 'typescript', framework: 'express' },
+      targetConfig: { language: 'typescript', framework: 'nestjs' },
     });
 
     render(<FeaturePackSection />);
