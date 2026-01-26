@@ -1,12 +1,6 @@
 import { Badge, Center, Group, Loader, ScrollArea, Stack, Tabs, Text } from '@mantine/core';
-import {
-  IconBrandGoogle,
-  IconKey,
-  IconMail,
-  IconTemplate,
-  IconUpload,
-} from '@tabler/icons-react';
-import { Suspense, lazy, useMemo } from 'react';
+import { IconBrandGoogle, IconKey, IconMail, IconTemplate, IconUpload } from '@tabler/icons-react';
+import { lazy, Suspense, useMemo } from 'react';
 import { useTargetConfig } from '../../store';
 import type { SettingsFormProps } from './types';
 

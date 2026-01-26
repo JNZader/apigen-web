@@ -26,7 +26,6 @@ import type {
   AxumServerConfig,
   EdgeConfig,
   RustAxumOptions,
-  RustPreset,
 } from '../../types';
 
 const LOAD_BALANCING_STRATEGIES = [
@@ -38,13 +37,6 @@ const LOAD_BALANCING_STRATEGIES = [
 export const RustOptionsPanel = memo(function RustOptionsPanel() {
   const rustOptions = useRustOptions();
   const setRustOptions = useProjectStoreInternal((s) => s.setRustOptions);
-
-  const handlePresetChange = useCallback(
-    (preset: RustPreset) => {
-      setRustOptions({ preset });
-    },
-    [setRustOptions],
-  );
 
   const handleServerChange = useCallback(
     <K extends keyof AxumServerConfig>(key: K, value: AxumServerConfig[K]) => {
@@ -100,11 +92,7 @@ export const RustOptionsPanel = memo(function RustOptionsPanel() {
       </Group>
 
       {isEdgePreset && (
-        <Alert
-          icon={<IconInfoCircle size={16} />}
-          color="yellow"
-          data-testid="edge-preset-alert"
-        >
+        <Alert icon={<IconInfoCircle size={16} />} color="yellow" data-testid="edge-preset-alert">
           Edge presets have resource constraints optimized for edge deployment. Some options are
           pre-configured.
         </Alert>
@@ -288,9 +276,7 @@ export const RustOptionsPanel = memo(function RustOptionsPanel() {
                 label="Connection Pooling"
                 description="Enable connection pool"
                 checked={rustOptions.edge.connectionPoolEnabled}
-                onChange={(e) =>
-                  handleEdgeChange('connectionPoolEnabled', e.currentTarget.checked)
-                }
+                onChange={(e) => handleEdgeChange('connectionPoolEnabled', e.currentTarget.checked)}
                 data-testid="edge-pool-enabled-switch"
               />
 
@@ -392,9 +378,7 @@ export const RustOptionsPanel = memo(function RustOptionsPanel() {
                     label="Rate Limit (RPS)"
                     description="Requests per second limit"
                     value={rustOptions.edgeGateway.rateLimitRps}
-                    onChange={(val) =>
-                      handleEdgeGatewayChange('rateLimitRps', Number(val) || 1000)
-                    }
+                    onChange={(val) => handleEdgeGatewayChange('rateLimitRps', Number(val) || 1000)}
                     min={1}
                     max={1000000}
                     data-testid="gateway-rate-limit-input"
