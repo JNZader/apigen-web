@@ -24,15 +24,15 @@ import {
   IconUsers,
 } from '@tabler/icons-react';
 import {
-  applyTemplate,
   filterTemplates,
   PROJECT_TEMPLATES,
   TEMPLATE_CATEGORIES,
   type ProjectTemplate,
   type TemplateCategory,
-} from '../data/templates';
-import { useEntities, useEntityActions, useRelationActions, useServiceActions } from '../store';
-import { notify } from '../utils/notifications';
+} from '../../config/projectTemplates';
+import { useEntities, useEntityActions, useRelationActions, useServiceActions } from '../../store';
+import { notify } from '../../utils/notifications';
+import { applyTemplate } from '../../config/projectTemplates';
 
 interface TemplateSelectorProps {
   readonly opened: boolean;
