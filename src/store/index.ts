@@ -133,6 +133,7 @@ export {
 // Rust Store Exports
 // ============================================================================
 
+export type { RustValidationError, RustValidationResult } from './rustSlice';
 export {
   // Atomic selectors
   useRustActions,
@@ -146,4 +147,3 @@ export {
   useRustServer,
   useRustValidation,
 } from './rustSlice';
-export type { RustValidationError, RustValidationResult } from './rustSlice';
