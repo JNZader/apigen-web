@@ -31,7 +31,6 @@ import { EntityDetailPanel } from '../components/EntityDetailPanel';
 import { EntityForm } from '../components/EntityForm';
 import { EntityList } from '../components/EntityList';
 import { EventMessageDesigner } from '../components/EventMessageDesigner';
-import { KeyboardShortcutsModal } from '../components/KeyboardShortcutsModal';
 import { Layout } from '../components/Layout';
 import { MultiServiceExport } from '../components/MultiServiceExport';
 import { ProjectWizard } from '../components/ProjectWizard';
@@ -178,9 +177,7 @@ export function DesignerPage() {
       }
     },
     onEscape: () => {
-      if (shortcutsOpened) {
-        closeShortcuts();
-      } else if (entityFormOpened) {
+      if (entityFormOpened) {
         closeEntityForm();
         setEditingEntity(null);
       } else if (relationFormOpened) {
@@ -189,7 +186,6 @@ export function DesignerPage() {
         clearSelection();
       }
     },
-    onShowHelp: openShortcuts,
   });
 
   const sidebar = <EntityList onAddEntity={handleAddEntity} />;

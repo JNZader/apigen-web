@@ -349,7 +349,7 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
 
           <Tabs.Panel value="feature-pack" pl="md">
             <ScrollArea h={600}>
-              <FeaturePackSection />
+              <FeaturePackSection form={form} />
             </ScrollArea>
           </Tabs.Panel>
         </Tabs>
