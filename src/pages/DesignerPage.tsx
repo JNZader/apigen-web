@@ -33,6 +33,7 @@ import { EntityList } from '../components/EntityList';
 import { EventMessageDesigner } from '../components/EventMessageDesigner';
 import { Layout } from '../components/Layout';
 import { MultiServiceExport } from '../components/MultiServiceExport';
+import { KeyboardShortcutsModal } from '../components/KeyboardShortcutsModal';
 import { ProjectWizard } from '../components/ProjectWizard';
 import { RelationForm } from '../components/RelationForm';
 import { SectionErrorBoundary } from '../components/SectionErrorBoundary';
