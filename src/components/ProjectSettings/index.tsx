@@ -8,8 +8,10 @@ import {
   IconDatabase,
   IconEye,
   IconFileText,
+  IconFolder,
   IconGlobe,
   IconNetwork,
+  IconPackage,
   IconRefresh,
   IconRocket,
   IconRouter,
@@ -28,9 +30,11 @@ import { CacheSettingsForm } from './CacheSettingsForm';
 import { CorsSettingsForm } from './CorsSettingsForm';
 import { DatabaseSettingsForm } from './DatabaseSettingsForm';
 import { FeaturesSettingsForm } from './FeaturesSettingsForm';
+import { FileStorageSettingsForm } from './FileStorageSettingsForm';
 import { GatewaySettingsForm } from './GatewaySettingsForm';
 import { GraphQLSettingsForm } from './GraphQLSettingsForm';
 import { GrpcSettingsForm } from './GrpcSettingsForm';
+import { FeaturePackSection } from './FeaturePackSection';
 import { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
 import { RateLimitSettingsForm } from './RateLimitSettingsForm';
 import { ResilienceSettingsForm } from './ResilienceSettingsForm';
@@ -70,6 +74,46 @@ interface ProjectSettingsProps {
   readonly opened: boolean;
   readonly onClose: () => void;
 }
+
+// =============================================================================
+// Feature Pack 2025 Forms - Re-exports for external use
+// =============================================================================
+
+// Feature Pack Forms
+export { SocialLoginSettingsForm } from './SocialLoginSettingsForm';
+export { MailServiceSettingsForm } from './MailServiceSettingsForm';
+export { FileStorageSettingsForm } from './FileStorageSettingsForm';
+export { PasswordResetSettingsForm } from './PasswordResetSettingsForm';
+export { JteTemplatesSettingsForm } from './JteTemplatesSettingsForm';
+
+// Containers
+export { FeaturePackSection } from './FeaturePackSection';
+
+// Core Settings Forms
+export { BasicSettingsForm } from './BasicSettingsForm';
+export { CacheSettingsForm } from './CacheSettingsForm';
+export { CorsSettingsForm } from './CorsSettingsForm';
+export { DatabaseSettingsForm } from './DatabaseSettingsForm';
+export { FeaturesSettingsForm } from './FeaturesSettingsForm';
+export { GatewaySettingsForm } from './GatewaySettingsForm';
+export { GraphQLSettingsForm } from './GraphQLSettingsForm';
+export { GrpcSettingsForm } from './GrpcSettingsForm';
+export { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
+export { RateLimitSettingsForm } from './RateLimitSettingsForm';
+export { ResilienceSettingsForm } from './ResilienceSettingsForm';
+export { SecuritySettingsForm } from './SecuritySettingsForm';
+
+// Types
+export type { SettingsFormProps } from './types';
+
+// Future: Language Selector components (Phase 1)
+// export { LanguageSelector } from './LanguageSelector';
+// export { FrameworkCard } from './FrameworkCard';
+// export { FeatureMatrix } from './FeatureMatrix';
+
+// =============================================================================
+// Main ProjectSettings Component
+// =============================================================================
 
 export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
   const project = useProject();
@@ -141,6 +185,9 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             <Tabs.Tab value="cache" leftSection={<IconRefresh size={16} />}>
               Cache
             </Tabs.Tab>
+            <Tabs.Tab value="file-storage" leftSection={<IconFolder size={16} />}>
+              File Storage
+            </Tabs.Tab>
             <Tabs.Tab value="features" leftSection={<IconRocket size={16} />}>
               Features
             </Tabs.Tab>
@@ -161,6 +208,9 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             </Tabs.Tab>
             <Tabs.Tab value="gateway" leftSection={<IconRouter size={16} />}>
               Gateway
+            </Tabs.Tab>
+            <Tabs.Tab value="feature-pack" leftSection={<IconPackage size={16} />}>
+              Feature Pack
             </Tabs.Tab>
           </Tabs.List>
 
@@ -222,6 +272,12 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             </ScrollArea>
           </Tabs.Panel>
 
+          <Tabs.Panel value="file-storage" pl="md">
+            <ScrollArea h={600}>
+              <FileStorageSettingsForm form={form} />
+            </ScrollArea>
+          </Tabs.Panel>
+
           <Tabs.Panel value="features" pl="md">
             <ScrollArea h={600}>
               <FeaturesSettingsForm form={form} />
@@ -261,6 +317,12 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
           <Tabs.Panel value="gateway" pl="md">
             <ScrollArea h={600}>
               <GatewaySettingsForm form={form} />
+            </ScrollArea>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="feature-pack" pl="md">
+            <ScrollArea h={600}>
+              <FeaturePackSection form={form} />
             </ScrollArea>
           </Tabs.Panel>
         </Tabs>
