@@ -1,7 +1,7 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useProjectStoreInternal } from '@/store';
 import { render, resetAllStores, screen, userEvent, waitFor } from '@/test/utils';
 import type { ProjectConfig } from '@/types';
-import { useProjectStoreInternal } from '@/store';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FeaturePackSection } from './FeaturePackSection';
 
 vi.mock('./SocialLoginSettingsForm', async () => {

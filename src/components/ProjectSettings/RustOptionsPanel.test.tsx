@@ -3,11 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useProjectStoreInternal } from '../../store/projectStore';
 import { resetAllStores, TestProviders } from '../../test/utils';
-import {
-  cloudPresetDefaults,
-  defaultProjectConfig,
-  edgeGatewayPresetDefaults,
-} from '../../types';
+import { cloudPresetDefaults, defaultProjectConfig, edgeGatewayPresetDefaults } from '../../types';
 import { RustOptionsPanel } from './RustOptionsPanel';
 
 describe('RustOptionsPanel', () => {
@@ -99,7 +95,6 @@ describe('RustOptionsPanel', () => {
 
   describe('Server Configuration Section', () => {
     it('shows server options in expanded accordion', async () => {
-      const user = userEvent.setup();
       render(
         <TestProviders>
           <RustOptionsPanel />
@@ -325,9 +320,7 @@ describe('RustOptionsPanel', () => {
         expect(screen.getByTestId('edge-max-connections-input')).toBeInTheDocument();
       });
 
-      const maxConnInput = screen
-        .getByTestId('edge-max-connections-input')
-        .querySelector('input');
+      const maxConnInput = screen.getByTestId('edge-max-connections-input').querySelector('input');
       await user.clear(maxConnInput!);
       await user.type(maxConnInput!, '5000');
 

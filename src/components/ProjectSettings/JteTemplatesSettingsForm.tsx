@@ -1,20 +1,19 @@
-import { Alert, Checkbox, Group, List, Paper, Stack, Switch, Text, ThemeIcon } from '@mantine/core';
-import { IconCheck, IconInfoCircle, IconTemplate } from '@tabler/icons-react';
-import { memo } from 'react';
-import { useFeaturePackConfig, useProjectStoreInternal, useTargetConfig } from '../../store';
 import {
   Alert,
   Badge,
   Checkbox,
   Collapse,
   Group,
+  List,
   Paper,
   Stack,
   Switch,
   Text,
+  ThemeIcon,
 } from '@mantine/core';
-import { IconAlertTriangle, IconTemplate } from '@tabler/icons-react';
-import { useTargetConfig } from '../../store';
+import { IconAlertTriangle, IconCheck, IconInfoCircle, IconTemplate } from '@tabler/icons-react';
+import { memo } from 'react';
+import { useFeaturePackConfig, useProjectStoreInternal, useTargetConfig } from '../../store';
 import type { SettingsFormProps } from './types';
 
 const AVAILABLE_TEMPLATES = [
@@ -25,7 +24,7 @@ const AVAILABLE_TEMPLATES = [
   { id: 'email', name: 'Email Templates', description: 'Transactional email layouts' },
 ] as const;
 
-export const JteTemplatesSettingsForm = memo(function JteTemplatesSettingsForm() {
+export const JteTemplatesSettingsFormMemo = memo(function JteTemplatesSettingsFormMemo() {
   const featurePackConfig = useFeaturePackConfig();
   const jteConfig = featurePackConfig.jte;
   const setFeaturePackConfig = useProjectStoreInternal((s) => s.setFeaturePackConfig);
@@ -153,6 +152,7 @@ export const JteTemplatesSettingsForm = memo(function JteTemplatesSettingsForm()
     </Stack>
   );
 });
+
 export function JteTemplatesSettingsForm({ form }: SettingsFormProps) {
   const targetConfig = useTargetConfig();
   const isJavaOrKotlin = targetConfig.language === 'java' || targetConfig.language === 'kotlin';
@@ -206,7 +206,9 @@ export function JteTemplatesSettingsForm({ form }: SettingsFormProps) {
               </Text>
               <ul style={{ margin: 0, paddingLeft: 20 }}>
                 <li>
-                  <Text size="sm">JTE Configuration - Template engine setup in application.properties</Text>
+                  <Text size="sm">
+                    JTE Configuration - Template engine setup in application.properties
+                  </Text>
                 </li>
                 <li>
                   <Text size="sm">Base Layout - Reusable layout template with header/footer</Text>
