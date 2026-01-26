@@ -1,5 +1,5 @@
-import type { ProjectConfig, ProjectFeatures, ProjectModules } from '../../types';
-import { defaultProjectConfig } from '../../types';
+import type { ProjectConfig, ProjectFeatures, ProjectModules } from '@/types';
+import { defaultProjectConfig } from '@/types';
 
 /**
  * Creates mock project modules for testing purposes.
@@ -41,6 +41,12 @@ export function createMockProjectFeatures(
     etagSupport: true,
     domainEvents: true,
     sseUpdates: false,
+    // Feature Pack 2025
+    socialLogin: false,
+    passwordReset: false,
+    mailService: false,
+    fileStorage: false,
+    jteTemplates: false,
     ...overrides,
   };
 }

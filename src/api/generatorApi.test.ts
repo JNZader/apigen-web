@@ -156,7 +156,8 @@ describe('generatorApi', () => {
     });
 
     it('should validate request with Feature Pack 2025 features', () => {
-      const requestWithFeatures: GenerateRequest = {
+      // Using plain object (not GenerateRequest type) since Zod schema allows partial features
+      const requestWithFeatures = {
         ...validRequest,
         project: {
           ...validRequest.project,
@@ -174,7 +175,8 @@ describe('generatorApi', () => {
     });
 
     it('should validate request with modules', () => {
-      const requestWithModules: GenerateRequest = {
+      // Using plain object (not GenerateRequest type) since Zod schema allows partial modules
+      const requestWithModules = {
         ...validRequest,
         project: {
           ...validRequest.project,

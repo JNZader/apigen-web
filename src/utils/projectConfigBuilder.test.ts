@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ProjectConfig, ServiceDesign, TargetConfig } from '../types';
 import { defaultProjectConfig } from '../types/project';
+import { defaultServiceConfig } from '../types/service';
 import { createDefaultTargetConfig } from '../types/target';
 import {
   buildProjectConfig,
@@ -21,13 +22,13 @@ function createTestService(overrides: Partial<ServiceDesign['config']> = {}): Se
     id: 'test-service-id',
     name: 'TestService',
     description: 'A test service',
-    entities: [],
+    color: '#228be6',
+    position: { x: 0, y: 0 },
+    width: 400,
+    height: 300,
+    entityIds: [],
     config: {
-      databaseType: 'postgresql',
-      enableTracing: true,
-      enableMetrics: true,
-      enableCircuitBreaker: true,
-      enableRateLimiting: true,
+      ...defaultServiceConfig,
       ...overrides,
     },
   };
