@@ -109,6 +109,7 @@ export const LoadingSkeleton = memo(function LoadingSkeleton({
     <Stack gap={gap}>
       {showHeader && <Skeleton height={32} radius="sm" width="40%" mb="xs" />}
       {Array.from({ length: rows }).map((_, index) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton items are static, have no state, and never reorder
         <Group key={`skeleton-row-${index}`} gap="sm" wrap="nowrap">
           <Skeleton height={rowHeight} circle width={rowHeight} />
           <Stack gap={4} style={{ flex: 1 }}>
@@ -146,6 +147,7 @@ export const CardSkeleton = memo(function CardSkeleton({
     <Stack gap="md">
       {Array.from({ length: count }).map((_, cardIndex) => (
         <Card
+          // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton items are static, have no state, and never reorder
           key={`card-skeleton-${cardIndex}`}
           shadow="sm"
           padding="lg"
@@ -168,6 +170,7 @@ export const CardSkeleton = memo(function CardSkeleton({
           {showFields && (
             <Stack gap="xs" mt="md">
               {Array.from({ length: fieldCount }).map((_, fieldIndex) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton items are static, have no state, and never reorder
                 <Group key={`field-skeleton-${fieldIndex}`} justify="space-between" wrap="nowrap">
                   <Skeleton height={14} width={`${60 + Math.random() * 30}%`} radius="sm" />
                   <Skeleton height={18} width={60} radius="xl" />
@@ -234,7 +237,11 @@ export const GenerationProgress = memo(function GenerationProgress({
     <Paper p="md" withBorder bg={isComplete ? 'green.0' : 'blue.0'}>
       <Stack gap="sm">
         <Group gap="sm" wrap="nowrap">
-          <Loader size="sm" color={isComplete ? 'green' : 'blue'} type={isComplete ? 'dots' : 'oval'} />
+          <Loader
+            size="sm"
+            color={isComplete ? 'green' : 'blue'}
+            type={isComplete ? 'dots' : 'oval'}
+          />
           <Stack gap={2} style={{ flex: 1 }}>
             <Text size="sm" fw={500}>
               {STEP_LABELS[step]}

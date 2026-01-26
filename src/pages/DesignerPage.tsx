@@ -24,7 +24,7 @@ import {
   IconPlus,
 } from '@tabler/icons-react';
 import { saveAs } from 'file-saver';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { DesignerCanvas } from '../components/canvas/DesignerCanvas';
 import { EntityCard } from '../components/EntityCard';
 import { EntityDetailPanel } from '../components/EntityDetailPanel';
@@ -59,7 +59,7 @@ export function DesignerPage() {
     useDisclosure(false);
   const [serviceExportOpened, { open: openServiceExport, close: closeServiceExport }] =
     useDisclosure(false);
-const [wizardOpened, { open: openWizard, close: closeWizard }] = useDisclosure(false);
+  const [wizardOpened, { open: openWizard, close: closeWizard }] = useDisclosure(false);
   const [shortcutsOpened, { open: openShortcuts, close: closeShortcuts }] = useDisclosure(false);
   const [editingEntity, setEditingEntity] = useState<string | null>(null);
   const [relationSource, setRelationSource] = useState<string>('');
@@ -88,15 +88,21 @@ const [wizardOpened, { open: openWizard, close: closeWizard }] = useDisclosure(f
   // Service actions
   const { addService } = useServiceActions();
 
+  // Track if wizard check has run (to ensure it only runs once on mount)
+  const hasCheckedWizard = useRef(false);
+
   // Auto-open wizard for new projects
   useEffect(() => {
+    if (hasCheckedWizard.current) return;
+    hasCheckedWizard.current = true;
+
     const hasSeenWizard = localStorage.getItem(WIZARD_STORAGE_KEY) === 'true';
     const isNewProject = !project.name && entities.length === 0;
 
     if (isNewProject && !hasSeenWizard) {
       openWizard();
     }
-  }, []); // Only run on mount
+  }, [project.name, entities.length, openWizard]);
 
   // Wizard handlers
   const handleWizardComplete = useCallback(() => {
@@ -471,7 +477,7 @@ const [wizardOpened, { open: openWizard, close: closeWizard }] = useDisclosure(f
         <MultiServiceExport />
       </Drawer>
 
-{/* Project wizard modal */}
+      {/* Project wizard modal */}
       <ProjectWizard
         opened={wizardOpened}
         onClose={handleWizardClose}
