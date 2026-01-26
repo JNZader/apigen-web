@@ -1,13 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useProjectStoreInternal } from '../../store/projectStore';
 import { resetAllStores, TestProviders } from '../../test/utils';
-import {
-  cloudPresetDefaults,
-  defaultProjectConfig,
-  edgeGatewayPresetDefaults,
-} from '../../types';
+import { cloudPresetDefaults, defaultProjectConfig, edgeGatewayPresetDefaults } from '../../types';
 import { RustOptionsPanel } from './RustOptionsPanel';
 
 describe('RustOptionsPanel', () => {
@@ -99,7 +95,6 @@ describe('RustOptionsPanel', () => {
 
   describe('Server Configuration Section', () => {
     it('shows server options in expanded accordion', async () => {
-      const user = userEvent.setup();
       render(
         <TestProviders>
           <RustOptionsPanel />
@@ -120,11 +115,12 @@ describe('RustOptionsPanel', () => {
         </TestProviders>,
       );
 
-      const portInput = screen.getByTestId('server-port-input').querySelector('input');
+      // Mantine NumberInput places data-testid directly on the input element
+      const portInput = screen.getByTestId('server-port-input');
       expect(portInput).toBeInTheDocument();
 
-      await user.clear(portInput!);
-      await user.type(portInput!, '8080');
+      await user.clear(portInput);
+      await user.type(portInput, '8080');
 
       await waitFor(() => {
         const state = useProjectStoreInternal.getState();
@@ -325,11 +321,12 @@ describe('RustOptionsPanel', () => {
         expect(screen.getByTestId('edge-max-connections-input')).toBeInTheDocument();
       });
 
-      const maxConnInput = screen
-        .getByTestId('edge-max-connections-input')
-        .querySelector('input');
-      await user.clear(maxConnInput!);
-      await user.type(maxConnInput!, '5000');
+      // Mantine NumberInput places data-testid directly on the input element
+      const maxConnInput = screen.getByTestId('edge-max-connections-input');
+
+      // Use Ctrl+A to select all content before typing (user.clear and tripleClick don't work reliably with Mantine NumberInput)
+      await user.click(maxConnInput);
+      await user.keyboard('{Control>}a{/Control}5000');
 
       await waitFor(() => {
         const state = useProjectStoreInternal.getState();

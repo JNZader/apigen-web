@@ -98,6 +98,7 @@ export {
   useAllConfigActions,
   useFeaturePackActions,
   useFeaturePackConfig,
+  useFeatures,
   useGoChiOptions,
   useLanguageOptionsActions,
   // Atomic selectors
