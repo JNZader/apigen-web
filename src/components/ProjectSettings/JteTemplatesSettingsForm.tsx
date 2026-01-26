@@ -1,16 +1,6 @@
-import { Alert, 
-  Alert,
-  Badge,Checkbox, 
-  Checkbox,
-  Collapse,Group, 
-  Group,List, Paper, 
-  Paper,Stack, 
-  Stack,Switch, 
-  Switch,Text, 
-  Text,ThemeIcon, } from '@mantine/core';
-import { IconAlertTriangle, IconCheck, IconInfoCircle, IconTemplate, IconTemplate } from '@tabler/icons-react';
-import { memo } from 'react';
-import { useFeaturePackConfig, useProjectStoreInternal, useTargetConfig, useTargetConfig } from '../../store';
+import { Alert, Badge, Checkbox, Collapse, Group, Paper, Stack, Switch, Text } from '@mantine/core';
+import { IconAlertTriangle, IconTemplate } from '@tabler/icons-react';
+import { useTargetConfig } from '../../store';
 import type { SettingsFormProps } from './types';
 
 const AVAILABLE_TEMPLATES = [
@@ -21,134 +11,6 @@ const AVAILABLE_TEMPLATES = [
   { id: 'email', name: 'Email Templates', description: 'Transactional email layouts' },
 ] as const;
 
-export const JteTemplatesSettingsForm = memo(function JteTemplatesSettingsForm() {
-  const featurePackConfig = useFeaturePackConfig();
-  const jteConfig = featurePackConfig.jte;
-  const setFeaturePackConfig = useProjectStoreInternal((s) => s.setFeaturePackConfig);
-  const targetConfig = useTargetConfig();
-
-  const isSupported = ['java', 'kotlin'].includes(targetConfig.language);
-
-  const updateJteConfig = (updates: Partial<typeof jteConfig>) => {
-    setFeaturePackConfig({
-      jte: { ...jteConfig, ...updates },
-    });
-  };
-
-  if (!isSupported) {
-    return (
-      <Alert
-        icon={<IconInfoCircle size={16} />}
-        title="Not Available"
-        color="yellow"
-        data-testid="jte-unavailable-alert"
-      >
-        JTE Templates are only available for Java and Kotlin projects.
-        <br />
-        Current language: {targetConfig.language}
-      </Alert>
-    );
-  }
-
-  const handleTemplateToggle = (templateId: string, checked: boolean) => {
-    const currentTemplates =
-      (jteConfig as { selectedTemplates?: string[] }).selectedTemplates || [];
-    const newTemplates = checked
-      ? [...currentTemplates, templateId]
-      : currentTemplates.filter((t) => t !== templateId);
-    updateJteConfig({ ...jteConfig, selectedTemplates: newTemplates } as typeof jteConfig);
-  };
-
-  const selectedTemplates = (jteConfig as { selectedTemplates?: string[] }).selectedTemplates || [];
-
-  return (
-    <Stack gap="md" data-testid="jte-templates-form">
-      {/* Master toggle */}
-      <Group justify="space-between">
-        <div>
-          <Group gap="xs">
-            <IconTemplate size={20} />
-            <Text fw={500}>Enable JTE Templates</Text>
-          </Group>
-          <Text size="sm" c="dimmed">
-            Generate server-side rendered views using Java Template Engine
-          </Text>
-        </div>
-        <Switch
-          checked={jteConfig.enabled}
-          onChange={(e) => updateJteConfig({ enabled: e.currentTarget.checked })}
-          size="md"
-          data-testid="jte-enable-toggle"
-        />
-      </Group>
-
-      {/* Template selection */}
-      {jteConfig.enabled && (
-        <>
-          <Paper withBorder p="md" radius="md" data-testid="jte-template-selection">
-            <Text fw={500} mb="sm">
-              Select Templates to Generate:
-            </Text>
-            <Stack gap="xs">
-              {AVAILABLE_TEMPLATES.map((template) => (
-                <Checkbox
-                  key={template.id}
-                  data-testid={`jte-template-${template.id}`}
-                  label={
-                    <div>
-                      <Text size="sm" fw={500}>
-                        {template.name}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {template.description}
-                      </Text>
-                    </div>
-                  }
-                  checked={selectedTemplates.includes(template.id)}
-                  onChange={(e) => handleTemplateToggle(template.id, e.currentTarget.checked)}
-                />
-              ))}
-            </Stack>
-          </Paper>
-
-          <Paper withBorder p="md" radius="md">
-            <Text fw={500} mb="sm">
-              This will generate:
-            </Text>
-            <List
-              spacing="xs"
-              size="sm"
-              icon={
-                <ThemeIcon color="green" size={20} radius="xl">
-                  <IconCheck size={12} />
-                </ThemeIcon>
-              }
-            >
-              <List.Item>
-                <Text fw={500}>JTE Configuration</Text>
-                <Text size="xs" c="dimmed">
-                  Template engine setup in application.properties
-                </Text>
-              </List.Item>
-              <List.Item>
-                <Text fw={500}>Base Layout</Text>
-                <Text size="xs" c="dimmed">
-                  Reusable layout template with header/footer
-                </Text>
-              </List.Item>
-              <List.Item>
-                <Text fw={500}>Selected Templates</Text>
-                <Text size="xs" c="dimmed">
-                  {selectedTemplates.length} template(s) selected
-                </Text>
-              </List.Item>
-            </List>
-          </Paper>
-        </>
-      )}
-    </Stack>
-  );
-});
 export function JteTemplatesSettingsForm({ form }: SettingsFormProps) {
   const targetConfig = useTargetConfig();
   const isJavaOrKotlin = targetConfig.language === 'java' || targetConfig.language === 'kotlin';
@@ -202,7 +64,9 @@ export function JteTemplatesSettingsForm({ form }: SettingsFormProps) {
               </Text>
               <ul style={{ margin: 0, paddingLeft: 20 }}>
                 <li>
-                  <Text size="sm">JTE Configuration - Template engine setup in application.properties</Text>
+                  <Text size="sm">
+                    JTE Configuration - Template engine setup in application.properties
+                  </Text>
                 </li>
                 <li>
                   <Text size="sm">Base Layout - Reusable layout template with header/footer</Text>

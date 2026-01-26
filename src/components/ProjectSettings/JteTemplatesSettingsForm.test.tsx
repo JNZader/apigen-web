@@ -1,9 +1,23 @@
+import { useForm } from '@mantine/form';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useProjectStoreInternal } from '../../store/projectStore';
 import { resetAllStores, TestProviders } from '../../test/utils';
+import { defaultProjectConfig, type ProjectConfig } from '../../types';
 import { JteTemplatesSettingsForm } from './JteTemplatesSettingsForm';
+
+function TestWrapper({ initialValues }: { initialValues?: Partial<ProjectConfig> }) {
+  const form = useForm<ProjectConfig>({
+    initialValues: { ...defaultProjectConfig, ...initialValues },
+  });
+
+  return (
+    <TestProviders>
+      <JteTemplatesSettingsForm form={form} />
+    </TestProviders>
+  );
+}
 
 describe('JteTemplatesSettingsForm', () => {
   beforeEach(() => {
@@ -14,128 +28,107 @@ describe('JteTemplatesSettingsForm', () => {
     it('renders enable toggle for Java', () => {
       useProjectStoreInternal.setState({
         project: {
-          ...useProjectStoreInternal.getState().project,
+          ...defaultProjectConfig,
           targetConfig: {
-            ...useProjectStoreInternal.getState().project.targetConfig,
+            ...defaultProjectConfig.targetConfig,
             language: 'java',
+            framework: 'spring-boot',
           },
         },
       });
 
-      render(
-        <TestProviders>
-          <JteTemplatesSettingsForm />
-        </TestProviders>,
-      );
+      render(<TestWrapper />);
 
-      expect(screen.getByTestId('jte-enable-toggle')).toBeInTheDocument();
       expect(screen.getByText('Enable JTE Templates')).toBeInTheDocument();
+      expect(screen.getByRole('switch')).toBeInTheDocument();
     });
 
     it('renders enable toggle for Kotlin', () => {
       useProjectStoreInternal.setState({
         project: {
-          ...useProjectStoreInternal.getState().project,
+          ...defaultProjectConfig,
           targetConfig: {
-            ...useProjectStoreInternal.getState().project.targetConfig,
+            ...defaultProjectConfig.targetConfig,
             language: 'kotlin',
+            framework: 'spring-boot',
           },
         },
       });
 
-      render(
-        <TestProviders>
-          <JteTemplatesSettingsForm />
-        </TestProviders>,
-      );
+      render(<TestWrapper />);
 
-      expect(screen.getByTestId('jte-enable-toggle')).toBeInTheDocument();
       expect(screen.getByText('Enable JTE Templates')).toBeInTheDocument();
     });
 
     it('shows unavailable for Python', () => {
       useProjectStoreInternal.setState({
         project: {
-          ...useProjectStoreInternal.getState().project,
+          ...defaultProjectConfig,
           targetConfig: {
-            ...useProjectStoreInternal.getState().project.targetConfig,
+            ...defaultProjectConfig.targetConfig,
             language: 'python',
+            framework: 'fastapi',
           },
         },
       });
 
-      render(
-        <TestProviders>
-          <JteTemplatesSettingsForm />
-        </TestProviders>,
-      );
+      render(<TestWrapper />);
 
-      expect(screen.getByTestId('jte-unavailable-alert')).toBeInTheDocument();
-      expect(screen.getByText('Not Available')).toBeInTheDocument();
-      expect(screen.getByText(/Current language: python/)).toBeInTheDocument();
+      expect(screen.getByText('Language Not Supported')).toBeInTheDocument();
+      expect(
+        screen.getByText(/JTE.*templates are only available for Java and Kotlin/),
+      ).toBeInTheDocument();
     });
 
     it('shows unavailable for TypeScript', () => {
       useProjectStoreInternal.setState({
         project: {
-          ...useProjectStoreInternal.getState().project,
+          ...defaultProjectConfig,
           targetConfig: {
-            ...useProjectStoreInternal.getState().project.targetConfig,
+            ...defaultProjectConfig.targetConfig,
             language: 'typescript',
+            framework: 'nestjs',
           },
         },
       });
 
-      render(
-        <TestProviders>
-          <JteTemplatesSettingsForm />
-        </TestProviders>,
-      );
+      render(<TestWrapper />);
 
-      expect(screen.getByTestId('jte-unavailable-alert')).toBeInTheDocument();
-      expect(screen.getByText(/Current language: typescript/)).toBeInTheDocument();
+      expect(screen.getByText('Language Not Supported')).toBeInTheDocument();
     });
 
     it('shows unavailable for Go', () => {
       useProjectStoreInternal.setState({
         project: {
-          ...useProjectStoreInternal.getState().project,
+          ...defaultProjectConfig,
           targetConfig: {
-            ...useProjectStoreInternal.getState().project.targetConfig,
+            ...defaultProjectConfig.targetConfig,
             language: 'go',
+            framework: 'gin',
           },
         },
       });
 
-      render(
-        <TestProviders>
-          <JteTemplatesSettingsForm />
-        </TestProviders>,
-      );
+      render(<TestWrapper />);
 
-      expect(screen.getByTestId('jte-unavailable-alert')).toBeInTheDocument();
-      expect(screen.getByText(/Current language: go/)).toBeInTheDocument();
+      expect(screen.getByText('Language Not Supported')).toBeInTheDocument();
     });
 
     it('shows unavailable for Rust', () => {
       useProjectStoreInternal.setState({
         project: {
-          ...useProjectStoreInternal.getState().project,
+          ...defaultProjectConfig,
           targetConfig: {
-            ...useProjectStoreInternal.getState().project.targetConfig,
+            ...defaultProjectConfig.targetConfig,
             language: 'rust',
+            framework: 'axum',
           },
         },
       });
 
-      render(
-        <TestProviders>
-          <JteTemplatesSettingsForm />
-        </TestProviders>,
-      );
+      render(<TestWrapper />);
 
-      expect(screen.getByTestId('jte-unavailable-alert')).toBeInTheDocument();
-      expect(screen.getByText(/Current language: rust/)).toBeInTheDocument();
+      expect(screen.getByText('Language Not Supported')).toBeInTheDocument();
     });
   });
 
@@ -143,180 +136,148 @@ describe('JteTemplatesSettingsForm', () => {
     beforeEach(() => {
       useProjectStoreInternal.setState({
         project: {
-          ...useProjectStoreInternal.getState().project,
+          ...defaultProjectConfig,
           targetConfig: {
-            ...useProjectStoreInternal.getState().project.targetConfig,
+            ...defaultProjectConfig.targetConfig,
             language: 'java',
-          },
-          featurePackConfig: {
-            ...useProjectStoreInternal.getState().project.featurePackConfig,
-            jte: {
-              ...useProjectStoreInternal.getState().project.featurePackConfig.jte,
-              enabled: true,
-            },
+            framework: 'spring-boot',
           },
         },
       });
     });
 
-    it('shows template selection when enabled', () => {
+    it('shows template options when enabled', () => {
       render(
-        <TestProviders>
-          <JteTemplatesSettingsForm />
-        </TestProviders>,
+        <TestWrapper
+          initialValues={{
+            features: { ...defaultProjectConfig.features, jteTemplates: true },
+          }}
+        />,
       );
 
-      expect(screen.getByTestId('jte-template-selection')).toBeInTheDocument();
-      expect(screen.getByText('Select Templates to Generate:')).toBeInTheDocument();
-    });
-
-    it('shows Login Page template option', () => {
-      render(
-        <TestProviders>
-          <JteTemplatesSettingsForm />
-        </TestProviders>,
-      );
-
-      expect(screen.getByTestId('jte-template-login')).toBeInTheDocument();
+      expect(screen.getByText('Select Templates')).toBeInTheDocument();
       expect(screen.getByText('Login Page')).toBeInTheDocument();
-    });
-
-    it('shows Dashboard template option', () => {
-      render(
-        <TestProviders>
-          <JteTemplatesSettingsForm />
-        </TestProviders>,
-      );
-
-      expect(screen.getByTestId('jte-template-dashboard')).toBeInTheDocument();
       expect(screen.getByText('Dashboard')).toBeInTheDocument();
     });
 
-    it('hides template selection when disabled', () => {
-      useProjectStoreInternal.setState({
-        project: {
-          ...useProjectStoreInternal.getState().project,
-          featurePackConfig: {
-            ...useProjectStoreInternal.getState().project.featurePackConfig,
-            jte: {
-              ...useProjectStoreInternal.getState().project.featurePackConfig.jte,
-              enabled: false,
-            },
-          },
-        },
-      });
-
+    it('shows all available templates', () => {
       render(
-        <TestProviders>
-          <JteTemplatesSettingsForm />
-        </TestProviders>,
+        <TestWrapper
+          initialValues={{
+            features: { ...defaultProjectConfig.features, jteTemplates: true },
+          }}
+        />,
       );
 
-      expect(screen.queryByTestId('jte-template-selection')).not.toBeInTheDocument();
+      expect(screen.getByText('Login Page')).toBeInTheDocument();
+      expect(screen.getByText('Registration Page')).toBeInTheDocument();
+      expect(screen.getByText('Dashboard')).toBeInTheDocument();
+      expect(screen.getByText('Error Pages')).toBeInTheDocument();
+      expect(screen.getByText('Email Templates')).toBeInTheDocument();
+    });
+
+    it('shows what will be generated section', () => {
+      render(
+        <TestWrapper
+          initialValues={{
+            features: { ...defaultProjectConfig.features, jteTemplates: true },
+          }}
+        />,
+      );
+
+      expect(screen.getByText('What will be generated')).toBeInTheDocument();
+      expect(screen.getByText(/JTE Configuration/)).toBeInTheDocument();
+      expect(screen.getByText(/Base Layout/)).toBeInTheDocument();
+    });
+
+    it('hides template selection when disabled', () => {
+      render(
+        <TestWrapper
+          initialValues={{
+            features: { ...defaultProjectConfig.features, jteTemplates: false },
+          }}
+        />,
+      );
+
+      expect(screen.queryByText('Select Templates')).not.toBeVisible();
     });
   });
 
-  describe('Store Interactions', () => {
+  describe('Toggle Interactions', () => {
     beforeEach(() => {
       useProjectStoreInternal.setState({
         project: {
-          ...useProjectStoreInternal.getState().project,
+          ...defaultProjectConfig,
           targetConfig: {
-            ...useProjectStoreInternal.getState().project.targetConfig,
+            ...defaultProjectConfig.targetConfig,
             language: 'java',
+            framework: 'spring-boot',
           },
         },
       });
     });
 
-    it('calls setFeaturePackConfig when toggling enable', async () => {
+    it('toggles JTE feature on click', async () => {
       const user = userEvent.setup();
+      render(<TestWrapper />);
 
-      render(
-        <TestProviders>
-          <JteTemplatesSettingsForm />
-        </TestProviders>,
-      );
+      const toggle = screen.getByRole('switch', { name: /Enable JTE Templates/i });
+      expect(toggle).not.toBeChecked();
 
-      const toggle = screen.getByTestId('jte-enable-toggle');
       await user.click(toggle);
 
       await waitFor(() => {
-        const state = useProjectStoreInternal.getState();
-        expect(state.project.featurePackConfig.jte.enabled).toBe(true);
+        expect(toggle).toBeChecked();
       });
     });
 
-    it('calls updateJteConfig when toggling template', async () => {
+    it('shows templates after enabling', async () => {
       const user = userEvent.setup();
+      render(<TestWrapper />);
 
-      useProjectStoreInternal.setState({
-        project: {
-          ...useProjectStoreInternal.getState().project,
-          featurePackConfig: {
-            ...useProjectStoreInternal.getState().project.featurePackConfig,
-            jte: {
-              ...useProjectStoreInternal.getState().project.featurePackConfig.jte,
-              enabled: true,
+      const toggle = screen.getByRole('switch', { name: /Enable JTE Templates/i });
+      await user.click(toggle);
+
+      await waitFor(() => {
+        expect(screen.getByText('Select Templates')).toBeInTheDocument();
+      });
+    });
+
+    it('can select template checkboxes', async () => {
+      const user = userEvent.setup();
+      render(
+        <TestWrapper
+          initialValues={{
+            features: { ...defaultProjectConfig.features, jteTemplates: true },
+          }}
+        />,
+      );
+
+      const loginCheckbox = screen.getByRole('checkbox', { name: /Login Page/i });
+      await user.click(loginCheckbox);
+
+      await waitFor(() => {
+        expect(loginCheckbox).toBeChecked();
+      });
+    });
+
+    it('shows selected count badge', () => {
+      render(
+        <TestWrapper
+          initialValues={{
+            features: { ...defaultProjectConfig.features, jteTemplates: true },
+            featurePackConfig: {
+              ...defaultProjectConfig.featurePackConfig,
+              jte: {
+                ...defaultProjectConfig.featurePackConfig.jte,
+                selectedTemplates: ['login', 'dashboard'],
+              },
             },
-          },
-        },
-      });
-
-      render(
-        <TestProviders>
-          <JteTemplatesSettingsForm />
-        </TestProviders>,
+          }}
+        />,
       );
 
-      const loginCheckbox = screen.getByTestId('jte-template-login');
-      await user.click(loginCheckbox);
-
-      await waitFor(() => {
-        const state = useProjectStoreInternal.getState();
-        const selectedTemplates = (
-          state.project.featurePackConfig.jte as { selectedTemplates?: string[] }
-        ).selectedTemplates;
-        expect(selectedTemplates).toContain('login');
-      });
-    });
-
-    it('removes template when unchecking', async () => {
-      const user = userEvent.setup();
-
-      const baseProject = useProjectStoreInternal.getState().project;
-      const baseJte = baseProject.featurePackConfig.jte;
-      useProjectStoreInternal.setState({
-        project: {
-          ...baseProject,
-          featurePackConfig: {
-            ...baseProject.featurePackConfig,
-            jte: {
-              ...baseJte,
-              enabled: true,
-              selectedTemplates: ['login', 'dashboard'],
-            } as typeof baseJte & { selectedTemplates: string[] },
-          },
-        },
-      });
-
-      render(
-        <TestProviders>
-          <JteTemplatesSettingsForm />
-        </TestProviders>,
-      );
-
-      const loginCheckbox = screen.getByTestId('jte-template-login');
-      await user.click(loginCheckbox);
-
-      await waitFor(() => {
-        const state = useProjectStoreInternal.getState();
-        const selectedTemplates = (
-          state.project.featurePackConfig.jte as { selectedTemplates?: string[] }
-        ).selectedTemplates;
-        expect(selectedTemplates).not.toContain('login');
-        expect(selectedTemplates).toContain('dashboard');
-      });
+      expect(screen.getByText('2 selected')).toBeInTheDocument();
     });
   });
 });

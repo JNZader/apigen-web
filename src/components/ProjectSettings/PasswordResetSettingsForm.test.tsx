@@ -1,9 +1,23 @@
-import { render, screen } from '@testing-library/react';
+import { useForm } from '@mantine/form';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useProjectStoreInternal } from '../../store/projectStore';
 import { resetAllStores, TestProviders } from '../../test/utils';
+import { defaultProjectConfig, type ProjectConfig } from '../../types';
 import { PasswordResetSettingsForm } from './PasswordResetSettingsForm';
+
+function TestWrapper({ initialValues }: { initialValues?: Partial<ProjectConfig> }) {
+  const form = useForm<ProjectConfig>({
+    initialValues: { ...defaultProjectConfig, ...initialValues },
+  });
+
+  return (
+    <TestProviders>
+      <PasswordResetSettingsForm form={form} />
+    </TestProviders>
+  );
+}
 
 describe('PasswordResetSettingsForm', () => {
   beforeEach(() => {
@@ -11,150 +25,167 @@ describe('PasswordResetSettingsForm', () => {
   });
 
   it('renders enable toggle', () => {
-    render(
-      <TestProviders>
-        <PasswordResetSettingsForm />
-      </TestProviders>,
-    );
+    render(<TestWrapper />);
 
-    expect(screen.getByTestId('password-reset-toggle')).toBeInTheDocument();
     expect(screen.getByText('Enable Password Reset')).toBeInTheDocument();
+    expect(
+      screen.getByText('Generate password reset functionality with email-based recovery'),
+    ).toBeInTheDocument();
   });
 
-  it('shows warning when mail is not enabled', async () => {
-    const user = userEvent.setup();
-
-    // Enable password reset but mail is disabled by default
+  it('shows warning when mail is not enabled but password reset is', () => {
     render(
-      <TestProviders>
-        <PasswordResetSettingsForm />
-      </TestProviders>,
-    );
-
-    const toggle = screen.getByTestId('password-reset-toggle');
-    await user.click(toggle);
-
-    expect(screen.getByTestId('mail-required-warning')).toBeInTheDocument();
-    expect(screen.getByText('Mail Service Required')).toBeInTheDocument();
-  });
-
-  it('does not show warning when mail is enabled', async () => {
-    const user = userEvent.setup();
-
-    // Enable mail service first
-    useProjectStoreInternal.setState((state) => ({
-      project: {
-        ...state.project,
-        featurePackConfig: {
-          ...state.project.featurePackConfig,
-          mail: {
-            ...state.project.featurePackConfig.mail,
-            enabled: true,
+      <TestWrapper
+        initialValues={{
+          features: {
+            ...defaultProjectConfig.features,
+            passwordReset: true,
+            mailService: false,
           },
-        },
-      },
-    }));
-
-    render(
-      <TestProviders>
-        <PasswordResetSettingsForm />
-      </TestProviders>,
+        }}
+      />,
     );
 
-    const toggle = screen.getByTestId('password-reset-toggle');
-    await user.click(toggle);
-
-    expect(screen.queryByTestId('mail-required-warning')).not.toBeInTheDocument();
+    expect(screen.getByText('Mail Service Required')).toBeInTheDocument();
+    expect(screen.getByText(/Password Reset requires Mail Service/)).toBeInTheDocument();
   });
 
-  it('shows what gets generated when enabled', async () => {
-    const user = userEvent.setup();
-
+  it('does not show warning when mail is enabled', () => {
     render(
-      <TestProviders>
-        <PasswordResetSettingsForm />
-      </TestProviders>,
+      <TestWrapper
+        initialValues={{
+          features: {
+            ...defaultProjectConfig.features,
+            passwordReset: true,
+            mailService: true,
+          },
+        }}
+      />,
     );
 
-    // Initially, generated items should not be visible
-    expect(screen.queryByTestId('generated-items-section')).not.toBeInTheDocument();
-
-    const toggle = screen.getByTestId('password-reset-toggle');
-    await user.click(toggle);
-
-    expect(screen.getByTestId('generated-items-section')).toBeInTheDocument();
-    expect(screen.getByText('This will generate:')).toBeInTheDocument();
+    expect(screen.queryByText('Mail Service Required')).not.toBeInTheDocument();
   });
 
-  it('shows PasswordResetToken in generated list', async () => {
-    const user = userEvent.setup();
-
+  it('shows generated components when enabled', () => {
     render(
-      <TestProviders>
-        <PasswordResetSettingsForm />
-      </TestProviders>,
+      <TestWrapper
+        initialValues={{
+          features: {
+            ...defaultProjectConfig.features,
+            passwordReset: true,
+          },
+        }}
+      />,
     );
 
-    const toggle = screen.getByTestId('password-reset-toggle');
-    await user.click(toggle);
+    expect(screen.getByText('Generated Components')).toBeInTheDocument();
+    expect(screen.getByText('The following will be generated:')).toBeInTheDocument();
+  });
 
-    expect(screen.getByTestId('generated-item-token')).toBeInTheDocument();
+  it('shows PasswordResetToken in generated list', () => {
+    render(
+      <TestWrapper
+        initialValues={{
+          features: {
+            ...defaultProjectConfig.features,
+            passwordReset: true,
+          },
+        }}
+      />,
+    );
+
     expect(screen.getByText('PasswordResetToken')).toBeInTheDocument();
+    expect(screen.getByText(/Entity for storing reset tokens/)).toBeInTheDocument();
   });
 
-  it('shows PasswordResetService in generated list', async () => {
-    const user = userEvent.setup();
-
+  it('shows PasswordResetService in generated list', () => {
     render(
-      <TestProviders>
-        <PasswordResetSettingsForm />
-      </TestProviders>,
+      <TestWrapper
+        initialValues={{
+          features: {
+            ...defaultProjectConfig.features,
+            passwordReset: true,
+          },
+        }}
+      />,
     );
 
-    const toggle = screen.getByTestId('password-reset-toggle');
-    await user.click(toggle);
-
-    expect(screen.getByTestId('generated-item-service')).toBeInTheDocument();
     expect(screen.getByText('PasswordResetService')).toBeInTheDocument();
+    expect(screen.getByText(/Business logic for password reset flow/)).toBeInTheDocument();
   });
 
-  it('shows PasswordResetController in generated list', async () => {
-    const user = userEvent.setup();
-
+  it('shows PasswordResetController in generated list', () => {
     render(
-      <TestProviders>
-        <PasswordResetSettingsForm />
-      </TestProviders>,
+      <TestWrapper
+        initialValues={{
+          features: {
+            ...defaultProjectConfig.features,
+            passwordReset: true,
+          },
+        }}
+      />,
     );
 
-    const toggle = screen.getByTestId('password-reset-toggle');
-    await user.click(toggle);
-
-    expect(screen.getByTestId('generated-item-controller')).toBeInTheDocument();
     expect(screen.getByText('PasswordResetController')).toBeInTheDocument();
+    expect(screen.getByText(/REST endpoints for password reset/)).toBeInTheDocument();
   });
 
-  it('shows unavailable for Rust', () => {
-    // Set language to Rust
-    useProjectStoreInternal.setState((state) => ({
+  it('shows limited support warning for Rust', () => {
+    useProjectStoreInternal.setState({
       project: {
-        ...state.project,
+        ...defaultProjectConfig,
         targetConfig: {
-          ...state.project.targetConfig,
+          ...defaultProjectConfig.targetConfig,
           language: 'rust',
           framework: 'axum',
         },
       },
-    }));
+    });
 
     render(
-      <TestProviders>
-        <PasswordResetSettingsForm />
-      </TestProviders>,
+      <TestWrapper
+        initialValues={{
+          features: {
+            ...defaultProjectConfig.features,
+            passwordReset: true,
+          },
+        }}
+      />,
     );
 
-    expect(screen.getByTestId('password-reset-unavailable-alert')).toBeInTheDocument();
-    expect(screen.getByText('Not Available')).toBeInTheDocument();
-    expect(screen.getByText(/Password Reset is not available for rust/)).toBeInTheDocument();
+    expect(screen.getByText('Limited Support for Rust')).toBeInTheDocument();
+    expect(screen.getByText(/JTE Templates are not available for Rust/)).toBeInTheDocument();
+  });
+
+  it('shows generated endpoints when enabled', () => {
+    render(
+      <TestWrapper
+        initialValues={{
+          features: {
+            ...defaultProjectConfig.features,
+            passwordReset: true,
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText('Generated Endpoints')).toBeInTheDocument();
+    expect(screen.getByText('POST /api/auth/password/forgot')).toBeInTheDocument();
+    expect(screen.getByText('POST /api/auth/password/reset')).toBeInTheDocument();
+  });
+
+  it('toggles password reset on click', async () => {
+    const user = userEvent.setup();
+    render(<TestWrapper />);
+
+    // Find the switch by its role (Mantine uses role="switch")
+    const toggle = screen.getByRole('switch');
+    expect(toggle).not.toBeChecked();
+
+    await user.click(toggle);
+
+    await waitFor(() => {
+      expect(toggle).toBeChecked();
+    });
   });
 });
