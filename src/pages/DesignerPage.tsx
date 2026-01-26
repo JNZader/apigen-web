@@ -24,7 +24,7 @@ import {
   IconPlus,
 } from '@tabler/icons-react';
 import { saveAs } from 'file-saver';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { DesignerCanvas } from '../components/canvas/DesignerCanvas';
 import { EntityCard } from '../components/EntityCard';
 import { EntityDetailPanel } from '../components/EntityDetailPanel';
@@ -99,14 +99,14 @@ const [wizardOpened, { open: openWizard, close: closeWizard }] = useDisclosure(f
   }, []); // Only run on mount
 
   // Wizard handlers
-  const handleWizardComplete = () => {
+  const handleWizardComplete = useCallback(() => {
     localStorage.setItem(WIZARD_STORAGE_KEY, 'true');
-  };
+  }, []);
 
-  const handleWizardClose = () => {
+  const handleWizardClose = useCallback(() => {
     localStorage.setItem(WIZARD_STORAGE_KEY, 'true');
     closeWizard();
-  };
+  }, [closeWizard]);
 
   // Event handlers
   const handleEditEntity = (entityId: string) => {

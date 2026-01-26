@@ -21,7 +21,7 @@ import {
 import type { Node } from '@xyflow/react';
 import { getNodesBounds } from '@xyflow/react';
 import { toPng, toSvg } from 'html-to-image';
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import type { CanvasView } from '../../store/projectStore';
 import {
   useCanvasView,
@@ -50,7 +50,7 @@ interface CanvasToolbarProps {
   readonly onOpenWizard?: () => void;
 }
 
-export function CanvasToolbar({
+export const CanvasToolbar = memo(function CanvasToolbar({
   nodes,
   reactFlowWrapper,
   onAddEntity,
@@ -319,4 +319,4 @@ export function CanvasToolbar({
       </Group>
     </Paper>
   );
-}
+});
