@@ -1,7 +1,7 @@
 import { Collapse, Divider, NumberInput, Stack, Switch } from '@mantine/core';
 import type { SettingsFormProps } from './types';
 
-export function GrpcSettingsForm({ form }: SettingsFormProps) {
+export function GrpcSettingsForm({ form }: Readonly<SettingsFormProps>) {
   return (
     <Stack>
       <Switch

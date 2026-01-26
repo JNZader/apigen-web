@@ -2,7 +2,7 @@ import { Alert, NumberInput, Stack, Switch, TagsInput, Text } from '@mantine/cor
 import { IconInfoCircle } from '@tabler/icons-react';
 import type { SettingsFormProps } from './types';
 
-export function CorsSettingsForm({ form }: SettingsFormProps) {
+export function CorsSettingsForm({ form }: Readonly<SettingsFormProps>) {
   return (
     <Stack>
       <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light" mb="md">

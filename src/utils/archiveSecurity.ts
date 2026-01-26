@@ -48,7 +48,7 @@ export async function addServiceToZip(
     );
   }
 
-  const serviceZip = await JSZip.loadAsync(serviceBlob);
+  const serviceZip = await JSZip.loadAsync(serviceBlob); // NOSONAR S5042 - Safe: size/count/path validated
   const folder = zip.folder(artifactId);
   if (!folder) return;
 

@@ -2,7 +2,7 @@ import { Alert, Select, Stack, Text, TextInput } from '@mantine/core';
 import { IconInfoCircle } from '@tabler/icons-react';
 import type { SettingsFormProps } from './types';
 
-export function BasicSettingsForm({ form }: SettingsFormProps) {
+export function BasicSettingsForm({ form }: Readonly<SettingsFormProps>) {
   const handleGroupIdChange = (value: string) => {
     form.setFieldValue('groupId', value);
     if (form.values.artifactId) {

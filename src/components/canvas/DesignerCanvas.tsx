@@ -57,6 +57,7 @@ interface DesignerCanvasProps {
   readonly onAddRelation: (sourceId: string, targetId: string) => void;
   readonly onAddService?: () => void;
   readonly onConfigureService?: (id: string) => void;
+  readonly onOpenWizard?: () => void;
 }
 
 export function DesignerCanvas({
@@ -66,6 +67,7 @@ export function DesignerCanvas({
   onAddRelation,
   onAddService,
   onConfigureService,
+  onOpenWizard,
 }: Readonly<DesignerCanvasProps>) {
   const { colorScheme } = useMantineColorScheme();
 
@@ -90,8 +92,8 @@ export function DesignerCanvas({
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
   // Track which service is being hovered during entity drag (for visual feedback)
-  // setDropTargetServiceId is kept for potential future use (drag-to-assign feature)
-  const [dropTargetServiceId, _setDropTargetServiceId] = useState<string | null>(null);
+  // Note: setter is unused but kept for future drag-to-assign feature implementation
+  const [dropTargetServiceId] = useState<string | null>(null);
 
   // Service connection form state management
   const {
@@ -297,6 +299,7 @@ export function DesignerCanvas({
             reactFlowWrapper={reactFlowWrapper}
             onAddEntity={onAddEntity}
             onAddService={onAddService}
+            onOpenWizard={onOpenWizard}
           />
         </Panel>
 

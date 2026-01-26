@@ -56,160 +56,164 @@ interface RustSliceState {
 // Validation Logic
 // ============================================================================
 
-function validateRustOptions(options: RustAxumOptions): RustValidationResult {
-  const errors: RustValidationError[] = [];
+// Validation rule type for declarative validation
+interface ValidationRule {
+  field: string;
+  isValid: boolean;
+  message: string;
+}
 
-  // Server validation
-  if (options.server.port < 1 || options.server.port > 65535) {
-    errors.push({
+// Helper: Validate server options
+function validateServerOptions(server: AxumServerConfig): RustValidationError[] {
+  const rules: ValidationRule[] = [
+    {
       field: 'server.port',
+      isValid: server.port >= 1 && server.port <= 65535,
       message: 'Port must be between 1 and 65535',
-    });
-  }
-
-  if (options.server.workers < 0) {
-    errors.push({
+    },
+    {
       field: 'server.workers',
+      isValid: server.workers >= 0,
       message: 'Workers must be 0 or greater (0 = auto-detect)',
-    });
-  }
-
-  if (options.server.maxBodySizeMb < 1) {
-    errors.push({
+    },
+    {
       field: 'server.maxBodySizeMb',
+      isValid: server.maxBodySizeMb >= 1,
       message: 'Max body size must be at least 1 MB',
-    });
-  }
-
-  if (options.server.keepAliveTimeoutSeconds < 1) {
-    errors.push({
+    },
+    {
       field: 'server.keepAliveTimeoutSeconds',
+      isValid: server.keepAliveTimeoutSeconds >= 1,
       message: 'Keep-alive timeout must be at least 1 second',
-    });
-  }
-
-  if (options.server.gracefulShutdownTimeoutSeconds < 1) {
-    errors.push({
+    },
+    {
       field: 'server.gracefulShutdownTimeoutSeconds',
+      isValid: server.gracefulShutdownTimeoutSeconds >= 1,
       message: 'Graceful shutdown timeout must be at least 1 second',
-    });
-  }
+    },
+  ];
+  return rules.filter((r) => !r.isValid).map(({ field, message }) => ({ field, message }));
+}
 
-  // Middleware validation
-  if (options.middleware.compressionLevel < 1 || options.middleware.compressionLevel > 9) {
-    errors.push({
+// Helper: Validate middleware options
+function validateMiddlewareOptions(middleware: AxumMiddlewareConfig): RustValidationError[] {
+  const rules: ValidationRule[] = [
+    {
       field: 'middleware.compressionLevel',
+      isValid: middleware.compressionLevel >= 1 && middleware.compressionLevel <= 9,
       message: 'Compression level must be between 1 and 9',
-    });
-  }
+    },
+  ];
+  return rules.filter((r) => !r.isValid).map(({ field, message }) => ({ field, message }));
+}
 
-  // Edge validation
-  if (options.edge.maxMemoryMb < 0) {
-    errors.push({
+// Helper: Validate edge options
+function validateEdgeOptions(edge: EdgeConfig): RustValidationError[] {
+  const rules: ValidationRule[] = [
+    {
       field: 'edge.maxMemoryMb',
+      isValid: edge.maxMemoryMb >= 0,
       message: 'Max memory must be 0 or greater (0 = unlimited)',
-    });
-  }
-
-  if (options.edge.maxConnections < 1) {
-    errors.push({
+    },
+    {
       field: 'edge.maxConnections',
+      isValid: edge.maxConnections >= 1,
       message: 'Max connections must be at least 1',
-    });
-  }
-
-  if (options.edge.connectionTimeoutMs < 100) {
-    errors.push({
+    },
+    {
       field: 'edge.connectionTimeoutMs',
+      isValid: edge.connectionTimeoutMs >= 100,
       message: 'Connection timeout must be at least 100ms',
-    });
-  }
-
-  if (options.edge.requestTimeoutMs < 100) {
-    errors.push({
+    },
+    {
       field: 'edge.requestTimeoutMs',
+      isValid: edge.requestTimeoutMs >= 100,
       message: 'Request timeout must be at least 100ms',
-    });
-  }
-
-  if (options.edge.connectionPoolSize < 1) {
-    errors.push({
+    },
+    {
       field: 'edge.connectionPoolSize',
+      isValid: edge.connectionPoolSize >= 1,
       message: 'Connection pool size must be at least 1',
-    });
-  }
+    },
+  ];
+  return rules.filter((r) => !r.isValid).map(({ field, message }) => ({ field, message }));
+}
 
-  // Edge Gateway validation (when preset is edge-gateway)
-  if (options.preset === 'edge-gateway') {
-    if (options.edgeGateway.cacheTtlSeconds < 0) {
-      errors.push({
-        field: 'edgeGateway.cacheTtlSeconds',
-        message: 'Cache TTL must be 0 or greater',
-      });
-    }
+// Helper: Validate edge gateway options
+function validateEdgeGatewayOptions(edgeGateway: EdgeGatewayConfig): RustValidationError[] {
+  const rules: ValidationRule[] = [
+    {
+      field: 'edgeGateway.cacheTtlSeconds',
+      isValid: edgeGateway.cacheTtlSeconds >= 0,
+      message: 'Cache TTL must be 0 or greater',
+    },
+    {
+      field: 'edgeGateway.rateLimitRps',
+      isValid: edgeGateway.rateLimitRps >= 1,
+      message: 'Rate limit must be at least 1 request per second',
+    },
+  ];
+  return rules.filter((r) => !r.isValid).map(({ field, message }) => ({ field, message }));
+}
 
-    if (options.edgeGateway.rateLimitRps < 1) {
-      errors.push({
-        field: 'edgeGateway.rateLimitRps',
-        message: 'Rate limit must be at least 1 request per second',
-      });
-    }
-  }
+// Helper: Validate edge anomaly options
+function validateEdgeAnomalyOptions(edgeAnomaly: EdgeAnomalyConfig): RustValidationError[] {
+  const rules: ValidationRule[] = [
+    {
+      field: 'edgeAnomaly.bufferSizeKb',
+      isValid: edgeAnomaly.bufferSizeKb >= 1,
+      message: 'Buffer size must be at least 1 KB',
+    },
+    {
+      field: 'edgeAnomaly.alertThreshold',
+      isValid: edgeAnomaly.alertThreshold >= 0 && edgeAnomaly.alertThreshold <= 1,
+      message: 'Alert threshold must be between 0.0 and 1.0',
+    },
+    {
+      field: 'edgeAnomaly.windowSizeSeconds',
+      isValid: edgeAnomaly.windowSizeSeconds >= 1,
+      message: 'Window size must be at least 1 second',
+    },
+  ];
+  return rules.filter((r) => !r.isValid).map(({ field, message }) => ({ field, message }));
+}
 
-  // Edge Anomaly validation (when preset is edge-anomaly)
-  if (options.preset === 'edge-anomaly') {
-    if (options.edgeAnomaly.bufferSizeKb < 1) {
-      errors.push({
-        field: 'edgeAnomaly.bufferSizeKb',
-        message: 'Buffer size must be at least 1 KB',
-      });
-    }
+// Helper: Validate edge AI options
+function validateEdgeAiOptions(edgeAi: EdgeAiConfig): RustValidationError[] {
+  const rules: ValidationRule[] = [
+    {
+      field: 'edgeAi.maxModelSizeMb',
+      isValid: edgeAi.maxModelSizeMb >= 1,
+      message: 'Max model size must be at least 1 MB',
+    },
+    {
+      field: 'edgeAi.inferenceThreads',
+      isValid: edgeAi.inferenceThreads >= 1,
+      message: 'Inference threads must be at least 1',
+    },
+    {
+      field: 'edgeAi.maxBatchSize',
+      isValid: edgeAi.maxBatchSize >= 1,
+      message: 'Max batch size must be at least 1',
+    },
+    {
+      field: 'edgeAi.inferenceTimeoutMs',
+      isValid: edgeAi.inferenceTimeoutMs >= 100,
+      message: 'Inference timeout must be at least 100ms',
+    },
+  ];
+  return rules.filter((r) => !r.isValid).map(({ field, message }) => ({ field, message }));
+}
 
-    if (options.edgeAnomaly.alertThreshold < 0 || options.edgeAnomaly.alertThreshold > 1) {
-      errors.push({
-        field: 'edgeAnomaly.alertThreshold',
-        message: 'Alert threshold must be between 0.0 and 1.0',
-      });
-    }
-
-    if (options.edgeAnomaly.windowSizeSeconds < 1) {
-      errors.push({
-        field: 'edgeAnomaly.windowSizeSeconds',
-        message: 'Window size must be at least 1 second',
-      });
-    }
-  }
-
-  // Edge AI validation (when preset is edge-ai)
-  if (options.preset === 'edge-ai') {
-    if (options.edgeAi.maxModelSizeMb < 1) {
-      errors.push({
-        field: 'edgeAi.maxModelSizeMb',
-        message: 'Max model size must be at least 1 MB',
-      });
-    }
-
-    if (options.edgeAi.inferenceThreads < 1) {
-      errors.push({
-        field: 'edgeAi.inferenceThreads',
-        message: 'Inference threads must be at least 1',
-      });
-    }
-
-    if (options.edgeAi.maxBatchSize < 1) {
-      errors.push({
-        field: 'edgeAi.maxBatchSize',
-        message: 'Max batch size must be at least 1',
-      });
-    }
-
-    if (options.edgeAi.inferenceTimeoutMs < 100) {
-      errors.push({
-        field: 'edgeAi.inferenceTimeoutMs',
-        message: 'Inference timeout must be at least 100ms',
-      });
-    }
-  }
+function validateRustOptions(options: RustAxumOptions): RustValidationResult {
+  const errors: RustValidationError[] = [
+    ...validateServerOptions(options.server),
+    ...validateMiddlewareOptions(options.middleware),
+    ...validateEdgeOptions(options.edge),
+    ...(options.preset === 'edge-gateway' ? validateEdgeGatewayOptions(options.edgeGateway) : []),
+    ...(options.preset === 'edge-anomaly' ? validateEdgeAnomalyOptions(options.edgeAnomaly) : []),
+    ...(options.preset === 'edge-ai' ? validateEdgeAiOptions(options.edgeAi) : []),
+  ];
 
   return {
     isValid: errors.length === 0,

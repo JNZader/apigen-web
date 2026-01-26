@@ -73,6 +73,24 @@ function getFrameworkFeatures(framework: Framework): FrameworkFeature[] {
   return frameworkSpecificFeatures[framework] || commonFeatures;
 }
 
+/**
+ * Get card transform scale based on selection and hover state.
+ */
+function getCardTransform(isSelected: boolean, isHovered: boolean): string {
+  if (isSelected) return 'scale(1.02)';
+  if (isHovered) return 'scale(1.01)';
+  return 'scale(1)';
+}
+
+/**
+ * Get card shadow based on selection and hover state.
+ */
+function getCardShadow(isSelected: boolean, isHovered: boolean): 'md' | 'sm' | 'xs' {
+  if (isSelected) return 'md';
+  if (isHovered) return 'sm';
+  return 'xs';
+}
+
 interface FrameworkCardProps {
   /** The framework to display */
   readonly framework: Framework;
@@ -109,10 +127,10 @@ export function FrameworkCard({
       style={{
         ...style,
         cursor: 'pointer',
-        transform: isSelected ? 'scale(1.02)' : isHovered ? 'scale(1.01)' : 'scale(1)',
+        transform: getCardTransform(isSelected, isHovered),
         transition: 'all 0.2s ease',
       }}
-      shadow={isSelected ? 'md' : isHovered ? 'sm' : 'xs'}
+      shadow={getCardShadow(isSelected, isHovered)}
       padding="md"
       radius="md"
       withBorder

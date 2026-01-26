@@ -1,7 +1,7 @@
 import { Divider, NumberInput, Select, Stack, Switch } from '@mantine/core';
 import type { SettingsFormProps } from './types';
 
-export function DatabaseSettingsForm({ form }: SettingsFormProps) {
+export function DatabaseSettingsForm({ form }: Readonly<SettingsFormProps>) {
   return (
     <Stack>
       <Select

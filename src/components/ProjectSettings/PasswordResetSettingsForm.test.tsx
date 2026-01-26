@@ -157,6 +157,6 @@ describe('PasswordResetSettingsForm', () => {
 
     expect(screen.getByTestId('password-reset-unavailable-alert')).toBeInTheDocument();
     expect(screen.getByText('Not Available')).toBeInTheDocument();
-    expect(screen.getByText(/Password Reset is not available for Rust/)).toBeInTheDocument();
+    expect(screen.getByText(/Password Reset is not available for Rust/i)).toBeInTheDocument();
   });
 });

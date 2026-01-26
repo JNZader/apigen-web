@@ -1,7 +1,7 @@
 import { Collapse, Divider, NumberInput, Select, Stack, Switch, TextInput } from '@mantine/core';
 import type { SettingsFormProps } from './types';
 
-export function CacheSettingsForm({ form }: SettingsFormProps) {
+export function CacheSettingsForm({ form }: Readonly<SettingsFormProps>) {
   return (
     <Stack>
       <Switch

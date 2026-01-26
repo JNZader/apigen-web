@@ -2,9 +2,10 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Rust Configuration E2E', () => {
   test.beforeEach(async ({ page }) => {
-    // Skip the onboarding modal by setting localStorage before navigating
+    // Skip both onboarding and wizard modals by setting localStorage before navigating
     await page.addInitScript(() => {
       localStorage.setItem('apigen-studio-onboarding-completed', 'true');
+      localStorage.setItem('apigen-wizard-seen', 'true');
     });
     await page.goto('/');
     await page.waitForLoadState('networkidle');
@@ -27,7 +28,7 @@ test.describe('Rust Configuration E2E', () => {
       );
 
       // Verify Axum framework is auto-selected (Rust only has Axum)
-      await expect(page.getByText('Axum')).toBeVisible();
+      await expect(page.getByRole('tab', { name: /Rust.*Axum/i })).toBeVisible();
     });
 
     test('should show Rust version in selection display', async ({ page }) => {
