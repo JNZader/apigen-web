@@ -28,11 +28,12 @@ import { SummaryStep } from './steps/SummaryStep';
 interface ProjectWizardProps {
   readonly opened: boolean;
   readonly onClose: () => void;
+  readonly onComplete?: () => void;
 }
 
 const TOTAL_STEPS = 4;
 
-export function ProjectWizard({ opened, onClose }: ProjectWizardProps) {
+export function ProjectWizard({ opened, onClose, onComplete }: ProjectWizardProps) {
   const [activeStep, setActiveStep] = useState(0);
   const { setProject } = useProjectActions();
 
@@ -103,10 +104,11 @@ export function ProjectWizard({ opened, onClose }: ProjectWizardProps) {
       title: 'Project Created',
       message: `Project "${form.values.name}" has been configured successfully`,
     });
+    onComplete?.();
     onClose();
     setActiveStep(0);
     form.reset();
-  }, [form, onClose, setProject, validateCurrentStep]);
+  }, [form, onClose, onComplete, setProject, validateCurrentStep]);
 
   const handleClose = useCallback(() => {
     onClose();
@@ -148,9 +150,9 @@ export function ProjectWizard({ opened, onClose }: ProjectWizardProps) {
 
         <Box mih={300}>
           {activeStep === 0 && <BasicInfoStep form={form} />}
-          {activeStep === 1 && <LanguageStep form={form} />}
-          {activeStep === 2 && <FeaturesStep form={form} />}
-          {activeStep === 3 && <SummaryStep form={form} />}
+          {activeStep === 1 && <LanguageStep />}
+          {activeStep === 2 && <FeaturesStep />}
+          {activeStep === 3 && <SummaryStep />}
         </Box>
 
         <Group justify="space-between" mt="md">

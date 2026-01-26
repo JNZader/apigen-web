@@ -57,6 +57,7 @@ interface DesignerCanvasProps {
   readonly onAddRelation: (sourceId: string, targetId: string) => void;
   readonly onAddService?: () => void;
   readonly onConfigureService?: (id: string) => void;
+  readonly onOpenWizard?: () => void;
 }
 
 export function DesignerCanvas({
@@ -66,6 +67,7 @@ export function DesignerCanvas({
   onAddRelation,
   onAddService,
   onConfigureService,
+  onOpenWizard,
 }: Readonly<DesignerCanvasProps>) {
   const { colorScheme } = useMantineColorScheme();
 
@@ -297,6 +299,7 @@ export function DesignerCanvas({
             reactFlowWrapper={reactFlowWrapper}
             onAddEntity={onAddEntity}
             onAddService={onAddService}
+            onOpenWizard={onOpenWizard}
           />
         </Panel>
 

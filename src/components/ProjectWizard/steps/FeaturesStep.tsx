@@ -24,8 +24,9 @@ import {
   IconServer,
   IconWebhook,
 } from '@tabler/icons-react';
+import { useCallback } from 'react';
 import { useLanguageFeatureSync } from '../../../hooks';
-import { useFeatures, useProjectStoreInternal, useTargetConfig } from '../../../store';
+import { useFeatures, useTargetConfig } from '../../../store';
 import {
   FEATURE_LABELS,
   type FeatureKey,
@@ -274,7 +275,6 @@ function FeatureCheckbox({
 export function FeaturesStep() {
   const targetConfig = useTargetConfig();
   const features = useFeatures();
-  const setProject = useProjectStoreInternal((s) => s.setProject);
   const {
     isFeatureSupported,
     enableFeatureWithDependencies,
@@ -284,13 +284,16 @@ export function FeaturesStep() {
 
   const languageLabel = LANGUAGE_METADATA[targetConfig.language].label;
 
-  const handleFeatureToggle = (key: FeatureKey, enabled: boolean) => {
-    if (enabled) {
-      enableFeatureWithDependencies(key);
-    } else {
-      disableFeatureWithDependents(key);
-    }
-  };
+  const handleFeatureToggle = useCallback(
+    (key: FeatureKey, enabled: boolean) => {
+      if (enabled) {
+        enableFeatureWithDependencies(key);
+      } else {
+        disableFeatureWithDependents(key);
+      }
+    },
+    [enableFeatureWithDependencies, disableFeatureWithDependents],
+  );
 
   const enabledCount = Object.values(features).filter(Boolean).length;
   const supportedCount =

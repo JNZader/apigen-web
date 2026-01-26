@@ -21,7 +21,7 @@ import {
   IconDiamond,
   IconHash,
 } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useLanguageFeatureSync } from '../../../hooks';
 import { useTargetConfig, useTargetConfigActions } from '../../../store';
 import {
@@ -66,33 +66,39 @@ export function LanguageStep({ onLanguageChange }: Readonly<LanguageStepProps>) 
   const { handleLanguageChange: syncFeatures } = useLanguageFeatureSync();
   const [hoveredLanguage, setHoveredLanguage] = useState<Language | null>(null);
 
-  const handleLanguageSelect = (language: Language) => {
-    const framework = getDefaultFramework(language);
-    const languageMeta = LANGUAGE_METADATA[language];
-    const frameworkMeta = FRAMEWORK_METADATA[framework];
+  const handleLanguageSelect = useCallback(
+    (language: Language) => {
+      const framework = getDefaultFramework(language);
+      const languageMeta = LANGUAGE_METADATA[language];
+      const frameworkMeta = FRAMEWORK_METADATA[framework];
 
-    setTargetConfig({
-      language,
-      framework,
-      languageVersion: languageMeta.defaultVersion,
-      frameworkVersion: frameworkMeta.defaultVersion,
-    });
+      setTargetConfig({
+        language,
+        framework,
+        languageVersion: languageMeta.defaultVersion,
+        frameworkVersion: frameworkMeta.defaultVersion,
+      });
 
-    syncFeatures(language, framework);
-    onLanguageChange?.(language, framework);
-  };
+      syncFeatures(language, framework);
+      onLanguageChange?.(language, framework);
+    },
+    [setTargetConfig, syncFeatures, onLanguageChange],
+  );
 
-  const handleFrameworkSelect = (framework: Framework) => {
-    const frameworkMeta = FRAMEWORK_METADATA[framework];
+  const handleFrameworkSelect = useCallback(
+    (framework: Framework) => {
+      const frameworkMeta = FRAMEWORK_METADATA[framework];
 
-    setTargetConfig({
-      framework,
-      frameworkVersion: frameworkMeta.defaultVersion,
-    });
+      setTargetConfig({
+        framework,
+        frameworkVersion: frameworkMeta.defaultVersion,
+      });
 
-    syncFeatures(targetConfig.language, framework);
-    onLanguageChange?.(targetConfig.language, framework);
-  };
+      syncFeatures(targetConfig.language, framework);
+      onLanguageChange?.(targetConfig.language, framework);
+    },
+    [setTargetConfig, syncFeatures, targetConfig.language, onLanguageChange],
+  );
 
   const availableFrameworks = getFrameworksForLanguage(targetConfig.language);
   const hasMultipleFrameworks = availableFrameworks.length > 1;
