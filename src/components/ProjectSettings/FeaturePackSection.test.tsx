@@ -1,8 +1,7 @@
-import { useForm } from '@mantine/form';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { render, resetAllStores, screen, userEvent, waitFor } from '@/test/utils';
+import type { ProjectConfig } from '@/types';
 import { useProjectStoreInternal } from '@/store';
-import { render, resetAllStores, screen, TestProviders, userEvent, waitFor } from '@/test/utils';
-import { defaultProjectConfig, type ProjectConfig } from '@/types';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FeaturePackSection } from './FeaturePackSection';
 
 vi.mock('./SocialLoginSettingsForm', async () => {
@@ -28,18 +27,6 @@ vi.mock('./JteTemplatesSettingsForm', () => ({
   JteTemplatesSettingsForm: () => <div data-testid="jte-form">JTE Form</div>,
 }));
 
-function TestWrapper({ initialValues }: { initialValues?: Partial<ProjectConfig> }) {
-  const form = useForm<ProjectConfig>({
-    initialValues: { ...defaultProjectConfig, ...initialValues },
-  });
-
-  return (
-    <TestProviders>
-      <FeaturePackSection form={form} />
-    </TestProviders>
-  );
-}
-
 const setProjectState = (overrides: Partial<ProjectConfig>) => {
   const baseProject = useProjectStoreInternal.getState().project;
 
@@ -64,13 +51,13 @@ describe('FeaturePackSection', () => {
       targetConfig: { language: 'java', framework: 'spring-boot' },
     });
 
-    render(<TestWrapper />);
+    render(<FeaturePackSection />);
 
-    expect(screen.getByRole('tab', { name: /Social Login/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /Mail/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /Storage/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /Password Reset/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /JTE/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Social Login' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Mail' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Storage' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Password Reset' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'JTE' })).toBeInTheDocument();
   });
 
   it('renders all tabs for Kotlin', () => {
@@ -78,13 +65,13 @@ describe('FeaturePackSection', () => {
       targetConfig: { language: 'kotlin', framework: 'spring-boot' },
     });
 
-    render(<TestWrapper />);
+    render(<FeaturePackSection />);
 
-    expect(screen.getByRole('tab', { name: /Social Login/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /Mail/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /Storage/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /Password Reset/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /JTE/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Social Login' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Mail' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Storage' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Password Reset' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'JTE' })).toBeInTheDocument();
   });
 
   it('hides JTE tab for Python', () => {
@@ -92,9 +79,9 @@ describe('FeaturePackSection', () => {
       targetConfig: { language: 'python', framework: 'fastapi' },
     });
 
-    render(<TestWrapper />);
+    render(<FeaturePackSection />);
 
-    expect(screen.queryByRole('tab', { name: /JTE/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'JTE' })).not.toBeInTheDocument();
   });
 
   it('hides JTE tab for TypeScript', () => {
@@ -102,9 +89,9 @@ describe('FeaturePackSection', () => {
       targetConfig: { language: 'typescript', framework: 'express' },
     });
 
-    render(<TestWrapper />);
+    render(<FeaturePackSection />);
 
-    expect(screen.queryByRole('tab', { name: /JTE/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'JTE' })).not.toBeInTheDocument();
   });
 
   it('hides JTE tab for Go', () => {
@@ -112,9 +99,9 @@ describe('FeaturePackSection', () => {
       targetConfig: { language: 'go', framework: 'gin' },
     });
 
-    render(<TestWrapper />);
+    render(<FeaturePackSection />);
 
-    expect(screen.queryByRole('tab', { name: /JTE/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'JTE' })).not.toBeInTheDocument();
   });
 
   it('hides JTE tab for Rust', () => {
@@ -122,78 +109,55 @@ describe('FeaturePackSection', () => {
       targetConfig: { language: 'rust', framework: 'axum' },
     });
 
-    render(<TestWrapper />);
+    render(<FeaturePackSection />);
 
-    expect(screen.queryByRole('tab', { name: /JTE/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'JTE' })).not.toBeInTheDocument();
   });
 
   it('shows correct enabled count (0 enabled)', () => {
-    render(
-      <TestWrapper
-        initialValues={{
-          features: {
-            ...defaultProjectConfig.features,
-            passwordReset: false,
-          },
-          featurePackConfig: {
-            ...defaultProjectConfig.featurePackConfig,
-            socialLogin: { ...defaultProjectConfig.featurePackConfig.socialLogin, enabled: false },
-            mail: { ...defaultProjectConfig.featurePackConfig.mail, enabled: false },
-            storage: { ...defaultProjectConfig.featurePackConfig.storage, enabled: false },
-            jte: { ...defaultProjectConfig.featurePackConfig.jte, enabled: false },
-          },
-        }}
-      />,
-    );
+    setProjectState({
+      features: {
+        socialLogin: false,
+        mailService: false,
+        fileStorage: false,
+        passwordReset: false,
+        jteTemplates: false,
+      },
+    });
 
-    // Badge should not be visible when 0 enabled
-    expect(screen.queryByText(/enabled/)).not.toBeInTheDocument();
+    render(<FeaturePackSection />);
+
+    expect(screen.getByText('0 enabled')).toBeInTheDocument();
   });
 
   it('shows correct enabled count (2 enabled)', () => {
-    render(
-      <TestWrapper
-        initialValues={{
-          features: {
-            ...defaultProjectConfig.features,
-            passwordReset: false,
-          },
-          featurePackConfig: {
-            ...defaultProjectConfig.featurePackConfig,
-            socialLogin: { ...defaultProjectConfig.featurePackConfig.socialLogin, enabled: true },
-            mail: { ...defaultProjectConfig.featurePackConfig.mail, enabled: true },
-            storage: { ...defaultProjectConfig.featurePackConfig.storage, enabled: false },
-            jte: { ...defaultProjectConfig.featurePackConfig.jte, enabled: false },
-          },
-        }}
-      />,
-    );
+    setProjectState({
+      features: {
+        socialLogin: true,
+        mailService: true,
+        fileStorage: false,
+        passwordReset: false,
+        jteTemplates: false,
+      },
+    });
+
+    render(<FeaturePackSection />);
 
     expect(screen.getByText('2 enabled')).toBeInTheDocument();
   });
 
   it('shows correct enabled count (5 enabled)', () => {
     setProjectState({
-      targetConfig: { language: 'java', framework: 'spring-boot' },
+      features: {
+        socialLogin: true,
+        mailService: true,
+        fileStorage: true,
+        passwordReset: true,
+        jteTemplates: true,
+      },
     });
 
-    render(
-      <TestWrapper
-        initialValues={{
-          features: {
-            ...defaultProjectConfig.features,
-            passwordReset: true,
-          },
-          featurePackConfig: {
-            ...defaultProjectConfig.featurePackConfig,
-            socialLogin: { ...defaultProjectConfig.featurePackConfig.socialLogin, enabled: true },
-            mail: { ...defaultProjectConfig.featurePackConfig.mail, enabled: true },
-            storage: { ...defaultProjectConfig.featurePackConfig.storage, enabled: true },
-            jte: { ...defaultProjectConfig.featurePackConfig.jte, enabled: true },
-          },
-        }}
-      />,
-    );
+    render(<FeaturePackSection />);
 
     expect(screen.getByText('5 enabled')).toBeInTheDocument();
   });
@@ -201,13 +165,13 @@ describe('FeaturePackSection', () => {
   it('switches tabs correctly - Social to Mail', async () => {
     const user = userEvent.setup();
 
-    render(<TestWrapper />);
+    render(<FeaturePackSection />);
 
     await waitFor(() => {
       expect(screen.getByTestId('social-form')).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('tab', { name: /Mail/i }));
+    await user.click(screen.getByRole('tab', { name: 'Mail' }));
 
     await waitFor(() => {
       expect(screen.getByTestId('mail-form')).toBeInTheDocument();
@@ -217,15 +181,15 @@ describe('FeaturePackSection', () => {
   it('switches tabs correctly - Mail to Storage', async () => {
     const user = userEvent.setup();
 
-    render(<TestWrapper />);
+    render(<FeaturePackSection />);
 
-    await user.click(screen.getByRole('tab', { name: /Mail/i }));
+    await user.click(screen.getByRole('tab', { name: 'Mail' }));
 
     await waitFor(() => {
       expect(screen.getByTestId('mail-form')).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('tab', { name: /Storage/i }));
+    await user.click(screen.getByRole('tab', { name: 'Storage' }));
 
     await waitFor(() => {
       expect(screen.getByTestId('storage-form')).toBeInTheDocument();
@@ -233,19 +197,18 @@ describe('FeaturePackSection', () => {
   });
 
   it('lazy loads form components', async () => {
-    render(<TestWrapper />);
+    render(<FeaturePackSection />);
 
     await waitFor(() => {
       expect(screen.getByTestId('social-form')).toBeInTheDocument();
     });
   });
 
-  it('loads form components via lazy loading', async () => {
-    // This test verifies that lazy-loaded components eventually render.
-    // The loading state may be too fast to capture reliably due to mocked components.
-    render(<TestWrapper />);
+  it('shows loading fallback while loading', async () => {
+    render(<FeaturePackSection />);
 
-    // Wait for the lazy-loaded component to appear
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+
     await waitFor(() => {
       expect(screen.getByTestId('social-form')).toBeInTheDocument();
     });

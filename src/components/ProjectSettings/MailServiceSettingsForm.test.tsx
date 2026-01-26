@@ -7,9 +7,14 @@ import { resetAllStores, TestProviders } from '../../test/utils';
 import { defaultProjectConfig, type ProjectConfig } from '../../types';
 import { MailServiceSettingsForm } from './MailServiceSettingsForm';
 
-function TestWrapper({ initialValues }: { initialValues?: Partial<ProjectConfig> }) {
+// Wrapper component to provide form context
+function TestWrapper({
+  initialValues = defaultProjectConfig,
+}: {
+  readonly initialValues?: ProjectConfig;
+}) {
   const form = useForm<ProjectConfig>({
-    initialValues: { ...defaultProjectConfig, ...initialValues },
+    initialValues,
   });
 
   return (
@@ -29,72 +34,66 @@ describe('MailServiceSettingsForm', () => {
       render(<TestWrapper />);
 
       expect(screen.getByText('Enable Mail Service')).toBeInTheDocument();
-      expect(screen.getByText('Enable SMTP email sending capabilities')).toBeInTheDocument();
+      expect(screen.getByTestId('mail-enable-toggle')).toBeInTheDocument();
     });
 
     it('shows SMTP fields when enabled', () => {
-      render(
-        <TestWrapper
-          initialValues={{
-            featurePackConfig: {
-              ...defaultProjectConfig.featurePackConfig,
-              mail: {
-                ...defaultProjectConfig.featurePackConfig.mail,
-                enabled: true,
-              },
-            },
-          }}
-        />,
-      );
+      const config = {
+        ...defaultProjectConfig,
+        featurePackConfig: {
+          ...defaultProjectConfig.featurePackConfig,
+          mail: {
+            ...defaultProjectConfig.featurePackConfig.mail,
+            enabled: true,
+          },
+        },
+      };
 
-      expect(screen.getByText('SMTP Host')).toBeInTheDocument();
-      expect(screen.getByText('SMTP Port')).toBeInTheDocument();
-      expect(screen.getByText('Username')).toBeInTheDocument();
-      expect(screen.getByText('Encryption')).toBeInTheDocument();
+      render(<TestWrapper initialValues={config} />);
+
+      expect(screen.getByTestId('smtp-host-input')).toBeInTheDocument();
+      expect(screen.getByTestId('smtp-port-input')).toBeInTheDocument();
+      expect(screen.getByTestId('smtp-username-input')).toBeInTheDocument();
+      expect(screen.getByTestId('smtp-encryption-select')).toBeInTheDocument();
+    });
+
+    it('hides SMTP fields when disabled', () => {
+      render(<TestWrapper />);
+
+      // The Collapse component still renders content but hides it
+      // Check that the toggle is unchecked (mail disabled)
+      expect(screen.getByTestId('mail-enable-toggle')).not.toBeChecked();
+
+      // SMTP fields are inside collapsed content and not visible
+      const hostInput = screen.queryByTestId('smtp-host-input');
+      if (hostInput) {
+        expect(hostInput).not.toBeVisible();
+      }
     });
 
     it('shows template checkboxes when enabled', () => {
-      render(
-        <TestWrapper
-          initialValues={{
-            featurePackConfig: {
-              ...defaultProjectConfig.featurePackConfig,
-              mail: {
-                ...defaultProjectConfig.featurePackConfig.mail,
-                enabled: true,
-              },
-            },
-          }}
-        />,
-      );
+      const config = {
+        ...defaultProjectConfig,
+        featurePackConfig: {
+          ...defaultProjectConfig.featurePackConfig,
+          mail: {
+            ...defaultProjectConfig.featurePackConfig.mail,
+            enabled: true,
+          },
+        },
+      };
 
-      expect(screen.getByText('Welcome Email')).toBeInTheDocument();
-      expect(screen.getByText('Password Reset Email')).toBeInTheDocument();
-      expect(screen.getByText('Notification Email')).toBeInTheDocument();
-    });
+      render(<TestWrapper initialValues={config} />);
 
-    it('shows security note when enabled', () => {
-      render(
-        <TestWrapper
-          initialValues={{
-            featurePackConfig: {
-              ...defaultProjectConfig.featurePackConfig,
-              mail: {
-                ...defaultProjectConfig.featurePackConfig.mail,
-                enabled: true,
-              },
-            },
-          }}
-        />,
-      );
-
-      expect(screen.getByText(/Security Note/)).toBeInTheDocument();
-      expect(screen.getByText(/MAIL_PASSWORD/)).toBeInTheDocument();
+      expect(screen.getByTestId('template-welcome-checkbox')).toBeInTheDocument();
+      expect(screen.getByTestId('template-password-reset-checkbox')).toBeInTheDocument();
+      expect(screen.getByTestId('template-jte-checkbox')).toBeInTheDocument();
     });
   });
 
   describe('Unavailable for Rust', () => {
     it('shows unavailable alert for Rust language', () => {
+      // Set store to Rust language
       useProjectStoreInternal.setState({
         project: {
           ...defaultProjectConfig,
@@ -108,13 +107,12 @@ describe('MailServiceSettingsForm', () => {
 
       render(<TestWrapper />);
 
-      expect(screen.getByText('Language Not Supported')).toBeInTheDocument();
-      expect(
-        screen.getByText(/Mail Service is not currently available for Rust/),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId('mail-unavailable-alert')).toBeInTheDocument();
+      expect(screen.getByText(/Mail Service is not available for Rust/i)).toBeInTheDocument();
+      expect(screen.queryByTestId('mail-enable-toggle')).not.toBeInTheDocument();
     });
 
-    it('shows form for Java', () => {
+    it('shows form for non-Rust languages', () => {
       useProjectStoreInternal.setState({
         project: {
           ...defaultProjectConfig,
@@ -128,71 +126,64 @@ describe('MailServiceSettingsForm', () => {
 
       render(<TestWrapper />);
 
-      expect(screen.queryByText('Language Not Supported')).not.toBeInTheDocument();
-      expect(screen.getByText('Enable Mail Service')).toBeInTheDocument();
+      expect(screen.queryByTestId('mail-unavailable-alert')).not.toBeInTheDocument();
+      expect(screen.getByTestId('mail-enable-toggle')).toBeInTheDocument();
     });
   });
 
   describe('Email Validation', () => {
-    // Note: The component's email validation doesn't work as expected because
-    // the custom error prop is overridden by form.getInputProps() spread.
-    // These tests verify the form renders correctly with various email values.
+    it('validates email format for fromAddress', () => {
+      const config = {
+        ...defaultProjectConfig,
+        featurePackConfig: {
+          ...defaultProjectConfig.featurePackConfig,
+          mail: {
+            ...defaultProjectConfig.featurePackConfig.mail,
+            enabled: true,
+            fromAddress: 'invalid-email',
+          },
+        },
+      };
 
-    it('renders from address field when enabled', () => {
-      render(
-        <TestWrapper
-          initialValues={{
-            featurePackConfig: {
-              ...defaultProjectConfig.featurePackConfig,
-              mail: {
-                ...defaultProjectConfig.featurePackConfig.mail,
-                enabled: true,
-                fromAddress: 'test@example.com',
-              },
-            },
-          }}
-        />,
-      );
+      render(<TestWrapper initialValues={config} />);
 
-      expect(screen.getByText('From Address')).toBeInTheDocument();
+      expect(screen.getByText('Invalid email format')).toBeInTheDocument();
     });
 
     it('does not show error for valid email', () => {
-      render(
-        <TestWrapper
-          initialValues={{
-            featurePackConfig: {
-              ...defaultProjectConfig.featurePackConfig,
-              mail: {
-                ...defaultProjectConfig.featurePackConfig.mail,
-                enabled: true,
-                fromAddress: 'valid@example.com',
-              },
-            },
-          }}
-        />,
-      );
+      const config = {
+        ...defaultProjectConfig,
+        featurePackConfig: {
+          ...defaultProjectConfig.featurePackConfig,
+          mail: {
+            ...defaultProjectConfig.featurePackConfig.mail,
+            enabled: true,
+            fromAddress: 'valid@example.com',
+          },
+        },
+      };
 
-      expect(screen.queryByText('Please enter a valid email address')).not.toBeInTheDocument();
+      render(<TestWrapper initialValues={config} />);
+
+      expect(screen.queryByText('Invalid email format')).not.toBeInTheDocument();
     });
 
     it('does not show error for empty email', () => {
-      render(
-        <TestWrapper
-          initialValues={{
-            featurePackConfig: {
-              ...defaultProjectConfig.featurePackConfig,
-              mail: {
-                ...defaultProjectConfig.featurePackConfig.mail,
-                enabled: true,
-                fromAddress: '',
-              },
-            },
-          }}
-        />,
-      );
+      const config = {
+        ...defaultProjectConfig,
+        featurePackConfig: {
+          ...defaultProjectConfig.featurePackConfig,
+          mail: {
+            ...defaultProjectConfig.featurePackConfig.mail,
+            enabled: true,
+            fromAddress: '',
+          },
+        },
+      };
 
-      expect(screen.queryByText('Please enter a valid email address')).not.toBeInTheDocument();
+      render(<TestWrapper initialValues={config} />);
+
+      expect(screen.queryByText('Invalid email format')).not.toBeInTheDocument();
     });
   });
 
@@ -202,14 +193,12 @@ describe('MailServiceSettingsForm', () => {
 
       render(<TestWrapper />);
 
-      const toggle = screen.getByRole('switch');
+      const toggle = screen.getByTestId('mail-enable-toggle');
       expect(toggle).not.toBeChecked();
 
       await user.click(toggle);
 
-      await waitFor(() => {
-        expect(toggle).toBeChecked();
-      });
+      expect(toggle).toBeChecked();
     });
 
     it('shows SMTP fields after enabling', async () => {
@@ -217,51 +206,40 @@ describe('MailServiceSettingsForm', () => {
 
       render(<TestWrapper />);
 
-      const toggle = screen.getByRole('switch');
-      await user.click(toggle);
+      // Before enabling, toggle should be unchecked
+      expect(screen.getByTestId('mail-enable-toggle')).not.toBeChecked();
 
+      await user.click(screen.getByTestId('mail-enable-toggle'));
+
+      // After enabling, toggle should be checked
+      expect(screen.getByTestId('mail-enable-toggle')).toBeChecked();
+
+      // Wait for collapse animation to complete and SMTP fields to become visible
       await waitFor(() => {
-        expect(screen.getByText('SMTP Host')).toBeInTheDocument();
+        expect(screen.getByTestId('smtp-host-input')).toBeVisible();
       });
     });
 
-    it('shows sender configuration section', () => {
-      render(
-        <TestWrapper
-          initialValues={{
-            featurePackConfig: {
-              ...defaultProjectConfig.featurePackConfig,
-              mail: {
-                ...defaultProjectConfig.featurePackConfig.mail,
-                enabled: true,
-              },
-            },
-          }}
-        />,
-      );
+    it('allows entering SMTP host', async () => {
+      const user = userEvent.setup();
+      const config = {
+        ...defaultProjectConfig,
+        featurePackConfig: {
+          ...defaultProjectConfig.featurePackConfig,
+          mail: {
+            ...defaultProjectConfig.featurePackConfig.mail,
+            enabled: true,
+          },
+        },
+      };
 
-      expect(screen.getByText('From Address')).toBeInTheDocument();
-      expect(screen.getByText('From Name')).toBeInTheDocument();
-    });
+      render(<TestWrapper initialValues={config} />);
 
-    it('shows connection settings section', () => {
-      render(
-        <TestWrapper
-          initialValues={{
-            featurePackConfig: {
-              ...defaultProjectConfig.featurePackConfig,
-              mail: {
-                ...defaultProjectConfig.featurePackConfig.mail,
-                enabled: true,
-              },
-            },
-          }}
-        />,
-      );
+      const hostInput = screen.getByTestId('smtp-host-input');
+      await user.clear(hostInput);
+      await user.type(hostInput, 'smtp.example.com');
 
-      expect(screen.getByText('Connection Timeout (ms)')).toBeInTheDocument();
-      expect(screen.getByText('Read Timeout (ms)')).toBeInTheDocument();
-      expect(screen.getByText('Enable Debug Mode')).toBeInTheDocument();
+      expect(hostInput).toHaveValue('smtp.example.com');
     });
   });
 });

@@ -1,9 +1,27 @@
-import { Alert, Button, Group, Modal, rem, Stack, Text, Textarea } from '@mantine/core';
+import {
+  Alert,
+  Button,
+  Group,
+  Modal,
+  rem,
+  Stack,
+  Text,
+  Textarea,
+} from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import { modals } from '@mantine/modals';
-import { IconAlertCircle, IconApi, IconUpload, IconX } from '@tabler/icons-react';
+import {
+  IconAlertCircle,
+  IconApi,
+  IconUpload,
+  IconX,
+} from '@tabler/icons-react';
 import { useCallback, useRef, useState } from 'react';
-import { useEntities, useEntityActions, useRelationActions } from '../../store';
+import {
+  useEntities,
+  useEntityActions,
+  useRelationActions,
+} from '../../store';
 import { notify } from '../../utils/notifications';
 import { parseOpenApi } from '../../utils/openApiParser';
 
@@ -83,9 +101,7 @@ export function OpenApiImportModal({
         isImportingRef.current = false;
       }
     } catch (error) {
-      setImportError(
-        error instanceof Error ? error.message : 'Failed to parse OpenAPI specification',
-      );
+      setImportError(error instanceof Error ? error.message : 'Failed to parse OpenAPI specification');
       isImportingRef.current = false;
     }
   }, [importContent, entities.length, applyImport]);
@@ -163,7 +179,9 @@ export function OpenApiImportModal({
           <Stack>
             <Dropzone
               onDrop={handleFileDrop}
-              onReject={() => setImportError('Invalid file type. Please use .json or .yaml files.')}
+              onReject={() =>
+                setImportError('Invalid file type. Please use .json or .yaml files.')
+              }
               maxSize={5 * 1024 * 1024}
               accept={{
                 'application/json': ['.json'],

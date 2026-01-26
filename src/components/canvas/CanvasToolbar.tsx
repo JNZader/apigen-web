@@ -295,7 +295,10 @@ export function CanvasToolbar({
             </Menu.Target>
             <Menu.Dropdown>
               <Menu.Label>Import From</Menu.Label>
-              <Menu.Item leftSection={<IconApi size={14} />} onClick={openOpenApiModal}>
+              <Menu.Item
+                leftSection={<IconApi size={14} />}
+                onClick={openOpenApiModal}
+              >
                 OpenAPI / Swagger
               </Menu.Item>
             </Menu.Dropdown>
