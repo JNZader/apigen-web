@@ -107,6 +107,9 @@ export { ResilienceSettingsForm } from './ResilienceSettingsForm';
 export { SecuritySettingsForm } from './SecuritySettingsForm';
 export { RustOptionsPanel } from './RustOptionsPanel';
 
+// Rust/Axum Settings
+export { RustOptionsPanel } from './RustOptionsPanel';
+
 // Types
 export type { SettingsFormProps } from './types';
 
