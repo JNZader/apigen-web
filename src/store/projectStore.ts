@@ -8,6 +8,7 @@ import {
   type FieldDesign,
   type GoChiOptions,
   type ProjectConfig,
+  type ProjectFeatures,
   type RustAxumOptions,
   type ServiceConnectionDesign,
   type ServiceDesign,
@@ -22,6 +23,7 @@ import { useEntityStore } from './entityStore';
 import type { CanvasView, LayoutPreset } from './layoutStore';
 import { useLayoutStore } from './layoutStore';
 import { useRelationStore } from './relationStore';
+import { useRustStore } from './rustSlice';
 import { useServiceConnectionStore } from './serviceConnectionStore';
 import { useServiceStore } from './serviceStore';
 
@@ -73,6 +75,9 @@ interface ProjectState {
   // Target Config Actions
   setTargetConfig: (config: Partial<TargetConfig>) => void;
 
+  // Feature Flags Actions
+  setFeatures: (features: Partial<ProjectFeatures>) => void;
+
   // Feature Pack 2025 Actions
   setFeaturePackConfig: (config: Partial<FeaturePackConfig>) => void;
 
@@ -114,6 +119,18 @@ export const useProjectStoreInternal = create<ProjectState>()(
         })),
 
       /**
+       * Updates the feature flags
+       * @param features - Partial feature flags to merge
+       */
+      setFeatures: (features) =>
+        set((state) => ({
+          project: {
+            ...state.project,
+            features: { ...state.project.features, ...features },
+          },
+        })),
+
+      /**
        * Updates the Feature Pack 2025 configuration
        * @param config - Partial feature pack configuration to merge
        */
@@ -129,13 +146,16 @@ export const useProjectStoreInternal = create<ProjectState>()(
        * Updates Rust/Axum specific options
        * @param options - Partial Rust options to merge
        */
-      setRustOptions: (options) =>
+      setRustOptions: (options) => {
+        // Sync with rust slice store
+        useRustStore.getState().setOptions(options);
         set((state) => ({
           project: {
             ...state.project,
             rustOptions: { ...state.project.rustOptions, ...options },
           },
-        })),
+        }));
+      },
 
       /**
        * Updates Go/Chi specific options
@@ -159,6 +179,7 @@ export const useProjectStoreInternal = create<ProjectState>()(
         useServiceStore.setState({ services: [], selectedServiceId: null });
         useServiceConnectionStore.setState({ serviceConnections: [] });
         useLayoutStore.setState({ canvasView: CANVAS_VIEWS.ENTITIES, needsAutoLayout: false });
+        useRustStore.getState().reset();
         set({ project: defaultProjectConfig });
       },
 
@@ -616,6 +637,12 @@ export const useProjectActions = () =>
  * @returns The current target configuration
  */
 export const useTargetConfig = () => useProjectStoreInternal((state) => state.project.targetConfig);
+
+/**
+ * Selector for accessing the feature flags
+ * @returns The current feature flags
+ */
+export const useFeatures = () => useProjectStoreInternal((state) => state.project.features);
 
 /**
  * Selector for accessing the Feature Pack 2025 configuration

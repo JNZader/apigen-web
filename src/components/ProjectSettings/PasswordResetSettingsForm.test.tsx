@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useProjectStoreInternal } from '../../store/projectStore';
@@ -76,13 +76,15 @@ describe('PasswordResetSettingsForm', () => {
       </TestProviders>,
     );
 
-    // Initially, generated items should not be visible
-    expect(screen.queryByTestId('generated-items-section')).not.toBeInTheDocument();
+    // Initially, generated items should not be visible (Collapse keeps in DOM but hides)
+    expect(screen.queryByTestId('generated-items-section')).not.toBeVisible();
 
     const toggle = screen.getByTestId('password-reset-toggle');
     await user.click(toggle);
 
-    expect(screen.getByTestId('generated-items-section')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('generated-items-section')).toBeVisible();
+    });
     expect(screen.getByText('This will generate:')).toBeInTheDocument();
   });
 

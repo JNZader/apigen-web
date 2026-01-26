@@ -29,30 +29,35 @@ export function MailServiceSettingsForm({ form }: SettingsFormProps) {
   const isRust = targetConfig.language === 'rust';
   const isMailEnabled = form.values.featurePackConfig.mail.enabled;
 
-  return (
-    <Stack>
-      {isRust && (
+  if (isRust) {
+    return (
+      <Stack>
         <Alert
           icon={<IconAlertTriangle size={16} />}
-          title="Language Not Supported"
+          title="Not Available"
           color="orange"
           variant="light"
+          data-testid="mail-unavailable-alert"
         >
           <Text size="sm">
-            Mail Service is not currently available for Rust. This feature is only supported for
-            Java, Kotlin, and Go projects.
+            Mail Service is not available for Rust. This feature is only supported for Java, Kotlin,
+            Python, TypeScript, PHP, C#, and Go projects.
           </Text>
         </Alert>
-      )}
+      </Stack>
+    );
+  }
 
+  return (
+    <Stack>
       <Switch
         label="Enable Mail Service"
         description="Enable SMTP email sending capabilities"
-        disabled={isRust}
         {...form.getInputProps('featurePackConfig.mail.enabled', { type: 'checkbox' })}
+        data-testid="mail-enable-toggle"
       />
 
-      <Collapse in={isMailEnabled && !isRust}>
+      <Collapse in={isMailEnabled}>
         <Stack mt="md">
           <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
             <Text size="sm">
@@ -122,13 +127,13 @@ export function MailServiceSettingsForm({ form }: SettingsFormProps) {
               label="From Address"
               placeholder="noreply@example.com"
               description="Default sender email address"
+              {...form.getInputProps('featurePackConfig.mail.fromAddress')}
               error={
                 form.values.featurePackConfig.mail.fromAddress &&
                 !isValidEmail(form.values.featurePackConfig.mail.fromAddress)
-                  ? 'Please enter a valid email address'
+                  ? 'Invalid email format'
                   : undefined
               }
-              {...form.getInputProps('featurePackConfig.mail.fromAddress')}
               data-testid="from-address-input"
             />
 
@@ -180,34 +185,22 @@ export function MailServiceSettingsForm({ form }: SettingsFormProps) {
             <Checkbox
               label="Welcome Email"
               description="Sent to new users upon registration"
-              checked={form.values.features.mailService}
-              onChange={(event) => {
-                form.setFieldValue('features.mailService', event.currentTarget.checked);
-              }}
+              {...form.getInputProps('features.mailService', { type: 'checkbox' })}
               data-testid="template-welcome-checkbox"
             />
 
             <Checkbox
               label="Password Reset Email"
               description="Sent when users request password recovery"
-              checked={form.values.features.passwordReset}
-              onChange={(event) => {
-                form.setFieldValue('features.passwordReset', event.currentTarget.checked);
-              }}
+              {...form.getInputProps('features.passwordReset', { type: 'checkbox' })}
               data-testid="template-password-reset-checkbox"
             />
 
             <Checkbox
-              label="Notification Email"
-              description="General notification template for system alerts"
-              checked={form.values.features.domainEvents && form.values.features.mailService}
-              onChange={(event) => {
-                if (event.currentTarget.checked) {
-                  form.setFieldValue('features.domainEvents', true);
-                  form.setFieldValue('features.mailService', true);
-                }
-              }}
-              disabled={!form.values.features.mailService}
+              label="JTE Templates"
+              description="Server-side rendered email templates using JTE"
+              {...form.getInputProps('features.jteTemplates', { type: 'checkbox' })}
+              data-testid="template-jte-checkbox"
             />
           </Stack>
         </Stack>

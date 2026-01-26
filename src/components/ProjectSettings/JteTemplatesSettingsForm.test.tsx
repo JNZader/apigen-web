@@ -212,7 +212,8 @@ describe('JteTemplatesSettingsForm', () => {
         </TestProviders>,
       );
 
-      expect(screen.queryByTestId('jte-template-selection')).not.toBeInTheDocument();
+      // Mantine's Collapse keeps elements in DOM but hides them
+      expect(screen.queryByTestId('jte-template-selection')).not.toBeVisible();
     });
   });
 

@@ -1,8 +1,9 @@
 import { Badge, Center, Group, Loader, ScrollArea, Stack, Tabs, Text } from '@mantine/core';
+import { useForm } from '@mantine/form';
 import { IconBrandGoogle, IconKey, IconMail, IconTemplate, IconUpload } from '@tabler/icons-react';
-import { lazy, Suspense, useMemo } from 'react';
-import { useTargetConfig } from '../../store';
-import type { SettingsFormProps } from './types';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useFeatures, useProject, useProjectStoreInternal, useTargetConfig } from '../../store';
+import type { ProjectConfig } from '../../types';
 
 // Lazy load all Feature Pack forms for better performance
 const SocialLoginSettingsForm = lazy(() =>
@@ -45,36 +46,66 @@ function LoadingFallback() {
  * Feature Pack Section component with tabs for all Feature Pack 2025 forms.
  * Uses lazy loading for better initial load performance.
  */
-export function FeaturePackSection({ form }: SettingsFormProps) {
+export function FeaturePackSection() {
   const targetConfig = useTargetConfig();
+  const features = useFeatures();
+  const project = useProject();
+  const setProject = useProjectStoreInternal((s) => s.setProject);
   const isJavaKotlin = ['java', 'kotlin'].includes(targetConfig.language);
+
+  // Track if we're syncing from store to form to avoid circular updates
+  const isSyncingFromStore = useRef(false);
+
+  // Callback for form value changes - sync to store
+  const handleValuesChange = useCallback(
+    (values: ProjectConfig) => {
+      if (!isSyncingFromStore.current) {
+        setProject(values);
+      }
+    },
+    [setProject],
+  );
+
+  // Create a form that syncs with the store via onValuesChange
+  const form = useForm<ProjectConfig>({
+    initialValues: project,
+    onValuesChange: handleValuesChange,
+  });
+
+  // Sync store changes to form
+  useEffect(() => {
+    isSyncingFromStore.current = true;
+    form.setValues(project);
+    // Reset flag after React has processed the update
+    requestAnimationFrame(() => {
+      isSyncingFromStore.current = false;
+    });
+  }, [project, form.setValues]);
 
   // Count enabled features for the badge
   const enabledFeaturesCount = useMemo(() => {
     let count = 0;
-    if (form.values.featurePackConfig?.socialLogin?.enabled) count++;
-    if (form.values.featurePackConfig?.mail?.enabled) count++;
-    if (form.values.featurePackConfig?.storage?.enabled) count++;
-    if (form.values.features?.passwordReset) count++;
-    if (form.values.featurePackConfig?.jte?.enabled) count++;
+    if (features.socialLogin) count++;
+    if (features.mailService) count++;
+    if (features.fileStorage) count++;
+    if (features.passwordReset) count++;
+    if (features.jteTemplates) count++;
     return count;
   }, [
-    form.values.featurePackConfig?.socialLogin?.enabled,
-    form.values.featurePackConfig?.mail?.enabled,
-    form.values.featurePackConfig?.storage?.enabled,
-    form.values.features?.passwordReset,
-    form.values.featurePackConfig?.jte?.enabled,
+    features.socialLogin,
+    features.mailService,
+    features.fileStorage,
+    features.passwordReset,
+    features.jteTemplates,
   ]);
 
   return (
     <Stack gap="md">
       <Group justify="space-between">
         <Text fw={500}>Feature Pack 2025</Text>
-        {enabledFeaturesCount > 0 && (
-          <Badge variant="light" color="blue">
-            {enabledFeaturesCount} enabled
-          </Badge>
-        )}
+        <Badge variant="light" color="blue">
+          {enabledFeaturesCount} enabled
+        </Badge>
       </Group>
 
       <Tabs defaultValue="social" variant="outline">
@@ -125,7 +156,7 @@ export function FeaturePackSection({ form }: SettingsFormProps) {
         <Tabs.Panel value="password" pt="md">
           <ScrollArea h={450}>
             <Suspense fallback={<LoadingFallback />}>
-              <PasswordResetSettingsForm form={form} />
+              <PasswordResetSettingsForm />
             </Suspense>
           </ScrollArea>
         </Tabs.Panel>
@@ -134,7 +165,7 @@ export function FeaturePackSection({ form }: SettingsFormProps) {
           <Tabs.Panel value="jte" pt="md">
             <ScrollArea h={450}>
               <Suspense fallback={<LoadingFallback />}>
-                <JteTemplatesSettingsForm form={form} />
+                <JteTemplatesSettingsForm />
               </Suspense>
             </ScrollArea>
           </Tabs.Panel>

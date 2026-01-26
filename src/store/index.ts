@@ -10,6 +10,7 @@ export { useLayoutStore } from './layoutStore';
 // Combined store facade (for backward compatibility)
 export { useProjectStore, useProjectStoreInternal } from './projectStore';
 export { useRelationStore } from './relationStore';
+export { useRustStore } from './rustSlice';
 export { useServiceConnectionStore } from './serviceConnectionStore';
 export { useServiceStore } from './serviceStore';
 
@@ -97,6 +98,7 @@ export {
   useAllConfigActions,
   useFeaturePackActions,
   useFeaturePackConfig,
+  useFeatures,
   useGoChiOptions,
   useLanguageOptionsActions,
   // Atomic selectors
@@ -126,3 +128,22 @@ export {
   useCanvasUIActions,
   useIsEntityExpanded,
 } from './canvasUIStore';
+
+// ============================================================================
+// Rust Store Exports
+// ============================================================================
+
+export type { RustValidationError, RustValidationResult } from './rustSlice';
+export {
+  // Atomic selectors
+  useRustActions,
+  useRustEdge,
+  useRustEdgeAi,
+  useRustEdgeAnomaly,
+  useRustEdgeGateway,
+  useRustMiddleware,
+  useRustOptions as useRustSliceOptions,
+  useRustPreset,
+  useRustServer,
+  useRustValidation,
+} from './rustSlice';
