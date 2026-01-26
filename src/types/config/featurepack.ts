@@ -43,6 +43,10 @@ export interface SocialLoginConfig {
   autoLinkAccounts: boolean;
   /** Require email verification for new social accounts */
   requireEmailVerification: boolean;
+  /** URL to redirect after successful authentication */
+  successRedirectUrl: string;
+  /** URL to redirect after failed authentication */
+  failureRedirectUrl: string;
   /** Provider-specific configurations */
   providers: Record<SocialProvider, SocialProviderConfig>;
 }
@@ -267,6 +271,8 @@ export const defaultSocialLoginConfig: SocialLoginConfig = {
   enabled: false,
   autoLinkAccounts: false,
   requireEmailVerification: true,
+  successRedirectUrl: '/dashboard',
+  failureRedirectUrl: '/login?error=true',
   providers: {
     google: { ...defaultSocialProviderConfig, scopes: ['openid', 'email', 'profile'] },
     github: { ...defaultSocialProviderConfig, scopes: ['user:email', 'read:user'] },
