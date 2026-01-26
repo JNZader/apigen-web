@@ -2,9 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 import * as apiClientModule from './apiClient';
 import {
+  type GenerateRequest,
   GenerateRequestSchema,
   validateGenerateRequest,
-  type GenerateRequest,
 } from './generatorApi';
 
 // Mock the apiClient module

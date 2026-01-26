@@ -9,18 +9,18 @@
 
 import { useCallback, useMemo, useRef } from 'react';
 import { useProjectStoreInternal } from '../store/projectStore';
-import type { Language, Framework } from '../types/target';
-import type { ProjectFeatures } from '../types/project';
 import {
-  type FeatureKey,
   FEATURE_LABELS,
+  type FeatureKey,
   getFeatureDependencies,
   getFeatureDependents,
   getUnsupportedFeatures,
   isFeatureSupportedByFramework,
 } from '../types/config/featureCompatibility';
-import { notify } from '../utils/notifications';
+import type { ProjectFeatures } from '../types/project';
+import type { Framework, Language } from '../types/target';
 import { LANGUAGE_METADATA } from '../types/target';
+import { notify } from '../utils/notifications';
 
 // ============================================================================
 // TYPES
@@ -95,10 +95,7 @@ export function useLanguageFeatureSync(): LanguageFeatureSyncResult {
    * Get current unsupported features
    */
   const unsupportedFeatures = useMemo(() => {
-    return getUnsupportedFeatures(
-      project.targetConfig.language,
-      project.targetConfig.framework
-    );
+    return getUnsupportedFeatures(project.targetConfig.language, project.targetConfig.framework);
   }, [project.targetConfig.language, project.targetConfig.framework]);
 
   /**
@@ -109,10 +106,10 @@ export function useLanguageFeatureSync(): LanguageFeatureSyncResult {
       return isFeatureSupportedByFramework(
         project.targetConfig.language,
         project.targetConfig.framework,
-        feature
+        feature,
       );
     },
-    [project.targetConfig.language, project.targetConfig.framework]
+    [project.targetConfig.language, project.targetConfig.framework],
   );
 
   /**
@@ -189,7 +186,7 @@ export function useLanguageFeatureSync(): LanguageFeatureSyncResult {
         hasDisabledFeatures: true,
       };
     },
-    [project.features, setProject]
+    [project.features, setProject],
   );
 
   /**
@@ -199,7 +196,7 @@ export function useLanguageFeatureSync(): LanguageFeatureSyncResult {
     (newFramework: Framework): DisabledFeaturesResult => {
       return handleLanguageChange(project.targetConfig.language, newFramework);
     },
-    [project.targetConfig.language, handleLanguageChange]
+    [project.targetConfig.language, handleLanguageChange],
   );
 
   /**
@@ -212,11 +209,13 @@ export function useLanguageFeatureSync(): LanguageFeatureSyncResult {
 
       // Find dependencies that need to be enabled
       const dependenciesToEnable = dependencies.filter(
-        (dep) => !currentFeatures[dep] && isFeatureSupportedByFramework(
-          project.targetConfig.language,
-          project.targetConfig.framework,
-          dep
-        )
+        (dep) =>
+          !currentFeatures[dep] &&
+          isFeatureSupportedByFramework(
+            project.targetConfig.language,
+            project.targetConfig.framework,
+            dep,
+          ),
       );
 
       if (dependenciesToEnable.length === 0) {
@@ -264,7 +263,7 @@ export function useLanguageFeatureSync(): LanguageFeatureSyncResult {
         hasEnabledDependencies: true,
       };
     },
-    [project.features, project.targetConfig.language, project.targetConfig.framework, setProject]
+    [project.features, project.targetConfig.language, project.targetConfig.framework, setProject],
   );
 
   /**
@@ -316,7 +315,7 @@ export function useLanguageFeatureSync(): LanguageFeatureSyncResult {
         hasDisabledDependents: true,
       };
     },
-    [project.features, setProject]
+    [project.features, setProject],
   );
 
   return {

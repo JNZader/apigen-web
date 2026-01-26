@@ -18,12 +18,12 @@ import {
 } from './config/api';
 import { defaultCacheConfig } from './config/cache';
 import { defaultDatabaseConfig } from './config/database';
+import { defaultFeaturePackConfig } from './config/featurepack';
 import {
   defaultBatchConfig,
   defaultBulkConfig,
   defaultFeatureFlagsConfig,
 } from './config/features';
-import { defaultFeaturePackConfig } from './config/featurepack';
 import { defaultGoChiOptions } from './config/gochi';
 import { defaultI18nConfig, defaultWebhooksConfig } from './config/messaging';
 import {
@@ -74,6 +74,31 @@ export type {
   HikariConfig,
 } from './config/database';
 export { defaultDatabaseConfig } from './config/database';
+// Feature Pack 2025 types
+export type {
+  AzureStorageConfig,
+  FeaturePackConfig,
+  GcsStorageConfig,
+  JteConfig,
+  LocalStorageConfig,
+  MailConfig,
+  PasswordResetConfig,
+  S3StorageConfig,
+  SmtpEncryption,
+  SocialLoginConfig,
+  SocialProvider,
+  SocialProviderConfig,
+  StorageConfig,
+  StorageProvider,
+} from './config/featurepack';
+export {
+  defaultFeaturePackConfig,
+  defaultJteConfig,
+  defaultMailConfig,
+  defaultPasswordResetConfig,
+  defaultSocialLoginConfig,
+  defaultStorageConfig,
+} from './config/featurepack';
 // Feature types
 export type {
   BatchConfig,
@@ -87,6 +112,32 @@ export {
   defaultBulkConfig,
   defaultFeatureFlagsConfig,
 } from './config/features';
+// Go/Chi types
+export type {
+  GoChiCacheConfig,
+  GoChiCacheType,
+  GoChiMessagingConfig,
+  GoChiMessagingType,
+  GoChiOptions,
+  GoChiRedisConfig,
+  KafkaConfig,
+  MemcachedConfig,
+  MemoryCacheConfig,
+  NatsConfig,
+  RabbitMQConfig,
+} from './config/gochi';
+export {
+  defaultGoChiCacheConfig,
+  defaultGoChiMessagingConfig,
+  defaultGoChiOptions,
+  defaultGoChiRedisConfig,
+  defaultKafkaConfig,
+  defaultMemcachedConfig,
+  defaultMemoryCacheConfig,
+  defaultNatsConfig,
+  defaultRabbitMQConfig,
+  getDefaultGoChiOptions,
+} from './config/gochi';
 // Messaging types
 export type {
   I18nConfig,
@@ -123,66 +174,6 @@ export type {
   RetryConfig,
 } from './config/resilience';
 export { defaultResilienceConfig } from './config/resilience';
-// Security types
-export type {
-  JwtKeyRotationConfig,
-  JwtSecretLength,
-  OAuth2Config,
-  PkceConfig,
-  ReferrerPolicy,
-  SecurityConfig,
-  SecurityHeadersConfig,
-  SecurityMode,
-} from './config/security';
-export { defaultSecurityConfig } from './config/security';
-
-// Target types
-export type {
-  Framework,
-  FrameworkMetadata,
-  Language,
-  LanguageFrameworkMap,
-  LanguageMetadata,
-  TargetConfig,
-} from './target';
-export {
-  createDefaultTargetConfig,
-  defaultTargetConfig,
-  FRAMEWORK_METADATA,
-  FRAMEWORKS,
-  getDefaultFramework,
-  getFrameworksForLanguage,
-  isFrameworkCompatible,
-  LANGUAGE_METADATA,
-  LANGUAGES,
-} from './target';
-
-// Feature Pack 2025 types
-export type {
-  AzureStorageConfig,
-  FeaturePackConfig,
-  GcsStorageConfig,
-  JteConfig,
-  LocalStorageConfig,
-  MailConfig,
-  PasswordResetConfig,
-  S3StorageConfig,
-  SmtpEncryption,
-  SocialLoginConfig,
-  SocialProvider,
-  SocialProviderConfig,
-  StorageConfig,
-  StorageProvider,
-} from './config/featurepack';
-export {
-  defaultFeaturePackConfig,
-  defaultJteConfig,
-  defaultMailConfig,
-  defaultPasswordResetConfig,
-  defaultSocialLoginConfig,
-  defaultStorageConfig,
-} from './config/featurepack';
-
 // Rust/Axum types
 export type {
   AxumMiddlewareConfig,
@@ -209,33 +200,38 @@ export {
   getRustPresetDefaults,
   RUST_PRESET_DEFAULTS,
 } from './config/rust';
-
-// Go/Chi types
+// Security types
 export type {
-  GoChiCacheConfig,
-  GoChiCacheType,
-  GoChiMessagingConfig,
-  GoChiMessagingType,
-  GoChiOptions,
-  GoChiRedisConfig,
-  KafkaConfig,
-  MemcachedConfig,
-  MemoryCacheConfig,
-  NatsConfig,
-  RabbitMQConfig,
-} from './config/gochi';
+  JwtKeyRotationConfig,
+  JwtSecretLength,
+  OAuth2Config,
+  PkceConfig,
+  ReferrerPolicy,
+  SecurityConfig,
+  SecurityHeadersConfig,
+  SecurityMode,
+} from './config/security';
+export { defaultSecurityConfig } from './config/security';
+// Target types
+export type {
+  Framework,
+  FrameworkMetadata,
+  Language,
+  LanguageFrameworkMap,
+  LanguageMetadata,
+  TargetConfig,
+} from './target';
 export {
-  defaultGoChiCacheConfig,
-  defaultGoChiMessagingConfig,
-  defaultGoChiOptions,
-  defaultGoChiRedisConfig,
-  defaultKafkaConfig,
-  defaultMemcachedConfig,
-  defaultMemoryCacheConfig,
-  defaultNatsConfig,
-  defaultRabbitMQConfig,
-  getDefaultGoChiOptions,
-} from './config/gochi';
+  createDefaultTargetConfig,
+  defaultTargetConfig,
+  FRAMEWORK_METADATA,
+  FRAMEWORKS,
+  getDefaultFramework,
+  getFrameworksForLanguage,
+  isFrameworkCompatible,
+  LANGUAGE_METADATA,
+  LANGUAGES,
+} from './target';
 
 // ============================================================================
 // PROJECT MODULES

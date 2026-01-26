@@ -10,7 +10,7 @@
  */
 
 import type { FeatureFlag } from '@/types/config/features';
-import type { Language, Framework } from '@/types/target';
+import type { Framework, Language } from '@/types/target';
 
 // ============================================================================
 // FEATURE IDENTIFIERS
@@ -506,7 +506,7 @@ export function getLanguagesForFeature(feature: Feature): Language[] {
 export function validateFeatures(
   enabledFeatures: Feature[],
   language: Language,
-  framework: Framework
+  framework: Framework,
 ): ValidationResult {
   const issues: ValidationIssue[] = [];
 
@@ -558,7 +558,7 @@ export function validateFeatures(
           (i) =>
             i.code === 'FEATURE_CONFLICT' &&
             ((i.feature === feature && i.relatedFeatures?.includes(conflict)) ||
-              (i.feature === conflict && i.relatedFeatures?.includes(feature)))
+              (i.feature === conflict && i.relatedFeatures?.includes(feature))),
         );
 
         if (!existingConflict) {
@@ -590,10 +590,7 @@ export function validateFeatures(
  * Get missing dependencies for a feature.
  * Returns features that need to be enabled along with the requested feature.
  */
-export function getMissingDependencies(
-  feature: Feature,
-  enabledFeatures: Feature[]
-): Feature[] {
+export function getMissingDependencies(feature: Feature, enabledFeatures: Feature[]): Feature[] {
   const allDependencies = getFeatureDependencies(feature);
   return allDependencies.filter((dep) => !enabledFeatures.includes(dep));
 }
@@ -603,7 +600,7 @@ export function getMissingDependencies(
  */
 export function wouldCauseConflict(
   featureToEnable: Feature,
-  enabledFeatures: Feature[]
+  enabledFeatures: Feature[],
 ): Feature[] {
   const conflicts = getFeatureConflicts(featureToEnable);
   return conflicts.filter((conflict) => enabledFeatures.includes(conflict));
@@ -615,7 +612,7 @@ export function wouldCauseConflict(
 export function getAvailableFeatures(
   enabledFeatures: Feature[],
   language: Language,
-  framework: Framework
+  framework: Framework,
 ): Feature[] {
   const supported = getSupportedFeatures(language);
 
@@ -640,7 +637,7 @@ export function getAvailableFeatures(
 export function resolveFeatureWithDependencies(
   feature: Feature,
   currentFeatures: Feature[],
-  language: Language
+  language: Language,
 ): Feature[] {
   const toEnable: Feature[] = [feature];
   const dependencies = getFeatureDependencies(feature);

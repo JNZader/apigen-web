@@ -615,8 +615,7 @@ export const useProjectActions = () =>
  * Selector for accessing the target configuration (language, framework, versions)
  * @returns The current target configuration
  */
-export const useTargetConfig = () =>
-  useProjectStoreInternal((state) => state.project.targetConfig);
+export const useTargetConfig = () => useProjectStoreInternal((state) => state.project.targetConfig);
 
 /**
  * Selector for accessing the Feature Pack 2025 configuration
@@ -629,15 +628,13 @@ export const useFeaturePackConfig = () =>
  * Selector for accessing Rust/Axum specific options
  * @returns The current Rust/Axum options
  */
-export const useRustOptions = () =>
-  useProjectStoreInternal((state) => state.project.rustOptions);
+export const useRustOptions = () => useProjectStoreInternal((state) => state.project.rustOptions);
 
 /**
  * Selector for accessing Go/Chi specific options
  * @returns The current Go/Chi options
  */
-export const useGoChiOptions = () =>
-  useProjectStoreInternal((state) => state.project.goChiOptions);
+export const useGoChiOptions = () => useProjectStoreInternal((state) => state.project.goChiOptions);
 
 /**
  * Selector for target config actions that don't cause unnecessary re-renders

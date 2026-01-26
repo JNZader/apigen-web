@@ -10,27 +10,27 @@ import {
   Transition,
 } from '@mantine/core';
 import {
-  IconBrandTypescript,
-  IconBrandPython,
+  IconBrandGolang,
   IconBrandPhp,
+  IconBrandPython,
   IconBrandRust,
+  IconBrandTypescript,
   IconCode,
   IconCoffee,
   IconDiamond,
-  IconBrandGolang,
   IconHash,
 } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useLanguageFeatureSync } from '../../hooks';
 import { useTargetConfig, useTargetConfigActions } from '../../store';
 import {
-  type Framework,
   FRAMEWORK_METADATA,
+  type Framework,
   getDefaultFramework,
   getFrameworksForLanguage,
-  type Language,
   LANGUAGE_METADATA,
   LANGUAGES,
+  type Language,
 } from '../../types/target';
 
 interface LanguageSelectorProps {
@@ -254,12 +254,7 @@ function LanguageCard({
         data-testid={`language-card-${language}`}
       >
         <Stack gap="xs" align="center">
-          <ThemeIcon
-            size="xl"
-            radius="md"
-            color={color}
-            variant={isSelected ? 'filled' : 'light'}
-          >
+          <ThemeIcon size="xl" radius="md" color={color} variant={isSelected ? 'filled' : 'light'}>
             {icon}
           </ThemeIcon>
           <Text fw={isSelected ? 700 : 500} size="sm" ta="center">

@@ -5,17 +5,17 @@ export type {
   FeatureWithSupport,
   SupportLevel,
 } from './FeatureMatrix';
-export { DEFAULT_FEATURES, FeatureMatrix } from './FeatureMatrix';
-export type { FrameworkCardProps, FrameworkFeature } from './FrameworkCard';
-export { FrameworkCard } from './FrameworkCard';
-export { LanguageSelector } from './LanguageSelector';
 export {
-  FeatureMatrix,
-  FeatureSummary,
-  FEATURES,
+  DEFAULT_FEATURES,
   FEATURE_SUPPORT,
+  FEATURES,
   type FeatureCategory,
   type FeatureDefinition,
+  FeatureMatrix,
+  FeatureSummary,
   type FeatureSupportLevel,
   type FeatureSupportMatrix,
 } from './FeatureMatrix';
+export type { FrameworkCardProps, FrameworkFeature } from './FrameworkCard';
+export { FrameworkCard } from './FrameworkCard';
+export { LanguageSelector } from './LanguageSelector';

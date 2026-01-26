@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Alert, Button, Group, Modal, ScrollArea, Stack, Tabs, Text } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import {
@@ -18,6 +17,7 @@ import {
   IconShield,
   IconShieldCheck,
 } from '@tabler/icons-react';
+import { useState } from 'react';
 import { useProject, useProjectActions } from '../../store';
 import type { Framework, Language, ProjectConfig } from '../../types';
 import { notify } from '../../utils/notifications';
@@ -50,7 +50,7 @@ const LANGUAGE_SPECIFIC_FEATURES: Record<string, { languages: Language[]; label:
  */
 function getIncompatibleFeatures(
   features: ProjectConfig['features'],
-  newLanguage: Language
+  newLanguage: Language,
 ): string[] {
   const incompatible: string[] = [];
 

@@ -5,8 +5,8 @@
  * Used to automatically disable incompatible features when language changes.
  */
 
-import type { Language, Framework } from '../target';
 import type { ProjectFeatures } from '../project';
+import type { Framework, Language } from '../target';
 
 // ============================================================================
 // FEATURE KEYS TYPE
@@ -351,7 +351,7 @@ export function isFeatureSupportedByLanguage(language: Language, feature: Featur
 export function isFeatureSupportedByFramework(
   language: Language,
   framework: Framework,
-  feature: FeatureKey
+  feature: FeatureKey,
 ): boolean {
   // First check language support
   const languageSupports = isFeatureSupportedByLanguage(language, feature);
@@ -397,7 +397,7 @@ export function getUnsupportedFeatures(language: Language, framework: Framework)
   ];
 
   return allFeatures.filter(
-    (feature) => !isFeatureSupportedByFramework(language, framework, feature)
+    (feature) => !isFeatureSupportedByFramework(language, framework, feature),
   );
 }
 
@@ -433,7 +433,7 @@ export function getSupportedFeatures(language: Language, framework: Framework): 
   ];
 
   return allFeatures.filter((feature) =>
-    isFeatureSupportedByFramework(language, framework, feature)
+    isFeatureSupportedByFramework(language, framework, feature),
   );
 }
 

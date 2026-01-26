@@ -3,7 +3,11 @@
 // Centralized configuration for all supported languages and frameworks
 // ============================================================================
 
+import type { MantineColor } from '@mantine/core';
 import {
+  type Icon,
+  IconBolt,
+  IconBrandAzure,
   IconBrandCSharp,
   IconBrandGolang,
   IconBrandKotlin,
@@ -11,18 +15,14 @@ import {
   IconBrandPython,
   IconBrandRust,
   IconBrandTypescript,
-  IconCoffee,
   IconCode,
-  IconLeaf,
-  IconBolt,
+  IconCoffee,
   IconFeather,
   IconHexagon,
+  IconLeaf,
   IconRouteSquare,
-  IconBrandAzure,
-  type Icon,
 } from '@tabler/icons-react';
-import type { MantineColor } from '@mantine/core';
-import type { Language, Framework } from '../types/target';
+import type { Framework, Language } from '../types/target';
 
 // ============================================================================
 // ICON MAPPINGS
@@ -891,7 +891,7 @@ export function getFeaturesByCategory(): Record<FeatureInfo['category'], Feature
  */
 export function compareFrameworkFeatures(
   framework1: Framework,
-  framework2: Framework
+  framework2: Framework,
 ): {
   betterIn1: FeatureId[];
   betterIn2: FeatureId[];

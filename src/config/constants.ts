@@ -24,7 +24,10 @@ export const ARCHIVE_CONFIG = {
 
 export const UI_CONFIG = {
   // UI behavior limits
-  MAX_ENTITIES_VIRTUALIZATION: parseInt(import.meta.env.VITE_MAX_ENTITIES_VIRTUALIZATION || '50', 10),
+  MAX_ENTITIES_VIRTUALIZATION: parseInt(
+    import.meta.env.VITE_MAX_ENTITIES_VIRTUALIZATION || '50',
+    10,
+  ),
   DEBOUNCE_DELAY_MS: parseInt(import.meta.env.VITE_DEBOUNCE_DELAY_MS || '100', 10),
   THROTTLE_COOLDOWN_MS: parseInt(import.meta.env.VITE_THROTTLE_COOLDOWN_MS || '1000', 10),
 } as const;

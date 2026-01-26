@@ -1,24 +1,8 @@
-import {
-  Badge,
-  Card,
-  Group,
-  List,
-  Stack,
-  Text,
-  ThemeIcon,
-  Tooltip,
-} from '@mantine/core';
-import {
-  IconCheck,
-  IconCode,
-  IconExternalLink,
-} from '@tabler/icons-react';
+import { Badge, Card, Group, List, Stack, Text, ThemeIcon, Tooltip } from '@mantine/core';
+import { IconCheck, IconCode, IconExternalLink } from '@tabler/icons-react';
 import type React from 'react';
 import { useState } from 'react';
-import {
-  type Framework,
-  FRAMEWORK_METADATA,
-} from '../../types/target';
+import { FRAMEWORK_METADATA, type Framework } from '../../types/target';
 
 /**
  * Feature metadata for display in FrameworkCard.
