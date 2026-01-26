@@ -26,20 +26,23 @@ export interface ProjectTemplate {
   relations: TemplateRelation[];
 }
 
-export const TEMPLATE_CATEGORIES: { value: TemplateCategory; label: string; description: string }[] =
-  [
-    { value: 'starter', label: 'Starter', description: 'Simple projects to get started quickly' },
-    {
-      value: 'full-stack',
-      label: 'Full-Stack',
-      description: 'Complete applications with multiple features',
-    },
-    {
-      value: 'microservice',
-      label: 'Microservice',
-      description: 'Focused services for specific domains',
-    },
-  ];
+export const TEMPLATE_CATEGORIES: {
+  value: TemplateCategory;
+  label: string;
+  description: string;
+}[] = [
+  { value: 'starter', label: 'Starter', description: 'Simple projects to get started quickly' },
+  {
+    value: 'full-stack',
+    label: 'Full-Stack',
+    description: 'Complete applications with multiple features',
+  },
+  {
+    value: 'microservice',
+    label: 'Microservice',
+    description: 'Focused services for specific domains',
+  },
+];
 
 export const PROJECT_TEMPLATES: ProjectTemplate[] = [
   {
@@ -1412,8 +1415,10 @@ export function filterTemplates(
 
 export function getAllTags(templates: ProjectTemplate[]): string[] {
   const tagSet = new Set<string>();
-  templates.forEach((template) => {
-    template.tags.forEach((tag) => tagSet.add(tag));
-  });
+  for (const template of templates) {
+    for (const tag of template.tags) {
+      tagSet.add(tag);
+    }
+  }
   return Array.from(tagSet).sort();
 }
