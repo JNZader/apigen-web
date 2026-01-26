@@ -1,8 +1,9 @@
-import { Alert, Button, Group, Modal, ScrollArea, Stack, Tabs, Text } from '@mantine/core';
+import { Alert, Button, Group, Modal, ScrollArea, Stack, Tabs, Text, Badge } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import {
   IconAlertTriangle,
   IconBrandGraphql,
+  IconBrandRust,
   IconClock,
   IconCode,
   IconDatabase,
@@ -29,15 +30,17 @@ import { BasicSettingsForm } from './BasicSettingsForm';
 import { CacheSettingsForm } from './CacheSettingsForm';
 import { CorsSettingsForm } from './CorsSettingsForm';
 import { DatabaseSettingsForm } from './DatabaseSettingsForm';
+import { FeaturePackSection } from './FeaturePackSection';
 import { FeaturesSettingsForm } from './FeaturesSettingsForm';
 import { FileStorageSettingsForm } from './FileStorageSettingsForm';
 import { GatewaySettingsForm } from './GatewaySettingsForm';
 import { GraphQLSettingsForm } from './GraphQLSettingsForm';
 import { GrpcSettingsForm } from './GrpcSettingsForm';
-import { FeaturePackSection } from './FeaturePackSection';
 import { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
 import { RateLimitSettingsForm } from './RateLimitSettingsForm';
 import { ResilienceSettingsForm } from './ResilienceSettingsForm';
+import { RustOptionsPanel } from './RustOptionsPanel';
+import { RustPresetSelector } from './RustPresetSelector';
 import { SecuritySettingsForm } from './SecuritySettingsForm';
 
 /**
@@ -79,37 +82,36 @@ interface ProjectSettingsProps {
 // Feature Pack 2025 Forms - Re-exports for external use
 // =============================================================================
 
-// Feature Pack Forms
-export { SocialLoginSettingsForm } from './SocialLoginSettingsForm';
-export { MailServiceSettingsForm } from './MailServiceSettingsForm';
-export { FileStorageSettingsForm } from './FileStorageSettingsForm';
-export { PasswordResetSettingsForm } from './PasswordResetSettingsForm';
-export { JteTemplatesSettingsForm } from './JteTemplatesSettingsForm';
-
-// Containers
-export { FeaturePackSection } from './FeaturePackSection';
-
 // Core Settings Forms
 export { BasicSettingsForm } from './BasicSettingsForm';
 export { CacheSettingsForm } from './CacheSettingsForm';
 export { CorsSettingsForm } from './CorsSettingsForm';
 export { DatabaseSettingsForm } from './DatabaseSettingsForm';
+
+// Containers
+export { FeaturePackSection } from './FeaturePackSection';
 export { FeaturesSettingsForm } from './FeaturesSettingsForm';
+export { FileStorageSettingsForm } from './FileStorageSettingsForm';
 export { GatewaySettingsForm } from './GatewaySettingsForm';
 export { GraphQLSettingsForm } from './GraphQLSettingsForm';
 export { GrpcSettingsForm } from './GrpcSettingsForm';
+export { JteTemplatesSettingsForm } from './JteTemplatesSettingsForm';
+export { MailServiceSettingsForm } from './MailServiceSettingsForm';
 export { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
+export { PasswordResetSettingsForm } from './PasswordResetSettingsForm';
 export { RateLimitSettingsForm } from './RateLimitSettingsForm';
 export { ResilienceSettingsForm } from './ResilienceSettingsForm';
 export { SecuritySettingsForm } from './SecuritySettingsForm';
 
+// Feature Pack Forms
+export { SocialLoginSettingsForm } from './SocialLoginSettingsForm';
+
+// Rust/Axum Settings
+export { RustOptionsPanel } from './RustOptionsPanel';
+export { RustPresetSelector } from './RustPresetSelector';
+
 // Types
 export type { SettingsFormProps } from './types';
-
-// Future: Language Selector components (Phase 1)
-// export { LanguageSelector } from './LanguageSelector';
-// export { FrameworkCard } from './FrameworkCard';
-// export { FeatureMatrix } from './FeatureMatrix';
 
 // =============================================================================
 // Main ProjectSettings Component
@@ -131,6 +133,9 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
         isValidPackageName(v) ? null : 'Invalid package name (e.g., com.example.myapi)',
     },
   });
+
+  // Detect if Rust is selected
+  const isRust = form.values.targetConfig?.language === 'rust';
 
   const handleLanguageChange = (language: Language, framework: Framework) => {
     // Check for incompatible features
@@ -170,6 +175,19 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             <Tabs.Tab value="language" leftSection={<IconCode size={16} />}>
               Language
             </Tabs.Tab>
+            {isRust && (
+              <Tabs.Tab
+                value="rust"
+                leftSection={<IconBrandRust size={16} />}
+                rightSection={
+                  <Badge size="xs" variant="light" color="orange">
+                    Axum
+                  </Badge>
+                }
+              >
+                Rust
+              </Tabs.Tab>
+            )}
             <Tabs.Tab value="basic" leftSection={<IconFileText size={16} />}>
               Basic
             </Tabs.Tab>
@@ -241,6 +259,17 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
               </Stack>
             </ScrollArea>
           </Tabs.Panel>
+
+          {isRust && (
+            <Tabs.Panel value="rust" pl="md">
+              <ScrollArea h={600}>
+                <Stack gap="xl">
+                  <RustPresetSelector form={form} />
+                  <RustOptionsPanel />
+                </Stack>
+              </ScrollArea>
+            </Tabs.Panel>
+          )}
 
           <Tabs.Panel value="basic" pl="md">
             <ScrollArea h={600}>

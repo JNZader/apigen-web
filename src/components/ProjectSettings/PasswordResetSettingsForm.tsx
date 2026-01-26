@@ -1,92 +1,38 @@
-import { Alert, Group, List, Paper, Stack, Switch, Text, ThemeIcon } from '@mantine/core';
-import { IconAlertCircle, IconCheck, IconInfoCircle, IconKey } from '@tabler/icons-react';
-import { memo } from 'react';
+import { Alert, Collapse, List, Paper, Stack, Switch, Text, ThemeIcon, Title } from '@mantine/core';
+import { IconAlertTriangle, IconCheck, IconKey, IconMail } from '@tabler/icons-react';
 import {
   useFeaturePackConfig,
-  useProject,
+  useFeatures,
   useProjectStoreInternal,
   useTargetConfig,
-} from '@/store';
+} from '../../store';
 
-export const PasswordResetSettingsForm = memo(function PasswordResetSettingsForm() {
+export function PasswordResetSettingsForm() {
   const targetConfig = useTargetConfig();
-  const project = useProject();
+  const features = useFeatures();
   const featurePackConfig = useFeaturePackConfig();
+  const setFeatures = useProjectStoreInternal((s) => s.setFeatures);
 
-  const passwordResetEnabled = project.features.passwordReset;
+  const isRust = targetConfig.language === 'rust';
   const mailEnabled = featurePackConfig.mail.enabled;
+  const passwordResetEnabled = features.passwordReset;
 
-  const isSupported = targetConfig ? !['rust'].includes(targetConfig.language) : true;
-
-  const handleToggle = (checked: boolean) => {
-    useProjectStoreInternal.setState((state) => ({
-      project: {
-        ...state.project,
-        features: {
-          ...state.project.features,
-          passwordReset: checked,
-        },
-      },
-    }));
-  };
-
-  if (!isSupported) {
+  if (isRust) {
     return (
-      <Alert
-        icon={<IconInfoCircle size={16} />}
-        title="Not Available"
-        color="yellow"
-        data-testid="password-reset-unavailable-alert"
-      >
-        Password Reset is not available for {targetConfig?.language}.
-      </Alert>
+      <Stack>
+        <Alert
+          icon={<IconAlertTriangle size={16} />}
+          title="Not Available"
+          color="yellow"
+          variant="light"
+          data-testid="password-reset-unavailable-alert"
+        >
+          Password Reset is not available for rust. This feature is currently supported for Java,
+          Kotlin, Python, TypeScript, PHP, C#, and Go.
+        </Alert>
+      </Stack>
     );
   }
-
-  return (
-    <Stack gap="md" data-testid="password-reset-settings-form">
-      {/* Master toggle */}
-      <Group justify="space-between">
-        <div>
-          <Group gap="xs">
-            <IconKey size={20} />
-            <Text fw={500}>Enable Password Reset</Text>
-          </Group>
-          <Text size="sm" c="dimmed">
-            Allow users to reset their password via email
-          </Text>
-        </div>
-        <Switch
-          checked={passwordResetEnabled}
-          onChange={(e) => handleToggle(e.currentTarget.checked)}
-          size="md"
-          data-testid="password-reset-toggle"
-          aria-label="Enable Password Reset"
-        />
-      </Group>
-
-      {/* Dependency warning */}
-      {passwordResetEnabled && !mailEnabled && (
-        <Alert
-          icon={<IconAlertCircle size={16} />}
-          title="Mail Service Required"
-          color="yellow"
-          data-testid="mail-required-warning"
-        >
-          <Text size="sm">
-            Password Reset requires Mail Service to send reset emails.
-            <br />
-            Please enable Mail Service in the Mail tab.
-import { Alert, Collapse, List, Paper, Stack, Switch, Text, Title } from '@mantine/core';
-import { IconAlertTriangle, IconKey, IconMail } from '@tabler/icons-react';
-import { useTargetConfig } from '../../store';
-import type { SettingsFormProps } from './types';
-
-export function PasswordResetSettingsForm({ form }: SettingsFormProps) {
-  const targetConfig = useTargetConfig();
-  const isRust = targetConfig.language === 'rust';
-  const mailEnabled = form.values.features.mailService;
-  const passwordResetEnabled = form.values.features.passwordReset;
 
   return (
     <Stack>
@@ -98,7 +44,9 @@ export function PasswordResetSettingsForm({ form }: SettingsFormProps) {
           </Text>
         }
         description="Generate password reset functionality with email-based recovery"
-        {...form.getInputProps('features.passwordReset', { type: 'checkbox' })}
+        checked={passwordResetEnabled}
+        onChange={(e) => setFeatures({ passwordReset: e.currentTarget.checked })}
+        data-testid="password-reset-toggle"
       />
 
       {!mailEnabled && passwordResetEnabled && (
@@ -107,6 +55,7 @@ export function PasswordResetSettingsForm({ form }: SettingsFormProps) {
           title="Mail Service Required"
           color="yellow"
           variant="light"
+          data-testid="mail-required-warning"
         >
           <Text size="sm">
             Password Reset requires Mail Service to send reset emails. Please enable Mail Service in
@@ -115,98 +64,39 @@ export function PasswordResetSettingsForm({ form }: SettingsFormProps) {
         </Alert>
       )}
 
-      {/* What gets generated */}
-      {passwordResetEnabled && (
-        <Paper withBorder p="md" radius="md" data-testid="generated-items-section">
-          <Text fw={500} mb="sm">
-            This will generate:
-          </Text>
-
-          <List
-            spacing="xs"
-            size="sm"
-            icon={
-              <ThemeIcon color="green" size={20} radius="xl">
-                <IconCheck size={12} />
-              </ThemeIcon>
-            }
-          >
-            <List.Item data-testid="generated-item-token">
-              <Text fw={500}>PasswordResetToken</Text>
-              <Text size="xs" c="dimmed">
-                Entity to store reset tokens with expiration
-              </Text>
-            </List.Item>
-            <List.Item data-testid="generated-item-service">
-              <Text fw={500}>PasswordResetService</Text>
-              <Text size="xs" c="dimmed">
-                Service to handle token generation and validation
-              </Text>
-            </List.Item>
-            <List.Item data-testid="generated-item-controller">
-              <Text fw={500}>PasswordResetController</Text>
-              <Text size="xs" c="dimmed">
-                REST endpoints for password reset flow
-              </Text>
-            </List.Item>
-          </List>
-
-          <Text size="sm" mt="md" c="dimmed">
-            <strong>Endpoints:</strong>
-          </Text>
-          <List size="xs" c="dimmed">
-            <List.Item>POST /api/auth/password/forgot - Request reset email</List.Item>
-            <List.Item>POST /api/auth/password/reset - Reset with token</List.Item>
-          </List>
-        </Paper>
-      )}
-    </Stack>
-  );
-});
-      {isRust && passwordResetEnabled && (
-        <Alert
-          icon={<IconAlertTriangle size={16} />}
-          title="Limited Support for Rust"
-          color="orange"
-          variant="light"
-        >
-          <Text size="sm">
-            Password Reset for Rust/Axum has limited template support. JTE Templates are not
-            available for Rust.
-          </Text>
-        </Alert>
-      )}
-
       <Collapse in={passwordResetEnabled}>
         <Stack mt="md">
-          <Title order={6}>Generated Components</Title>
-          <Paper p="md" withBorder>
-            <Text size="sm" fw={500} mb="xs">
-              The following will be generated:
+          {/* What gets generated */}
+          <Paper withBorder p="md" radius="md" data-testid="generated-items-section">
+            <Text fw={500} mb="sm">
+              This will generate:
             </Text>
-            <List size="sm" spacing="xs">
-              <List.Item>
-                <Text size="sm">
-                  <Text component="span" fw={500}>
-                    PasswordResetToken
-                  </Text>{' '}
-                  - Entity for storing reset tokens
+
+            <List
+              spacing="xs"
+              size="sm"
+              icon={
+                <ThemeIcon color="green" size={20} radius="xl">
+                  <IconCheck size={12} />
+                </ThemeIcon>
+              }
+            >
+              <List.Item data-testid="generated-item-token">
+                <Text fw={500}>PasswordResetToken</Text>
+                <Text size="xs" c="dimmed">
+                  Entity to store reset tokens with expiration
                 </Text>
               </List.Item>
-              <List.Item>
-                <Text size="sm">
-                  <Text component="span" fw={500}>
-                    PasswordResetService
-                  </Text>{' '}
-                  - Business logic for password reset flow
+              <List.Item data-testid="generated-item-service">
+                <Text fw={500}>PasswordResetService</Text>
+                <Text size="xs" c="dimmed">
+                  Service to handle token generation and validation
                 </Text>
               </List.Item>
-              <List.Item>
-                <Text size="sm">
-                  <Text component="span" fw={500}>
-                    PasswordResetController
-                  </Text>{' '}
-                  - REST endpoints for password reset
+              <List.Item data-testid="generated-item-controller">
+                <Text fw={500}>PasswordResetController</Text>
+                <Text size="xs" c="dimmed">
+                  REST endpoints for password reset flow
                 </Text>
               </List.Item>
             </List>

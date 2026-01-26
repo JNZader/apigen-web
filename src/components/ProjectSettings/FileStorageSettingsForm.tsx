@@ -1,85 +1,4 @@
 import {
-  Collapse,
-  Divider,
-  NumberInput,
-  Select,
-  Stack,
-  Switch,
-  TagsInput,
-  TextInput,
-  Title,
-} from '@mantine/core';
-import type { SettingsFormProps } from './types';
-
-export function FileStorageSettingsForm({ form }: SettingsFormProps) {
-  const isEnabled = form.values.features.fileStorage;
-  const provider = form.values.featurePackConfig.storage.provider;
-
-  return (
-    <Stack>
-      <Title order={6}>File Storage</Title>
-
-      <Switch
-        label="Enable File Storage"
-        description="Enable file upload and storage functionality"
-        {...form.getInputProps('features.fileStorage', { type: 'checkbox' })}
-      />
-
-      <Collapse in={isEnabled}>
-        <Stack mt="md">
-          <Select
-            label="Storage Provider"
-            description="Choose where to store uploaded files"
-            data={[
-              { value: 'local', label: 'Local Filesystem' },
-              { value: 's3', label: 'Amazon S3' },
-              { value: 'gcs', label: 'Google Cloud Storage' },
-              { value: 'azure', label: 'Azure Blob Storage' },
-            ]}
-            {...form.getInputProps('featurePackConfig.storage.provider')}
-          />
-
-          <Divider label="Upload Limits" labelPosition="left" />
-
-          <NumberInput
-            label="Max File Size (MB)"
-            description="Maximum allowed file size for uploads"
-            min={1}
-            max={1024}
-            value={form.values.featurePackConfig.storage.maxFileSizeBytes / 1048576}
-            onChange={(value) =>
-              form.setFieldValue(
-                'featurePackConfig.storage.maxFileSizeBytes',
-                (value as number) * 1048576,
-              )
-            }
-          />
-
-          <TagsInput
-            label="Allowed Extensions"
-            description="Leave empty to allow all file types"
-            placeholder="e.g., jpg, png, pdf"
-            {...form.getInputProps('featurePackConfig.storage.allowedExtensions')}
-          />
-
-          <Switch
-            label="Validate Content Type"
-            description="Verify file content matches extension"
-            {...form.getInputProps('featurePackConfig.storage.validateContentType', {
-              type: 'checkbox',
-            })}
-          />
-
-          <Switch
-            label="Generate Unique Names"
-            description="Automatically generate unique filenames"
-            {...form.getInputProps('featurePackConfig.storage.generateUniqueNames', {
-              type: 'checkbox',
-            })}
-          />
-
-          {/* Local Storage Configuration */}
-          <Collapse in={provider === 'local'}>
   Alert,
   Card,
   Collapse,
@@ -91,9 +10,10 @@ export function FileStorageSettingsForm({ form }: SettingsFormProps) {
   TagsInput,
   Text,
   TextInput,
+  Title,
   UnstyledButton,
 } from '@mantine/core';
-import { IconCloud, IconFolder, IconInfoCircle, IconWorld } from '@tabler/icons-react';
+import { IconCloud, IconFolder, IconInfoCircle, IconServer, IconWorld } from '@tabler/icons-react';
 import type { StorageProvider } from '../../types/config/featurepack';
 import type { SettingsFormProps } from './types';
 
@@ -135,7 +55,7 @@ function StorageTypeCard({ icon, title, description, selected, onClick }: Storag
 }
 
 export function FileStorageSettingsForm({ form }: SettingsFormProps) {
-  const storageEnabled = form.values.featurePackConfig?.storage?.enabled ?? false;
+  const storageEnabled = form.values.features?.fileStorage ?? false;
   const currentProvider = form.values.featurePackConfig?.storage?.provider ?? 'local';
 
   const handleProviderChange = (provider: StorageProvider) => {
@@ -144,10 +64,12 @@ export function FileStorageSettingsForm({ form }: SettingsFormProps) {
 
   return (
     <Stack>
+      <Title order={5}>File Storage</Title>
+
       <Switch
         label="Enable File Storage"
         description="Allow file uploads and storage management in your API"
-        {...form.getInputProps('featurePackConfig.storage.enabled', { type: 'checkbox' })}
+        {...form.getInputProps('features.fileStorage', { type: 'checkbox' })}
       />
 
       <Collapse in={storageEnabled}>
@@ -176,6 +98,13 @@ export function FileStorageSettingsForm({ form }: SettingsFormProps) {
               selected={currentProvider === 'azure'}
               onClick={() => handleProviderChange('azure')}
             />
+            <StorageTypeCard
+              icon={<IconServer size={24} color="var(--mantine-color-green-6)" />}
+              title="Google Cloud"
+              description="Google Cloud Storage"
+              selected={currentProvider === 'gcs'}
+              onClick={() => handleProviderChange('gcs')}
+            />
           </Group>
 
           {/* Local Storage Configuration */}
@@ -184,7 +113,6 @@ export function FileStorageSettingsForm({ form }: SettingsFormProps) {
               <Divider label="Local Storage Configuration" labelPosition="left" />
               <TextInput
                 label="Base Path"
-                description="Directory for storing uploaded files"
                 description="Directory path for storing uploaded files"
                 placeholder="./uploads"
                 {...form.getInputProps('featurePackConfig.storage.local.basePath')}
@@ -199,13 +127,6 @@ export function FileStorageSettingsForm({ form }: SettingsFormProps) {
             </Stack>
           </Collapse>
 
-          {/* S3 Configuration */}
-          <Collapse in={provider === 's3'}>
-            <Stack mt="md">
-              <Divider label="S3 Configuration" labelPosition="left" />
-              <TextInput
-                label="Bucket Name"
-                placeholder="my-bucket"
           {/* S3 Storage Configuration */}
           <Collapse in={currentProvider === 's3'}>
             <Stack mt="md">
@@ -228,21 +149,12 @@ export function FileStorageSettingsForm({ form }: SettingsFormProps) {
               />
               <TextInput
                 label="Access Key ID"
-                placeholder="AKIA..."
                 description="AWS access key ID"
                 placeholder="AKIAIOSFODNN7EXAMPLE"
                 {...form.getInputProps('featurePackConfig.storage.s3.accessKeyId')}
               />
               <TextInput
                 label="Secret Access Key"
-                type="password"
-                placeholder="Your secret key"
-                {...form.getInputProps('featurePackConfig.storage.s3.secretAccessKey')}
-              />
-              <TextInput
-                label="Custom Endpoint"
-                description="Optional: for S3-compatible storage"
-                placeholder="https://s3.example.com"
                 description="AWS secret access key"
                 placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
                 type="password"
@@ -256,7 +168,6 @@ export function FileStorageSettingsForm({ form }: SettingsFormProps) {
               />
               <Switch
                 label="Path Style Access"
-                description="Use path-style URLs (for S3-compatible storage)"
                 description="Use path-style URLs (required for some S3-compatible services)"
                 {...form.getInputProps('featurePackConfig.storage.s3.pathStyleAccess', {
                   type: 'checkbox',
@@ -265,35 +176,6 @@ export function FileStorageSettingsForm({ form }: SettingsFormProps) {
             </Stack>
           </Collapse>
 
-          {/* GCS Configuration */}
-          <Collapse in={provider === 'gcs'}>
-            <Stack mt="md">
-              <Divider label="Google Cloud Storage Configuration" labelPosition="left" />
-              <TextInput
-                label="Bucket Name"
-                placeholder="my-gcs-bucket"
-                {...form.getInputProps('featurePackConfig.storage.gcs.bucket')}
-              />
-              <TextInput
-                label="Project ID"
-                placeholder="my-project-id"
-                {...form.getInputProps('featurePackConfig.storage.gcs.projectId')}
-              />
-              <TextInput
-                label="Credentials Path"
-                description="Path to service account JSON file"
-                placeholder="/path/to/credentials.json"
-                {...form.getInputProps('featurePackConfig.storage.gcs.credentialsPath')}
-              />
-            </Stack>
-          </Collapse>
-
-          {/* Azure Configuration */}
-          <Collapse in={provider === 'azure'}>
-            <Stack mt="md">
-              <Divider label="Azure Blob Storage Configuration" labelPosition="left" />
-              <TextInput
-                label="Account Name"
           {/* Azure Blob Storage Configuration */}
           <Collapse in={currentProvider === 'azure'}>
             <Stack mt="md">
@@ -309,20 +191,12 @@ export function FileStorageSettingsForm({ form }: SettingsFormProps) {
               />
               <TextInput
                 label="Account Key"
-                type="password"
-                placeholder="Your account key"
                 description="Azure storage account key"
                 type="password"
                 {...form.getInputProps('featurePackConfig.storage.azure.accountKey')}
               />
               <TextInput
                 label="Container Name"
-                placeholder="my-container"
-                {...form.getInputProps('featurePackConfig.storage.azure.containerName')}
-              />
-              <TextInput
-                label="Custom Endpoint"
-                description="Optional: custom endpoint URL"
                 description="Azure Blob container name"
                 placeholder="uploads"
                 {...form.getInputProps('featurePackConfig.storage.azure.containerName')}
@@ -336,6 +210,34 @@ export function FileStorageSettingsForm({ form }: SettingsFormProps) {
             </Stack>
           </Collapse>
 
+          {/* Google Cloud Storage Configuration */}
+          <Collapse in={currentProvider === 'gcs'}>
+            <Stack mt="md">
+              <Divider label="Google Cloud Storage Configuration" labelPosition="left" />
+              <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+                Configure your Google Cloud Storage credentials.
+              </Alert>
+              <TextInput
+                label="Project ID"
+                description="Google Cloud project ID"
+                placeholder="my-project-id"
+                {...form.getInputProps('featurePackConfig.storage.gcs.projectId')}
+              />
+              <TextInput
+                label="Bucket Name"
+                description="GCS bucket name"
+                placeholder="my-app-uploads"
+                {...form.getInputProps('featurePackConfig.storage.gcs.bucket')}
+              />
+              <TextInput
+                label="Credentials Path"
+                description="Path to service account credentials JSON file"
+                placeholder="/path/to/credentials.json"
+                {...form.getInputProps('featurePackConfig.storage.gcs.credentialsPath')}
+              />
+            </Stack>
+          </Collapse>
+
           <Divider label="Upload Limits" labelPosition="left" mt="md" />
 
           <NumberInput
@@ -343,7 +245,6 @@ export function FileStorageSettingsForm({ form }: SettingsFormProps) {
             description="Maximum allowed file size for uploads"
             min={1}
             max={1024}
-            {...form.getInputProps('featurePackConfig.storage.maxFileSizeBytes')}
             value={(form.values.featurePackConfig?.storage?.maxFileSizeBytes ?? 10485760) / 1048576}
             onChange={(value) => {
               const bytes = typeof value === 'number' ? value * 1048576 : 10485760;
