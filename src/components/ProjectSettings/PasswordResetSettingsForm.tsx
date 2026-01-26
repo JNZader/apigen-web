@@ -1,13 +1,38 @@
 import { Alert, Collapse, List, Paper, Stack, Switch, Text, ThemeIcon, Title } from '@mantine/core';
 import { IconAlertTriangle, IconCheck, IconKey, IconMail } from '@tabler/icons-react';
-import { useTargetConfig } from '../../store';
-import type { SettingsFormProps } from './types';
+import {
+  useFeaturePackConfig,
+  useFeatures,
+  useProjectStoreInternal,
+  useTargetConfig,
+} from '../../store';
 
-export function PasswordResetSettingsForm({ form }: SettingsFormProps) {
+export function PasswordResetSettingsForm() {
   const targetConfig = useTargetConfig();
+  const features = useFeatures();
+  const featurePackConfig = useFeaturePackConfig();
+  const setFeatures = useProjectStoreInternal((s) => s.setFeatures);
+
   const isRust = targetConfig.language === 'rust';
-  const mailEnabled = form.values.features.mailService;
-  const passwordResetEnabled = form.values.features.passwordReset;
+  const mailEnabled = featurePackConfig.mail.enabled;
+  const passwordResetEnabled = features.passwordReset;
+
+  if (isRust) {
+    return (
+      <Stack>
+        <Alert
+          icon={<IconAlertTriangle size={16} />}
+          title="Not Available"
+          color="yellow"
+          variant="light"
+          data-testid="password-reset-unavailable-alert"
+        >
+          Password Reset is not available for rust. This feature is currently supported for Java,
+          Kotlin, Python, TypeScript, PHP, C#, and Go.
+        </Alert>
+      </Stack>
+    );
+  }
 
   return (
     <Stack>
@@ -19,7 +44,9 @@ export function PasswordResetSettingsForm({ form }: SettingsFormProps) {
           </Text>
         }
         description="Generate password reset functionality with email-based recovery"
-        {...form.getInputProps('features.passwordReset', { type: 'checkbox' })}
+        checked={passwordResetEnabled}
+        onChange={(e) => setFeatures({ passwordReset: e.currentTarget.checked })}
+        data-testid="password-reset-toggle"
       />
 
       {!mailEnabled && passwordResetEnabled && (
@@ -28,24 +55,11 @@ export function PasswordResetSettingsForm({ form }: SettingsFormProps) {
           title="Mail Service Required"
           color="yellow"
           variant="light"
+          data-testid="mail-required-warning"
         >
           <Text size="sm">
             Password Reset requires Mail Service to send reset emails. Please enable Mail Service in
             the Features tab for password reset to work properly.
-          </Text>
-        </Alert>
-      )}
-
-      {isRust && passwordResetEnabled && (
-        <Alert
-          icon={<IconAlertTriangle size={16} />}
-          title="Limited Support for Rust"
-          color="orange"
-          variant="light"
-        >
-          <Text size="sm">
-            Password Reset for Rust/Axum has limited template support. JTE Templates are not
-            available for Rust.
           </Text>
         </Alert>
       )}

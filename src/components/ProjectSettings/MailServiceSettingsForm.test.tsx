@@ -132,7 +132,7 @@ describe('MailServiceSettingsForm', () => {
   });
 
   describe('Email Validation', () => {
-    it('validates email format for fromAddress', () => {
+    it('validates email format for fromAddress', async () => {
       const config = {
         ...defaultProjectConfig,
         featurePackConfig: {
@@ -147,7 +147,10 @@ describe('MailServiceSettingsForm', () => {
 
       render(<TestWrapper initialValues={config} />);
 
-      expect(screen.getByText('Invalid email format')).toBeInTheDocument();
+      // Wait for Collapse to expand and show the content
+      await waitFor(() => {
+        expect(screen.getByText('Invalid email format')).toBeInTheDocument();
+      });
     });
 
     it('does not show error for valid email', () => {

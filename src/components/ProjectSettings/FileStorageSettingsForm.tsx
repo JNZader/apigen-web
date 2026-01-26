@@ -10,9 +10,10 @@ import {
   TagsInput,
   Text,
   TextInput,
+  Title,
   UnstyledButton,
 } from '@mantine/core';
-import { IconCloud, IconFolder, IconInfoCircle, IconWorld } from '@tabler/icons-react';
+import { IconCloud, IconFolder, IconInfoCircle, IconServer, IconWorld } from '@tabler/icons-react';
 import type { StorageProvider } from '../../types/config/featurepack';
 import type { SettingsFormProps } from './types';
 
@@ -54,7 +55,7 @@ function StorageTypeCard({ icon, title, description, selected, onClick }: Storag
 }
 
 export function FileStorageSettingsForm({ form }: SettingsFormProps) {
-  const storageEnabled = form.values.featurePackConfig?.storage?.enabled ?? false;
+  const storageEnabled = form.values.features?.fileStorage ?? false;
   const currentProvider = form.values.featurePackConfig?.storage?.provider ?? 'local';
 
   const handleProviderChange = (provider: StorageProvider) => {
@@ -63,10 +64,12 @@ export function FileStorageSettingsForm({ form }: SettingsFormProps) {
 
   return (
     <Stack>
+      <Title order={5}>File Storage</Title>
+
       <Switch
         label="Enable File Storage"
         description="Allow file uploads and storage management in your API"
-        {...form.getInputProps('featurePackConfig.storage.enabled', { type: 'checkbox' })}
+        {...form.getInputProps('features.fileStorage', { type: 'checkbox' })}
       />
 
       <Collapse in={storageEnabled}>
@@ -94,6 +97,13 @@ export function FileStorageSettingsForm({ form }: SettingsFormProps) {
               description="Azure Blob Storage"
               selected={currentProvider === 'azure'}
               onClick={() => handleProviderChange('azure')}
+            />
+            <StorageTypeCard
+              icon={<IconServer size={24} color="var(--mantine-color-green-6)" />}
+              title="Google Cloud"
+              description="Google Cloud Storage"
+              selected={currentProvider === 'gcs'}
+              onClick={() => handleProviderChange('gcs')}
             />
           </Group>
 
@@ -196,6 +206,34 @@ export function FileStorageSettingsForm({ form }: SettingsFormProps) {
                 description="Custom endpoint URL if not using default Azure endpoint"
                 placeholder="https://mystorageaccount.blob.core.windows.net"
                 {...form.getInputProps('featurePackConfig.storage.azure.endpoint')}
+              />
+            </Stack>
+          </Collapse>
+
+          {/* Google Cloud Storage Configuration */}
+          <Collapse in={currentProvider === 'gcs'}>
+            <Stack mt="md">
+              <Divider label="Google Cloud Storage Configuration" labelPosition="left" />
+              <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light">
+                Configure your Google Cloud Storage credentials.
+              </Alert>
+              <TextInput
+                label="Project ID"
+                description="Google Cloud project ID"
+                placeholder="my-project-id"
+                {...form.getInputProps('featurePackConfig.storage.gcs.projectId')}
+              />
+              <TextInput
+                label="Bucket Name"
+                description="GCS bucket name"
+                placeholder="my-app-uploads"
+                {...form.getInputProps('featurePackConfig.storage.gcs.bucket')}
+              />
+              <TextInput
+                label="Credentials Path"
+                description="Path to service account credentials JSON file"
+                placeholder="/path/to/credentials.json"
+                {...form.getInputProps('featurePackConfig.storage.gcs.credentialsPath')}
               />
             </Stack>
           </Collapse>

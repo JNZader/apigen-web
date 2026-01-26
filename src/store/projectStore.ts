@@ -8,6 +8,7 @@ import {
   type FieldDesign,
   type GoChiOptions,
   type ProjectConfig,
+  type ProjectFeatures,
   type RustAxumOptions,
   type ServiceConnectionDesign,
   type ServiceDesign,
@@ -73,6 +74,9 @@ interface ProjectState {
   // Target Config Actions
   setTargetConfig: (config: Partial<TargetConfig>) => void;
 
+  // Feature Flags Actions
+  setFeatures: (features: Partial<ProjectFeatures>) => void;
+
   // Feature Pack 2025 Actions
   setFeaturePackConfig: (config: Partial<FeaturePackConfig>) => void;
 
@@ -110,6 +114,18 @@ export const useProjectStoreInternal = create<ProjectState>()(
           project: {
             ...state.project,
             targetConfig: { ...state.project.targetConfig, ...config },
+          },
+        })),
+
+      /**
+       * Updates the feature flags
+       * @param features - Partial feature flags to merge
+       */
+      setFeatures: (features) =>
+        set((state) => ({
+          project: {
+            ...state.project,
+            features: { ...state.project.features, ...features },
           },
         })),
 
@@ -616,6 +632,12 @@ export const useProjectActions = () =>
  * @returns The current target configuration
  */
 export const useTargetConfig = () => useProjectStoreInternal((state) => state.project.targetConfig);
+
+/**
+ * Selector for accessing the feature flags
+ * @returns The current feature flags
+ */
+export const useFeatures = () => useProjectStoreInternal((state) => state.project.features);
 
 /**
  * Selector for accessing the Feature Pack 2025 configuration
