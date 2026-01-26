@@ -27,7 +27,7 @@ export function PasswordResetSettingsForm() {
           variant="light"
           data-testid="password-reset-unavailable-alert"
         >
-          Password Reset is not available for rust. This feature is currently supported for Java,
+          Password Reset is not available for Rust. This feature is currently supported for Java,
           Kotlin, Python, TypeScript, PHP, C#, and Go.
         </Alert>
       </Stack>

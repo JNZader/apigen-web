@@ -262,7 +262,7 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             <Tabs.Panel value="rust" pl="md">
               <ScrollArea h={600}>
                 <Stack gap="xl">
-                  <RustPresetSelector form={form} />
+                  <RustPresetSelector />
                   <RustOptionsPanel />
                 </Stack>
               </ScrollArea>
