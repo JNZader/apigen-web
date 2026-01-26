@@ -358,7 +358,7 @@ export function convertPropertyToField(
     name: propertyName,
     columnName: generateColumnName(propertyName),
     type: javaType,
-    nullable: !isRequired && (property.nullable !== false),
+    nullable: !isRequired && property.nullable !== false,
     unique: false, // OpenAPI doesn't have a direct unique constraint
     validations,
   };
@@ -499,7 +499,9 @@ function buildRelations(
 
     // Skip if target is not an entity
     if (!entityIdMap.has(targetSchemaName)) {
-      warnings.push(`Skipped relation ${sourceSchemaName}.${sourceFieldName} -> ${targetSchemaName}: target not an entity`);
+      warnings.push(
+        `Skipped relation ${sourceSchemaName}.${sourceFieldName} -> ${targetSchemaName}: target not an entity`,
+      );
       continue;
     }
 
@@ -519,7 +521,11 @@ function buildRelations(
 
     const targetSchema = schemas[targetSchemaName];
     const backRef = hasBackReference(sourceSchemaName, targetSchema);
-    const relationType = determineRelationType(isArray, backRef.hasBackRef, backRef.isArray ?? false);
+    const relationType = determineRelationType(
+      isArray,
+      backRef.hasBackRef,
+      backRef.isArray ?? false,
+    );
 
     const relation: RelationDesign = {
       id: generateId(),
@@ -631,10 +637,7 @@ export function convertOpenApiToEntities(
   document: ParsedOpenApiDocument,
   options: ConversionOptions = {},
 ): ConversionResult {
-  const {
-    gridSpacing = 300,
-    startPosition = { x: 100, y: 100 },
-  } = options;
+  const { gridSpacing = 300, startPosition = { x: 100, y: 100 } } = options;
 
   const entities: EntityDesign[] = [];
   const allWarnings: string[] = [];
