@@ -77,10 +77,10 @@ export function validateFeatureCompatibility(config: ProjectConfig): ValidationR
     'jteTemplates',
   ] as const;
 
-  const javaOnlyLanguages: Language[] = ['java', 'kotlin'];
+  const javaOnlyLanguages = new Set<Language>(['java', 'kotlin']);
 
   for (const feature of featurePackFeatures) {
-    if (config.features[feature] && !javaOnlyLanguages.includes(language)) {
+    if (config.features[feature] && !javaOnlyLanguages.has(language)) {
       if (feature === 'jteTemplates') {
         errors.push(`JTE Templates feature is only available for Java/Kotlin projects`);
       } else {
@@ -90,7 +90,7 @@ export function validateFeatureCompatibility(config: ProjectConfig): ValidationR
   }
 
   // Virtual threads are Java 21+ specific
-  if (config.features.virtualThreads && !javaOnlyLanguages.includes(language)) {
+  if (config.features.virtualThreads && !javaOnlyLanguages.has(language)) {
     errors.push(`Virtual threads feature is only available for Java/Kotlin projects`);
   }
 
@@ -272,12 +272,12 @@ export function buildProjectConfig(
     groupId: baseProject.groupId,
     packageName: baseProject.packageName,
     artifactId: service?.name
-      ? `api-${service.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`
+      ? `api-${service.name.toLowerCase().replaceAll(/[^a-z0-9]/g, '-')}`
       : baseProject.artifactId,
 
     // Legacy Java fields (deprecated but maintained for compatibility)
-    javaVersion: baseProject.javaVersion,
-    springBootVersion: baseProject.springBootVersion,
+    javaVersion: baseProject.javaVersion, // NOSONAR S1874 - Intentionally using deprecated field for backward compatibility
+    springBootVersion: baseProject.springBootVersion, // NOSONAR S1874 - Intentionally using deprecated field for backward compatibility
 
     // Target configuration (multi-language support)
     targetConfig,

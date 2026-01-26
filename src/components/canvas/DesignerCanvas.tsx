@@ -92,8 +92,8 @@ export function DesignerCanvas({
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
   // Track which service is being hovered during entity drag (for visual feedback)
-  // setDropTargetServiceId is kept for potential future use (drag-to-assign feature)
-  const [dropTargetServiceId, _setDropTargetServiceId] = useState<string | null>(null);
+  // Note: setter is unused but kept for future drag-to-assign feature implementation
+  const [dropTargetServiceId] = useState<string | null>(null);
 
   // Service connection form state management
   const {

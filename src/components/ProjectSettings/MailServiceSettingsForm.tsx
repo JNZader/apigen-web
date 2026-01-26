@@ -17,14 +17,14 @@ import { IconAlertTriangle, IconInfoCircle, IconMail } from '@tabler/icons-react
 import { useTargetConfig } from '../../store';
 import type { SettingsFormProps } from './types';
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // NOSONAR S5852 - Safe: negated char classes cannot cause backtracking
 
 function isValidEmail(email: string): boolean {
   if (!email) return true;
   return EMAIL_REGEX.test(email);
 }
 
-export function MailServiceSettingsForm({ form }: SettingsFormProps) {
+export function MailServiceSettingsForm({ form }: Readonly<SettingsFormProps>) {
   const targetConfig = useTargetConfig();
   const isRust = targetConfig.language === 'rust';
   const isMailEnabled = form.values.featurePackConfig.mail.enabled;

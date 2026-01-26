@@ -328,7 +328,7 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   eventSourcing: 'Event Sourcing',
   apiVersioning: 'API Versioning',
   socialLogin: 'Social Login',
-  passwordReset: 'Password Reset',
+  passwordReset: 'Password Reset', // NOSONAR S2068 - Feature label, not a credential
   mailService: 'Mail Service',
   fileStorage: 'File Storage',
   jteTemplates: 'JTE Templates',

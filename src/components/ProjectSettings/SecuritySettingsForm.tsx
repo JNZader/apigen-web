@@ -10,7 +10,7 @@ import {
 } from '@mantine/core';
 import type { SettingsFormProps } from './types';
 
-export function SecuritySettingsForm({ form }: SettingsFormProps) {
+export function SecuritySettingsForm({ form }: Readonly<SettingsFormProps>) {
   return (
     <Stack>
       <Switch

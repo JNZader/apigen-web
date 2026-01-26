@@ -1,7 +1,7 @@
 import { Collapse, Divider, NumberInput, Stack, Switch, TextInput, Title } from '@mantine/core';
 import type { SettingsFormProps } from './types';
 
-export function ObservabilitySettingsForm({ form }: SettingsFormProps) {
+export function ObservabilitySettingsForm({ form }: Readonly<SettingsFormProps>) {
   return (
     <Stack>
       <Title order={6}>Distributed Tracing</Title>

@@ -60,6 +60,15 @@ const LANGUAGE_COLORS: Record<Language, string> = {
   csharp: 'violet',
 };
 
+/**
+ * Get card transform scale based on selection and hover state.
+ */
+function getCardTransform(isSelected: boolean, isHovered: boolean): string {
+  if (isSelected) return 'scale(1.02)';
+  if (isHovered) return 'scale(1.01)';
+  return 'scale(1)';
+}
+
 export function LanguageStep({ onLanguageChange }: Readonly<LanguageStepProps>) {
   const targetConfig = useTargetConfig();
   const { setTargetConfig } = useTargetConfigActions();
@@ -133,11 +142,7 @@ export function LanguageStep({ onLanguageChange }: Readonly<LanguageStepProps>) 
                     style={{
                       ...styles,
                       cursor: 'pointer',
-                      transform: isSelected
-                        ? 'scale(1.02)'
-                        : isHovered
-                          ? 'scale(1.01)'
-                          : 'scale(1)',
+                      transform: getCardTransform(isSelected, isHovered),
                       transition: 'all 0.2s ease',
                     }}
                     shadow={isSelected ? 'md' : 'sm'}

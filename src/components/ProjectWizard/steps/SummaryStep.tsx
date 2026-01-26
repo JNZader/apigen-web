@@ -29,7 +29,6 @@ import {
 } from '@tabler/icons-react';
 import { useFeatures, useProject, useTargetConfig } from '../../../store';
 import { FEATURE_LABELS, type FeatureKey } from '../../../types/config/featureCompatibility';
-import type { ProjectFeatures } from '../../../types/project';
 import { FRAMEWORK_METADATA, LANGUAGE_METADATA, type Language } from '../../../types/target';
 
 const LANGUAGE_ICONS: Record<Language, React.ReactNode> = {
@@ -123,12 +122,10 @@ export function SummaryStep() {
   const frameworkMeta = FRAMEWORK_METADATA[targetConfig.framework];
   const languageColor = LANGUAGE_COLORS[targetConfig.language];
 
-  const enabledFeatures = (Object.keys(features) as FeatureKey[]).filter(
-    (key) => features[key as keyof ProjectFeatures],
-  );
+  const enabledFeatures = (Object.keys(features) as FeatureKey[]).filter((key) => features[key]);
 
   const getEnabledFeaturesForGroup = (group: FeatureGroup) =>
-    group.features.filter((f) => features[f as keyof ProjectFeatures]);
+    group.features.filter((f) => features[f]);
 
   return (
     <Stack gap="xl">

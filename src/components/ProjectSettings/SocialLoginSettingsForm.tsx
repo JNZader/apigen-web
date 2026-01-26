@@ -37,7 +37,7 @@ function isValidUrl(url: string): boolean {
   }
 }
 
-export function SocialLoginSettingsForm({ form }: SettingsFormProps) {
+export function SocialLoginSettingsForm({ form }: Readonly<SettingsFormProps>) {
   const targetConfig = useTargetConfig();
   const { isFeatureSupported } = useLanguageFeatureSync();
   const languageLabel = LANGUAGE_METADATA[targetConfig.language].label;

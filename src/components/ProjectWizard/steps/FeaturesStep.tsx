@@ -32,7 +32,6 @@ import {
   type FeatureKey,
   getFeatureDependencies,
 } from '../../../types/config/featureCompatibility';
-import type { ProjectFeatures } from '../../../types/project';
 import { LANGUAGE_METADATA } from '../../../types/target';
 
 interface FeatureCategory {
@@ -359,7 +358,7 @@ export function FeaturesStep() {
                   featureKey={key}
                   description={description}
                   isSupported={isFeatureSupported(key)}
-                  isEnabled={features[key as keyof ProjectFeatures]}
+                  isEnabled={features[key]}
                   languageLabel={languageLabel}
                   dependencies={getFeatureDependencies(key)}
                   onToggle={handleFeatureToggle}

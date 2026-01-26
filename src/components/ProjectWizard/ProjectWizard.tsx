@@ -73,9 +73,9 @@ export function ProjectWizard({ opened, onClose, onComplete }: ProjectWizardProp
 
   const handleStepClick = useCallback(
     (step: number) => {
-      if (step < activeStep) {
-        setActiveStep(step);
-      } else if (step === activeStep + 1 && validateCurrentStep()) {
+      const canNavigateBack = step < activeStep;
+      const canNavigateForward = step === activeStep + 1 && validateCurrentStep();
+      if (canNavigateBack || canNavigateForward) {
         setActiveStep(step);
       }
     },

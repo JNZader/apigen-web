@@ -500,6 +500,79 @@ export function getLanguagesForFeature(feature: Feature): Language[] {
     .map(([language]) => language);
 }
 
+// Helper: Check language support for a feature
+function checkLanguageSupport(feature: Feature, language: Language): ValidationIssue | null {
+  if (isFeatureSupportedByLanguage(feature, language)) return null;
+  return {
+    code: 'UNSUPPORTED_BY_LANGUAGE',
+    severity: 'error',
+    feature,
+    message: VALIDATION_MESSAGES.UNSUPPORTED_BY_LANGUAGE(feature, language),
+    suggestion: VALIDATION_SUGGESTIONS.CHANGE_LANGUAGE(getLanguagesForFeature(feature)),
+  };
+}
+
+// Helper: Check framework support for a feature
+function checkFrameworkSupport(feature: Feature, framework: Framework): ValidationIssue | null {
+  if (isFeatureSupportedByFramework(feature, framework)) return null;
+  return {
+    code: 'UNSUPPORTED_BY_FRAMEWORK',
+    severity: 'error',
+    feature,
+    message: VALIDATION_MESSAGES.UNSUPPORTED_BY_FRAMEWORK(feature, framework),
+  };
+}
+
+// Helper: Check dependencies for a feature
+function checkDependencies(feature: Feature, enabledFeatures: Feature[]): ValidationIssue[] {
+  const dependencies = FEATURE_DEPENDENCIES[feature];
+  if (!dependencies) return [];
+
+  return dependencies
+    .filter((dep) => !enabledFeatures.includes(dep))
+    .map((dependency) => ({
+      code: 'MISSING_DEPENDENCY' as const,
+      severity: 'error' as const,
+      feature,
+      message: VALIDATION_MESSAGES.MISSING_DEPENDENCY(feature, dependency),
+      suggestion: VALIDATION_SUGGESTIONS.ENABLE_DEPENDENCY(dependency),
+      relatedFeatures: [dependency],
+    }));
+}
+
+// Helper: Check if conflict already exists
+function hasExistingConflict(
+  issues: ValidationIssue[],
+  feature: Feature,
+  conflict: Feature,
+): boolean {
+  return issues.some(
+    (i) =>
+      i.code === 'FEATURE_CONFLICT' &&
+      ((i.feature === feature && i.relatedFeatures?.includes(conflict)) ||
+        (i.feature === conflict && i.relatedFeatures?.includes(feature))),
+  );
+}
+
+// Helper: Check conflicts for a feature
+function checkConflicts(
+  feature: Feature,
+  enabledFeatures: Feature[],
+  existingIssues: ValidationIssue[],
+): ValidationIssue[] {
+  const conflicts = getFeatureConflicts(feature);
+  return conflicts
+    .filter((c) => enabledFeatures.includes(c) && !hasExistingConflict(existingIssues, feature, c))
+    .map((conflict) => ({
+      code: 'FEATURE_CONFLICT' as const,
+      severity: 'error' as const,
+      feature,
+      message: VALIDATION_MESSAGES.FEATURE_CONFLICT(feature, conflict),
+      suggestion: VALIDATION_SUGGESTIONS.DISABLE_CONFLICTING(conflict),
+      relatedFeatures: [conflict],
+    }));
+}
+
 /**
  * Validate a set of enabled features for a given language and framework.
  */
@@ -511,68 +584,17 @@ export function validateFeatures(
   const issues: ValidationIssue[] = [];
 
   for (const feature of enabledFeatures) {
-    // Check language support
-    if (!isFeatureSupportedByLanguage(feature, language)) {
-      issues.push({
-        code: 'UNSUPPORTED_BY_LANGUAGE',
-        severity: 'error',
-        feature,
-        message: VALIDATION_MESSAGES.UNSUPPORTED_BY_LANGUAGE(feature, language),
-        suggestion: VALIDATION_SUGGESTIONS.CHANGE_LANGUAGE(getLanguagesForFeature(feature)),
-      });
-    }
+    const langIssue = checkLanguageSupport(feature, language);
+    if (langIssue) issues.push(langIssue);
 
-    // Check framework support
-    if (!isFeatureSupportedByFramework(feature, framework)) {
-      issues.push({
-        code: 'UNSUPPORTED_BY_FRAMEWORK',
-        severity: 'error',
-        feature,
-        message: VALIDATION_MESSAGES.UNSUPPORTED_BY_FRAMEWORK(feature, framework),
-      });
-    }
+    const fwIssue = checkFrameworkSupport(feature, framework);
+    if (fwIssue) issues.push(fwIssue);
 
-    // Check dependencies
-    const dependencies = FEATURE_DEPENDENCIES[feature];
-    if (dependencies) {
-      for (const dependency of dependencies) {
-        if (!enabledFeatures.includes(dependency)) {
-          issues.push({
-            code: 'MISSING_DEPENDENCY',
-            severity: 'error',
-            feature,
-            message: VALIDATION_MESSAGES.MISSING_DEPENDENCY(feature, dependency),
-            suggestion: VALIDATION_SUGGESTIONS.ENABLE_DEPENDENCY(dependency),
-            relatedFeatures: [dependency],
-          });
-        }
-      }
-    }
-
-    // Check conflicts
-    const conflicts = getFeatureConflicts(feature);
-    for (const conflict of conflicts) {
-      if (enabledFeatures.includes(conflict)) {
-        // Only add if we haven't already added this conflict pair
-        const existingConflict = issues.find(
-          (i) =>
-            i.code === 'FEATURE_CONFLICT' &&
-            ((i.feature === feature && i.relatedFeatures?.includes(conflict)) ||
-              (i.feature === conflict && i.relatedFeatures?.includes(feature))),
-        );
-
-        if (!existingConflict) {
-          issues.push({
-            code: 'FEATURE_CONFLICT',
-            severity: 'error',
-            feature,
-            message: VALIDATION_MESSAGES.FEATURE_CONFLICT(feature, conflict),
-            suggestion: VALIDATION_SUGGESTIONS.DISABLE_CONFLICTING(conflict),
-            relatedFeatures: [conflict],
-          });
-        }
-      }
-    }
+    // Add dependencies first, then conflicts (conflicts need to see current issues state)
+    const depIssues = checkDependencies(feature, enabledFeatures);
+    issues.push(...depIssues);
+    const conflictIssues = checkConflicts(feature, enabledFeatures, issues);
+    issues.push(...conflictIssues);
   }
 
   const errors = issues.filter((i) => i.severity === 'error');

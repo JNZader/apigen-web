@@ -1,7 +1,7 @@
 import { Collapse, Divider, NumberInput, Stack, Switch, TextInput } from '@mantine/core';
 import type { SettingsFormProps } from './types';
 
-export function GraphQLSettingsForm({ form }: SettingsFormProps) {
+export function GraphQLSettingsForm({ form }: Readonly<SettingsFormProps>) {
   return (
     <Stack>
       <Switch
