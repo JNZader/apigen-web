@@ -124,7 +124,7 @@ export function SocialLoginSettingsForm({ form }: SettingsFormProps) {
             placeholder="https://example.com/auth/success"
             description="URL to redirect after successful authentication"
             error={validateRedirectUrl(
-              (form.values.featurePackConfig.socialLogin as Record<string, string>)
+              (form.values.featurePackConfig.socialLogin as unknown as Record<string, string>)
                 .successRedirectUrl ?? '',
             )}
             {...form.getInputProps('featurePackConfig.socialLogin.successRedirectUrl')}
@@ -135,7 +135,7 @@ export function SocialLoginSettingsForm({ form }: SettingsFormProps) {
             placeholder="https://example.com/auth/failure"
             description="URL to redirect after failed authentication"
             error={validateRedirectUrl(
-              (form.values.featurePackConfig.socialLogin as Record<string, string>)
+              (form.values.featurePackConfig.socialLogin as unknown as Record<string, string>)
                 .failureRedirectUrl ?? '',
             )}
             {...form.getInputProps('featurePackConfig.socialLogin.failureRedirectUrl')}
