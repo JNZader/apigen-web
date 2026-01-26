@@ -89,6 +89,9 @@ export { JteTemplatesSettingsForm } from './JteTemplatesSettingsForm';
 // Containers
 export { FeaturePackSection } from './FeaturePackSection';
 
+// Rust Components
+export { RustPresetSelector } from './RustPresetSelector';
+
 // Core Settings Forms
 export { BasicSettingsForm } from './BasicSettingsForm';
 export { CacheSettingsForm } from './CacheSettingsForm';
