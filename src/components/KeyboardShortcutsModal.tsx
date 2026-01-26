@@ -1,13 +1,4 @@
-import {
-  Box,
-  Group,
-  Kbd,
-  Modal,
-  Stack,
-  Text,
-  ThemeIcon,
-  Title,
-} from '@mantine/core';
+import { Box, Group, Kbd, Modal, Stack, Text, ThemeIcon, Title } from '@mantine/core';
 import { IconKeyboard } from '@tabler/icons-react';
 import { memo } from 'react';
 import { useIsMac } from '../hooks';
@@ -52,9 +43,7 @@ const SHORTCUT_CATEGORIES: readonly ShortcutCategory[] = [
   },
   {
     title: 'Project',
-    shortcuts: [
-      { keys: ['Ctrl', 'S'], mac: ['Cmd', 'S'], action: 'Export project (JSON)' },
-    ],
+    shortcuts: [{ keys: ['Ctrl', 'S'], mac: ['Cmd', 'S'], action: 'Export project (JSON)' }],
   },
 ] as const;
 
