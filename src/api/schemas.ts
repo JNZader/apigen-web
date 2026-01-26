@@ -105,13 +105,7 @@ export type TargetConfigSchemaType = z.infer<typeof TargetConfigSchema>;
 /**
  * Supported social login providers.
  */
-export const SocialProviderSchema = z.enum([
-  'google',
-  'github',
-  'facebook',
-  'apple',
-  'microsoft',
-]);
+export const SocialProviderSchema = z.enum(['google', 'github', 'facebook', 'apple', 'microsoft']);
 
 export type SocialProviderSchemaType = z.infer<typeof SocialProviderSchema>;
 
@@ -271,12 +265,7 @@ export type JteConfigSchemaType = z.infer<typeof JteConfigSchema>;
 /**
  * Rust deployment presets.
  */
-export const RustPresetSchema = z.enum([
-  'cloud',
-  'edge-gateway',
-  'edge-anomaly',
-  'edge-ai',
-]);
+export const RustPresetSchema = z.enum(['cloud', 'edge-gateway', 'edge-anomaly', 'edge-ai']);
 
 export type RustPresetSchemaType = z.infer<typeof RustPresetSchema>;
 
@@ -298,11 +287,7 @@ export type EdgeConfigSchemaType = z.infer<typeof EdgeConfigSchema>;
 /**
  * Load balancing strategy options.
  */
-export const LoadBalancingStrategySchema = z.enum([
-  'round-robin',
-  'least-connections',
-  'ip-hash',
-]);
+export const LoadBalancingStrategySchema = z.enum(['round-robin', 'least-connections', 'ip-hash']);
 
 export type LoadBalancingStrategySchemaType = z.infer<typeof LoadBalancingStrategySchema>;
 

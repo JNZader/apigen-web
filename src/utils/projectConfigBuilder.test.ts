@@ -1,13 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import type { ProjectConfig, ServiceDesign, TargetConfig } from '../types';
+import { defaultProjectConfig } from '../types/project';
+import { defaultServiceConfig } from '../types/service';
+import { createDefaultTargetConfig } from '../types/target';
 import {
   buildProjectConfig,
-  validateTargetConfig,
   validateFeatureCompatibility,
   validateProjectConfig,
+  validateTargetConfig,
 } from './projectConfigBuilder';
-import { defaultProjectConfig } from '../types/project';
-import { createDefaultTargetConfig } from '../types/target';
-import type { ProjectConfig, ServiceDesign, TargetConfig } from '../types';
 
 // ============================================================================
 // TEST HELPERS
@@ -21,13 +22,13 @@ function createTestService(overrides: Partial<ServiceDesign['config']> = {}): Se
     id: 'test-service-id',
     name: 'TestService',
     description: 'A test service',
-    entities: [],
+    color: '#228be6',
+    position: { x: 0, y: 0 },
+    width: 400,
+    height: 300,
+    entityIds: [],
     config: {
-      databaseType: 'postgresql',
-      enableTracing: true,
-      enableMetrics: true,
-      enableCircuitBreaker: true,
-      enableRateLimiting: true,
+      ...defaultServiceConfig,
       ...overrides,
     },
   };
@@ -39,11 +40,10 @@ function createTestService(overrides: Partial<ServiceDesign['config']> = {}): Se
 function createProjectWithTarget(
   language: TargetConfig['language'],
   framework: TargetConfig['framework'],
-  overrides: Partial<ProjectConfig> = {}
+  overrides: Partial<ProjectConfig> = {},
 ): ProjectConfig {
   return {
     ...defaultProjectConfig,
-    targetConfig: createDefaultTargetConfig(language),
     ...overrides,
     // Ensure framework is set correctly
     targetConfig: {
@@ -98,9 +98,7 @@ describe('validateTargetConfig', () => {
     const result = validateTargetConfig(config);
 
     expect(result.valid).toBe(false);
-    expect(result.errors).toContain(
-      "Framework 'axum' is not compatible with language 'java'"
-    );
+    expect(result.errors).toContain("Framework 'axum' is not compatible with language 'java'");
   });
 
   it('should reject empty language version', () => {
@@ -202,7 +200,7 @@ describe('validateFeatureCompatibility', () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toContain(
-      'JTE Templates feature is only available for Java/Kotlin projects'
+      'JTE Templates feature is only available for Java/Kotlin projects',
     );
   });
 
@@ -217,7 +215,7 @@ describe('validateFeatureCompatibility', () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toContain(
-      'Virtual threads feature is only available for Java/Kotlin projects'
+      'Virtual threads feature is only available for Java/Kotlin projects',
     );
   });
 
@@ -387,16 +385,19 @@ describe('buildProjectConfig', () => {
     });
 
     it('should apply Rust preset defaults for edge-gateway preset', () => {
+      // Only set the preset, excluding edge so preset defaults are applied
+      // Destructure to exclude edge from the spread
+      const { edge: _excludeEdge, ...rustOptionsWithoutEdge } = defaultProjectConfig.rustOptions;
       const config = createProjectWithTarget('rust', 'axum', {
         rustOptions: {
-          ...defaultProjectConfig.rustOptions,
+          ...rustOptionsWithoutEdge,
           preset: 'edge-gateway',
-        },
+        } as typeof defaultProjectConfig.rustOptions,
       });
       const result = buildProjectConfig(config);
 
       expect(result.rustOptions.preset).toBe('edge-gateway');
-      // Edge gateway has specific memory limits
+      // Edge gateway has specific memory limits from preset
       expect(result.rustOptions.edge.maxMemoryMb).toBe(256);
     });
 

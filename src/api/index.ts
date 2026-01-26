@@ -20,7 +20,6 @@ export {
   type GenerateRequest,
   generateProject,
   isServerAvailable,
-  type ProjectConfig,
   validateSchema,
 } from './generatorApi';
 

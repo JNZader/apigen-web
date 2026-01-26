@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { defaultProjectConfig } from '../types/project';
 import { useProjectGeneration } from './useProjectGeneration';
 
 // Mock dependencies
@@ -27,16 +28,20 @@ vi.mock('../api/generatorApi', async (importOriginal) => {
   };
 });
 
-// Mock the store
+// Mock the store - use defaultProjectConfig to ensure all required fields are present
 const mockStore = {
   project: {
+    ...defaultProjectConfig,
     name: 'Test Project',
     groupId: 'com.test',
     artifactId: 'test-project',
-    javaVersion: '21',
-    modules: { core: true },
-    features: { docker: true },
-    database: { type: 'postgresql' as const },
+    javaVersion: '25' as const,
+    targetConfig: {
+      language: 'java' as const,
+      framework: 'spring-boot' as const,
+      languageVersion: '25',
+      frameworkVersion: '4.0.0',
+    },
   },
   entities: [{ id: '1', name: 'User', fields: [] }],
   relations: [],

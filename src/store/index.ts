@@ -94,10 +94,18 @@ export {
 // ============================================================================
 
 export {
+  useAllConfigActions,
+  useFeaturePackActions,
+  useFeaturePackConfig,
+  useGoChiOptions,
+  useLanguageOptionsActions,
   // Atomic selectors
   useProject,
   // Action selectors
   useProjectActions,
+  useRustOptions,
+  useTargetConfig,
+  useTargetConfigActions,
 } from './projectStore';
 
 // ============================================================================

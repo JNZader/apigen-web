@@ -1,8 +1,10 @@
-import { Button, Group, Modal, ScrollArea, Tabs, Text } from '@mantine/core';
+import { Alert, Button, Group, Modal, ScrollArea, Stack, Tabs, Text } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import {
+  IconAlertTriangle,
   IconBrandGraphql,
   IconClock,
+  IconCode,
   IconDatabase,
   IconEye,
   IconFileText,
@@ -15,10 +17,12 @@ import {
   IconShield,
   IconShieldCheck,
 } from '@tabler/icons-react';
+import { useState } from 'react';
 import { useProject, useProjectActions } from '../../store';
-import type { ProjectConfig } from '../../types';
+import type { Framework, Language, ProjectConfig } from '../../types';
 import { notify } from '../../utils/notifications';
 import { isValidArtifactId, isValidGroupId, isValidPackageName } from '../../utils/validation';
+import { LanguageSelector } from '../LanguageSelector';
 import { BasicSettingsForm } from './BasicSettingsForm';
 import { CacheSettingsForm } from './CacheSettingsForm';
 import { CorsSettingsForm } from './CorsSettingsForm';
@@ -32,6 +36,36 @@ import { RateLimitSettingsForm } from './RateLimitSettingsForm';
 import { ResilienceSettingsForm } from './ResilienceSettingsForm';
 import { SecuritySettingsForm } from './SecuritySettingsForm';
 
+/**
+ * Features that are specific to certain languages/frameworks.
+ * Used to show warnings when switching languages.
+ */
+const LANGUAGE_SPECIFIC_FEATURES: Record<string, { languages: Language[]; label: string }> = {
+  virtualThreads: { languages: ['java'], label: 'Virtual Threads (Java 21+)' },
+  hateoas: { languages: ['java', 'kotlin'], label: 'HATEOAS' },
+};
+
+/**
+ * Get list of incompatible features when switching to a new language.
+ */
+function getIncompatibleFeatures(
+  features: ProjectConfig['features'],
+  newLanguage: Language,
+): string[] {
+  const incompatible: string[] = [];
+
+  for (const [featureKey, config] of Object.entries(LANGUAGE_SPECIFIC_FEATURES)) {
+    const isEnabled = features[featureKey as keyof typeof features];
+    const isCompatible = config.languages.includes(newLanguage);
+
+    if (isEnabled && !isCompatible) {
+      incompatible.push(config.label);
+    }
+  }
+
+  return incompatible;
+}
+
 interface ProjectSettingsProps {
   readonly opened: boolean;
   readonly onClose: () => void;
@@ -40,6 +74,7 @@ interface ProjectSettingsProps {
 export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
   const project = useProject();
   const { setProject } = useProjectActions();
+  const [incompatibleFeatures, setIncompatibleFeatures] = useState<string[]>([]);
 
   const form = useForm<ProjectConfig>({
     initialValues: project,
@@ -52,6 +87,16 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
         isValidPackageName(v) ? null : 'Invalid package name (e.g., com.example.myapi)',
     },
   });
+
+  const handleLanguageChange = (language: Language, framework: Framework) => {
+    // Check for incompatible features
+    const incompatible = getIncompatibleFeatures(form.values.features, language);
+    setIncompatibleFeatures(incompatible);
+
+    // Update form with new target config
+    form.setFieldValue('targetConfig.language', language);
+    form.setFieldValue('targetConfig.framework', framework);
+  };
 
   const handleSubmit = (values: ProjectConfig) => {
     setProject(values);
@@ -76,8 +121,11 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
       padding="lg"
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
-        <Tabs defaultValue="basic" orientation="vertical">
+        <Tabs defaultValue="language" orientation="vertical">
           <Tabs.List>
+            <Tabs.Tab value="language" leftSection={<IconCode size={16} />}>
+              Language
+            </Tabs.Tab>
             <Tabs.Tab value="basic" leftSection={<IconFileText size={16} />}>
               Basic
             </Tabs.Tab>
@@ -115,6 +163,34 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
               Gateway
             </Tabs.Tab>
           </Tabs.List>
+
+          <Tabs.Panel value="language" pl="md">
+            <ScrollArea h={600}>
+              <Stack>
+                <LanguageSelector onLanguageChange={handleLanguageChange} />
+                {incompatibleFeatures.length > 0 && (
+                  <Alert
+                    icon={<IconAlertTriangle size={16} />}
+                    title="Incompatible Features Detected"
+                    color="yellow"
+                    variant="light"
+                  >
+                    <Text size="sm">
+                      The following features are not available for the selected language and will be
+                      disabled:
+                    </Text>
+                    <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+                      {incompatibleFeatures.map((feature) => (
+                        <li key={feature}>
+                          <Text size="sm">{feature}</Text>
+                        </li>
+                      ))}
+                    </ul>
+                  </Alert>
+                )}
+              </Stack>
+            </ScrollArea>
+          </Tabs.Panel>
 
           <Tabs.Panel value="basic" pl="md">
             <ScrollArea h={600}>

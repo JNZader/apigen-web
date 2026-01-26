@@ -1,8 +1,7 @@
-import type { ProjectConfig, ServiceDesign, TargetConfig, Language, Framework } from '../types';
-import { isFrameworkCompatible, createDefaultTargetConfig } from '../types/target';
-import { defaultFeaturePackConfig } from '../types/config/featurepack';
-import { defaultRustAxumOptions, getRustPresetDefaults } from '../types/config/rust';
+import type { Language, ProjectConfig, ServiceDesign, TargetConfig } from '../types';
 import { getDefaultGoChiOptions } from '../types/config/gochi';
+import { defaultRustAxumOptions, getRustPresetDefaults } from '../types/config/rust';
+import { createDefaultTargetConfig, isFrameworkCompatible } from '../types/target';
 
 // ============================================================================
 // VALIDATION TYPES
@@ -37,7 +36,7 @@ export function validateTargetConfig(targetConfig: TargetConfig): ValidationResu
   // Check language-framework compatibility
   if (!isFrameworkCompatible(targetConfig.language, targetConfig.framework)) {
     errors.push(
-      `Framework '${targetConfig.framework}' is not compatible with language '${targetConfig.language}'`
+      `Framework '${targetConfig.framework}' is not compatible with language '${targetConfig.language}'`,
     );
   }
 
@@ -85,9 +84,7 @@ export function validateFeatureCompatibility(config: ProjectConfig): ValidationR
       if (feature === 'jteTemplates') {
         errors.push(`JTE Templates feature is only available for Java/Kotlin projects`);
       } else {
-        warnings.push(
-          `Feature '${feature}' may have limited support for ${language}/${framework}`
-        );
+        warnings.push(`Feature '${feature}' may have limited support for ${language}/${framework}`);
       }
     }
   }

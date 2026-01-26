@@ -243,9 +243,9 @@ describe('useThrottledAction', () => {
       );
 
       // Start first call
-      let firstPromise: Promise<void | undefined>;
+      let firstPromise: Promise<undefined>;
       act(() => {
-        firstPromise = result.current();
+        firstPromise = result.current() as Promise<undefined>;
       });
 
       // Try concurrent calls
