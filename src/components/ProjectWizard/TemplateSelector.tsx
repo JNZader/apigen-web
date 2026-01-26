@@ -1,208 +1,283 @@
+import { useMemo, useState } from 'react';
 import {
   Badge,
+  Button,
   Card,
   Group,
+  Modal,
   SegmentedControl,
   SimpleGrid,
   Stack,
   Text,
   TextInput,
   ThemeIcon,
-  useMantineTheme,
 } from '@mantine/core';
+import { useDebouncedValue } from '@mantine/hooks';
+import { modals } from '@mantine/modals';
 import {
+  IconArrowRight,
   IconCheckbox,
   IconFile,
   IconNews,
-  IconPackage,
   IconSearch,
   IconShoppingCart,
-  IconTemplate,
+  IconUsers,
 } from '@tabler/icons-react';
-import { memo, useCallback, useMemo, useState } from 'react';
-import { PROJECT_TEMPLATES, type ProjectTemplate } from '@/data/templates';
-
-type TemplateCategory = 'all' | 'blank' | 'starter';
+import {
+  filterTemplates,
+  PROJECT_TEMPLATES,
+  TEMPLATE_CATEGORIES,
+  type ProjectTemplate,
+  type TemplateCategory,
+} from '../../config/projectTemplates';
+import { useEntities, useEntityActions, useRelationActions, useServiceActions } from '../../store';
+import { notify } from '../../utils/notifications';
+import { applyTemplate } from '../../config/projectTemplates';
 
 interface TemplateSelectorProps {
-  readonly selectedId: string | null;
-  readonly onSelect: (template: ProjectTemplate) => void;
+  readonly opened: boolean;
+  readonly onClose: () => void;
 }
 
-const ICON_MAP: Record<string, React.ElementType> = {
-  IconFile: IconFile,
-  IconShoppingCart: IconShoppingCart,
-  IconNews: IconNews,
-  IconCheckbox: IconCheckbox,
-  IconPackage: IconPackage,
+const ICON_MAP: Record<string, React.ReactNode> = {
+  IconFile: <IconFile size={24} />,
+  IconShoppingCart: <IconShoppingCart size={24} />,
+  IconNews: <IconNews size={24} />,
+  IconCheckbox: <IconCheckbox size={24} />,
+  IconUsers: <IconUsers size={24} />,
 };
 
-const CATEGORY_OPTIONS = [
-  { label: 'All', value: 'all' },
-  { label: 'Blank', value: 'blank' },
-  { label: 'Starter', value: 'starter' },
-];
+const COLOR_MAP: Record<string, string> = {
+  blank: 'gray',
+  ecommerce: 'blue',
+  blog: 'orange',
+  'task-manager': 'teal',
+  'user-management': 'violet',
+};
 
-function getTemplateCategory(template: ProjectTemplate): TemplateCategory {
-  return template.entities.length === 0 ? 'blank' : 'starter';
-}
+const CATEGORY_COLOR_MAP: Record<TemplateCategory, string> = {
+  starter: 'green',
+  'full-stack': 'blue',
+  microservice: 'violet',
+};
 
-function getTemplateIcon(iconName: string): React.ElementType {
-  return ICON_MAP[iconName] || IconTemplate;
+export function TemplateSelector({ opened, onClose }: Readonly<TemplateSelectorProps>) {
+  const [search, setSearch] = useState('');
+  const [debouncedSearch] = useDebouncedValue(search, 200);
+  const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
+
+  const entities = useEntities();
+  const { setEntities } = useEntityActions();
+  const { setRelations } = useRelationActions();
+  const { clearServices } = useServiceActions();
+
+  const filteredTemplates = useMemo(() => {
+    return filterTemplates(PROJECT_TEMPLATES, {
+      search: debouncedSearch,
+      category: selectedCategory,
+    });
+  }, [debouncedSearch, selectedCategory]);
+
+  const applySelectedTemplate = (template: ProjectTemplate) => {
+    // Clear services and their connections when applying any template
+    clearServices();
+
+    if (template.id === 'blank') {
+      setEntities([]);
+      setRelations([]);
+      notify.info({
+        title: 'Template Applied',
+        message: 'Started with a blank project',
+      });
+    } else {
+      try {
+        const { entities: newEntities, relations: newRelations } = applyTemplate(template);
+        setEntities(newEntities);
+        setRelations(newRelations);
+        notify.success({
+          title: 'Template Applied',
+          message: `Loaded ${template.name} template with ${newEntities.length} entities`,
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        notify.error({
+          title: 'Template Error',
+          message: `Failed to apply template: ${errorMessage}`,
+        });
+      }
+    }
+    onClose();
+    setSearch('');
+    setSelectedCategory('all');
+  };
+
+  const handleSelectTemplate = (template: ProjectTemplate) => {
+    if (entities.length > 0) {
+      modals.openConfirmModal({
+        title: 'Replace Current Project',
+        children: 'This will replace all existing entities and relations. Continue?',
+        labels: { confirm: 'Replace', cancel: 'Cancel' },
+        confirmProps: { color: 'orange' },
+        onConfirm: () => applySelectedTemplate(template),
+      });
+    } else {
+      applySelectedTemplate(template);
+    }
+  };
+
+  const handleClose = () => {
+    onClose();
+    setSearch('');
+    setSelectedCategory('all');
+  };
+
+  const categoryOptions = [
+    { value: 'all', label: 'All' },
+    ...TEMPLATE_CATEGORIES.map((cat) => ({ value: cat.value, label: cat.label })),
+  ];
+
+  return (
+    <Modal
+      opened={opened}
+      onClose={handleClose}
+      title={
+        <Text fw={600} size="lg">
+          Choose a Template
+        </Text>
+      }
+      size="xl"
+      closeButtonProps={{ 'aria-label': 'Close' }}
+    >
+      <Stack gap="md">
+        <Text c="dimmed" size="sm">
+          Start with a pre-configured template or create from scratch.
+        </Text>
+
+        <TextInput
+          placeholder="Search templates..."
+          leftSection={<IconSearch size={16} />}
+          value={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+          aria-label="Search templates"
+        />
+
+        <SegmentedControl
+          value={selectedCategory}
+          onChange={(value) => setSelectedCategory(value as TemplateCategory | 'all')}
+          data={categoryOptions}
+          fullWidth
+          aria-label="Filter by category"
+        />
+
+        {filteredTemplates.length === 0 ? (
+          <Text c="dimmed" ta="center" py="xl">
+            No templates match your search criteria.
+          </Text>
+        ) : (
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+            {filteredTemplates.map((template) => (
+              <TemplateCard
+                key={template.id}
+                template={template}
+                onSelect={() => handleSelectTemplate(template)}
+              />
+            ))}
+          </SimpleGrid>
+        )}
+      </Stack>
+    </Modal>
+  );
 }
 
 interface TemplateCardProps {
   readonly template: ProjectTemplate;
-  readonly isSelected: boolean;
-  readonly onSelect: (template: ProjectTemplate) => void;
+  readonly onSelect: () => void;
 }
 
-const TemplateCard = memo(function TemplateCard({
-  template,
-  isSelected,
-  onSelect,
-}: TemplateCardProps) {
-  const theme = useMantineTheme();
-  const IconComponent = getTemplateIcon(template.icon);
-  const entityCount = template.entities.length;
-  const relationCount = template.relations.length;
-
-  const handleClick = useCallback(() => {
-    onSelect(template);
-  }, [onSelect, template]);
-
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        onSelect(template);
-      }
-    },
-    [onSelect, template],
-  );
+function TemplateCard({ template, onSelect }: Readonly<TemplateCardProps>) {
+  const color = COLOR_MAP[template.id] || 'blue';
+  const categoryColor = CATEGORY_COLOR_MAP[template.category];
 
   return (
     <Card
-      shadow={isSelected ? 'md' : 'sm'}
+      shadow="sm"
       padding="lg"
       radius="md"
       withBorder
-      onClick={handleClick}
-      onKeyDown={handleKeyDown}
+      style={{ cursor: 'pointer' }}
+      onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
       tabIndex={0}
       role="button"
-      aria-pressed={isSelected}
-      aria-label={`Select ${template.name} template`}
-      style={{
-        cursor: 'pointer',
-        borderColor: isSelected ? theme.colors.blue[5] : undefined,
-        borderWidth: isSelected ? 2 : 1,
-        backgroundColor: isSelected ? theme.colors.blue[0] : undefined,
-        transition: 'all 150ms ease',
-      }}
+      aria-label={`${template.name} template: ${template.description}. ${template.entities.length} entities, ${template.relations.length} relations. Category: ${template.category}`}
     >
       <Stack gap="sm">
-        <Group justify="space-between" align="flex-start">
-          <ThemeIcon
-            size="lg"
-            radius="md"
-            variant={isSelected ? 'filled' : 'light'}
-            color="blue"
-          >
-            <IconComponent size={20} />
-          </ThemeIcon>
-          {entityCount > 0 && (
-            <Badge size="sm" variant="light" color="gray">
-              {entityCount} {entityCount === 1 ? 'entity' : 'entities'}
-            </Badge>
+        <Group justify="space-between" wrap="nowrap">
+          <Group gap="sm" wrap="nowrap">
+            <ThemeIcon size="lg" radius="md" color={color} variant="light">
+              {ICON_MAP[template.icon] || <IconFile size={24} />}
+            </ThemeIcon>
+            <div>
+              <Text fw={600}>{template.name}</Text>
+              <Text size="xs" c="dimmed">
+                {template.description}
+              </Text>
+            </div>
+          </Group>
+        </Group>
+
+        <Group gap={4}>
+          <Badge size="xs" variant="filled" color={categoryColor}>
+            {template.category}
+          </Badge>
+          {template.entities.length > 0 && (
+            <>
+              <Badge size="xs" variant="light" color={color}>
+                {template.entities.length} entities
+              </Badge>
+              <Badge size="xs" variant="outline" color="gray">
+                {template.relations.length} relations
+              </Badge>
+            </>
           )}
         </Group>
 
-        <div>
-          <Text fw={600} size="sm">
-            {template.name}
-          </Text>
-          <Text size="xs" c="dimmed" lineClamp={2}>
-            {template.description}
-          </Text>
-        </div>
+        {template.tags.length > 0 && (
+          <Group gap={4}>
+            {template.tags.slice(0, 4).map((tag) => (
+              <Badge key={tag} size="xs" variant="dot" color="gray">
+                {tag}
+              </Badge>
+            ))}
+            {template.tags.length > 4 && (
+              <Text size="xs" c="dimmed">
+                +{template.tags.length - 4} more
+              </Text>
+            )}
+          </Group>
+        )}
 
-        {relationCount > 0 && (
+        {template.entities.length > 0 && (
           <Text size="xs" c="dimmed">
-            {relationCount} {relationCount === 1 ? 'relation' : 'relations'}
+            Includes: {template.entities.map((e) => e.name).join(', ')}
           </Text>
         )}
+
+        <Button
+          variant="light"
+          color={color}
+          size="xs"
+          rightSection={<IconArrowRight size={14} />}
+          fullWidth
+        >
+          Use Template
+        </Button>
       </Stack>
     </Card>
   );
-});
-
-export const TemplateSelector = memo(function TemplateSelector({
-  selectedId,
-  onSelect,
-}: TemplateSelectorProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [category, setCategory] = useState<TemplateCategory>('all');
-
-  const handleSearchChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchQuery(event.currentTarget.value);
-    },
-    [],
-  );
-
-  const handleCategoryChange = useCallback((value: string) => {
-    setCategory(value as TemplateCategory);
-  }, []);
-
-  const filteredTemplates = useMemo(() => {
-    return PROJECT_TEMPLATES.filter((template) => {
-      const matchesSearch =
-        searchQuery === '' ||
-        template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        template.description.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesCategory =
-        category === 'all' || getTemplateCategory(template) === category;
-
-      return matchesSearch && matchesCategory;
-    });
-  }, [searchQuery, category]);
-
-  return (
-    <Stack gap="md">
-      <Group gap="md" grow>
-        <TextInput
-          placeholder="Search templates..."
-          leftSection={<IconSearch size={16} />}
-          value={searchQuery}
-          onChange={handleSearchChange}
-          aria-label="Search templates"
-        />
-        <SegmentedControl
-          data={CATEGORY_OPTIONS}
-          value={category}
-          onChange={handleCategoryChange}
-          size="sm"
-        />
-      </Group>
-
-      {filteredTemplates.length === 0 ? (
-        <Text c="dimmed" ta="center" py="xl">
-          No templates found matching your criteria
-        </Text>
-      ) : (
-        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-          {filteredTemplates.map((template) => (
-            <TemplateCard
-              key={template.id}
-              template={template}
-              isSelected={selectedId === template.id}
-              onSelect={onSelect}
-            />
-          ))}
-        </SimpleGrid>
-      )}
-    </Stack>
-  );
-});
+}

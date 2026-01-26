@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { applyTemplate, PROJECT_TEMPLATES, type ProjectTemplate } from '../data/templates';
+import {
+  applyTemplate,
+  filterTemplates,
+  getAllTags,
+  PROJECT_TEMPLATES,
+  type ProjectTemplate,
+} from '../config/projectTemplates';
 
 describe('templates', () => {
   describe('PROJECT_TEMPLATES', () => {
@@ -10,7 +16,7 @@ describe('templates', () => {
     it('should contain all required template IDs', () => {
       const templateIds = PROJECT_TEMPLATES.map((t) => t.id);
       expect(templateIds).toEqual(
-        expect.arrayContaining(['blank', 'ecommerce', 'blog', 'task-manager', 'inventory']),
+        expect.arrayContaining(['blank', 'ecommerce', 'blog', 'task-manager', 'user-management']),
       );
     });
 
@@ -29,6 +35,8 @@ describe('templates', () => {
         expect(template).toHaveProperty('name');
         expect(template).toHaveProperty('description');
         expect(template).toHaveProperty('icon');
+        expect(template).toHaveProperty('category');
+        expect(template).toHaveProperty('tags');
         expect(template).toHaveProperty('entities');
         expect(template).toHaveProperty('relations');
       });
@@ -44,7 +52,8 @@ describe('templates', () => {
       const ecommerce = PROJECT_TEMPLATES.find((t) => t.id === 'ecommerce');
 
       expect(ecommerce).toBeDefined();
-      expect(ecommerce?.name).toBe('E-commerce');
+      expect(ecommerce?.name).toBe('E-Commerce API');
+      expect(ecommerce?.category).toBe('full-stack');
       expect(ecommerce?.entities.length).toBeGreaterThan(0);
       expect(ecommerce?.relations.length).toBeGreaterThan(0);
 
@@ -60,7 +69,8 @@ describe('templates', () => {
       const blog = PROJECT_TEMPLATES.find((t) => t.id === 'blog');
 
       expect(blog).toBeDefined();
-      expect(blog?.name).toBe('Blog');
+      expect(blog?.name).toBe('Blog API');
+      expect(blog?.category).toBe('starter');
       expect(blog?.entities.length).toBeGreaterThan(0);
       expect(blog?.relations.length).toBeGreaterThan(0);
 
@@ -77,6 +87,7 @@ describe('templates', () => {
 
       expect(taskManager).toBeDefined();
       expect(taskManager?.name).toBe('Task Manager');
+      expect(taskManager?.category).toBe('starter');
       expect(taskManager?.entities.length).toBeGreaterThan(0);
       expect(taskManager?.relations.length).toBeGreaterThan(0);
 
@@ -87,19 +98,21 @@ describe('templates', () => {
       expect(entityNames).toContain('Label');
     });
 
-    it('should have inventory template with correct structure', () => {
-      const inventory = PROJECT_TEMPLATES.find((t) => t.id === 'inventory');
+    it('should have user management template with correct structure', () => {
+      const userManagement = PROJECT_TEMPLATES.find((t) => t.id === 'user-management');
 
-      expect(inventory).toBeDefined();
-      expect(inventory?.name).toBe('Inventory');
-      expect(inventory?.entities.length).toBeGreaterThan(0);
-      expect(inventory?.relations.length).toBeGreaterThan(0);
+      expect(userManagement).toBeDefined();
+      expect(userManagement?.name).toBe('User Management');
+      expect(userManagement?.category).toBe('microservice');
+      expect(userManagement?.entities.length).toBeGreaterThan(0);
+      expect(userManagement?.relations.length).toBeGreaterThan(0);
 
-      const entityNames = inventory?.entities.map((e) => e.name) || [];
-      expect(entityNames).toContain('Product');
-      expect(entityNames).toContain('Warehouse');
-      expect(entityNames).toContain('Stock');
-      expect(entityNames).toContain('StockMovement');
+      const entityNames = userManagement?.entities.map((e) => e.name) || [];
+      expect(entityNames).toContain('User');
+      expect(entityNames).toContain('Role');
+      expect(entityNames).toContain('Permission');
+      expect(entityNames).toContain('Session');
+      expect(entityNames).toContain('AuditLog');
     });
 
     it('should have valid entity structure in all templates', () => {
@@ -159,11 +172,25 @@ describe('templates', () => {
         });
       });
     });
+
+    it('should have valid category in all templates', () => {
+      const validCategories = ['starter', 'full-stack', 'microservice'];
+      PROJECT_TEMPLATES.forEach((template) => {
+        expect(validCategories).toContain(template.category);
+      });
+    });
+
+    it('should have non-empty tags array in all templates', () => {
+      PROJECT_TEMPLATES.forEach((template) => {
+        expect(Array.isArray(template.tags)).toBe(true);
+        expect(template.tags.length).toBeGreaterThan(0);
+      });
+    });
   });
 
   describe('applyTemplate', () => {
     it('should add IDs to all entities', () => {
-      const template = PROJECT_TEMPLATES[1]; // e-commerce
+      const template = PROJECT_TEMPLATES.find((t) => t.id === 'ecommerce')!;
       const result = applyTemplate(template);
 
       expect(result.entities).toHaveLength(template.entities.length);
@@ -175,7 +202,7 @@ describe('templates', () => {
     });
 
     it('should preserve all entity properties except ID', () => {
-      const template = PROJECT_TEMPLATES[1]; // e-commerce
+      const template = PROJECT_TEMPLATES.find((t) => t.id === 'ecommerce')!;
       const result = applyTemplate(template);
 
       result.entities.forEach((entity, index) => {
@@ -190,7 +217,7 @@ describe('templates', () => {
     });
 
     it('should add IDs to all relations', () => {
-      const template = PROJECT_TEMPLATES[1]; // e-commerce
+      const template = PROJECT_TEMPLATES.find((t) => t.id === 'ecommerce')!;
       const result = applyTemplate(template);
 
       expect(result.relations).toHaveLength(template.relations.length);
@@ -202,7 +229,7 @@ describe('templates', () => {
     });
 
     it('should map entity names to IDs in relations', () => {
-      const template = PROJECT_TEMPLATES[1]; // e-commerce
+      const template = PROJECT_TEMPLATES.find((t) => t.id === 'ecommerce')!;
       const result = applyTemplate(template);
 
       result.relations.forEach((relation) => {
@@ -220,7 +247,7 @@ describe('templates', () => {
     });
 
     it('should generate unique IDs for all entities', () => {
-      const template = PROJECT_TEMPLATES[1]; // e-commerce
+      const template = PROJECT_TEMPLATES.find((t) => t.id === 'ecommerce')!;
       const result = applyTemplate(template);
 
       const entityIds = result.entities.map((e) => e.id);
@@ -229,7 +256,7 @@ describe('templates', () => {
     });
 
     it('should generate unique IDs for all relations', () => {
-      const template = PROJECT_TEMPLATES[1]; // e-commerce
+      const template = PROJECT_TEMPLATES.find((t) => t.id === 'ecommerce')!;
       const result = applyTemplate(template);
 
       const relationIds = result.relations.map((r) => r.id);
@@ -238,7 +265,7 @@ describe('templates', () => {
     });
 
     it('should generate unique IDs for all fields', () => {
-      const template = PROJECT_TEMPLATES[1]; // e-commerce
+      const template = PROJECT_TEMPLATES.find((t) => t.id === 'ecommerce')!;
       const result = applyTemplate(template);
 
       const allFieldIds = result.entities.flatMap((e) => e.fields.map((f) => f.id));
@@ -247,7 +274,7 @@ describe('templates', () => {
     });
 
     it('should throw error when relation references non-existent entity', () => {
-      const template = PROJECT_TEMPLATES[1]; // e-commerce
+      const template = PROJECT_TEMPLATES.find((t) => t.id === 'ecommerce')!;
       const invalidRelation = {
         sourceEntityName: 'Product',
         targetEntityName: 'NonExistentEntity',
@@ -280,7 +307,7 @@ describe('templates', () => {
     });
 
     it('should preserve relation properties', () => {
-      const template = PROJECT_TEMPLATES[1]; // e-commerce
+      const template = PROJECT_TEMPLATES.find((t) => t.id === 'ecommerce')!;
       const result = applyTemplate(template);
 
       result.relations.forEach((relation, index) => {
@@ -295,7 +322,7 @@ describe('templates', () => {
     });
 
     it('should set sourceFieldName correctly', () => {
-      const template = PROJECT_TEMPLATES[1]; // e-commerce
+      const template = PROJECT_TEMPLATES.find((t) => t.id === 'ecommerce')!;
       const result = applyTemplate(template);
 
       result.relations.forEach((relation, index) => {
@@ -305,6 +332,96 @@ describe('templates', () => {
           template.relations[index].targetEntityName.toLowerCase(),
         );
       });
+    });
+  });
+
+  describe('filterTemplates', () => {
+    it('should return all templates when no filters applied', () => {
+      const result = filterTemplates(PROJECT_TEMPLATES, {});
+      expect(result).toHaveLength(PROJECT_TEMPLATES.length);
+    });
+
+    it('should filter by category', () => {
+      const result = filterTemplates(PROJECT_TEMPLATES, { category: 'starter' });
+      expect(result.every((t) => t.category === 'starter')).toBe(true);
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('should return all templates when category is "all"', () => {
+      const result = filterTemplates(PROJECT_TEMPLATES, { category: 'all' });
+      expect(result).toHaveLength(PROJECT_TEMPLATES.length);
+    });
+
+    it('should filter by search term matching name', () => {
+      const result = filterTemplates(PROJECT_TEMPLATES, { search: 'blog' });
+      expect(result.some((t) => t.name.toLowerCase().includes('blog'))).toBe(true);
+    });
+
+    it('should filter by search term matching description', () => {
+      const result = filterTemplates(PROJECT_TEMPLATES, { search: 'products' });
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('should filter by search term matching tags', () => {
+      const result = filterTemplates(PROJECT_TEMPLATES, { search: 'auth' });
+      expect(result.some((t) => t.tags.some((tag) => tag.includes('auth')))).toBe(true);
+    });
+
+    it('should filter by search term matching entity names', () => {
+      const result = filterTemplates(PROJECT_TEMPLATES, { search: 'User' });
+      expect(
+        result.some((t) => t.entities.some((e) => e.name.toLowerCase().includes('user'))),
+      ).toBe(true);
+    });
+
+    it('should return empty array when no matches', () => {
+      const result = filterTemplates(PROJECT_TEMPLATES, { search: 'nonexistent12345' });
+      expect(result).toHaveLength(0);
+    });
+
+    it('should combine search and category filters', () => {
+      const result = filterTemplates(PROJECT_TEMPLATES, {
+        search: 'task',
+        category: 'starter',
+      });
+      expect(result.every((t) => t.category === 'starter')).toBe(true);
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('should filter by tags array', () => {
+      const result = filterTemplates(PROJECT_TEMPLATES, { tags: ['ecommerce'] });
+      expect(result.some((t) => t.tags.includes('ecommerce'))).toBe(true);
+    });
+
+    it('should handle case-insensitive search', () => {
+      const resultLower = filterTemplates(PROJECT_TEMPLATES, { search: 'blog' });
+      const resultUpper = filterTemplates(PROJECT_TEMPLATES, { search: 'BLOG' });
+      expect(resultLower.length).toBe(resultUpper.length);
+    });
+  });
+
+  describe('getAllTags', () => {
+    it('should return all unique tags from templates', () => {
+      const tags = getAllTags(PROJECT_TEMPLATES);
+      expect(Array.isArray(tags)).toBe(true);
+      expect(tags.length).toBeGreaterThan(0);
+
+      // Verify uniqueness
+      const uniqueTags = new Set(tags);
+      expect(uniqueTags.size).toBe(tags.length);
+    });
+
+    it('should return sorted tags', () => {
+      const tags = getAllTags(PROJECT_TEMPLATES);
+      const sortedTags = [...tags].sort();
+      expect(tags).toEqual(sortedTags);
+    });
+
+    it('should contain known tags', () => {
+      const tags = getAllTags(PROJECT_TEMPLATES);
+      expect(tags).toContain('blog');
+      expect(tags).toContain('ecommerce');
+      expect(tags).toContain('users');
     });
   });
 });

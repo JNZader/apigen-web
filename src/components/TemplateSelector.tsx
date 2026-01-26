@@ -1,25 +1,36 @@
+import { useMemo, useState } from 'react';
 import {
   Badge,
   Button,
   Card,
   Group,
   Modal,
+  SegmentedControl,
   SimpleGrid,
   Stack,
   Text,
+  TextInput,
   ThemeIcon,
 } from '@mantine/core';
+import { useDebouncedValue } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
 import {
   IconArrowRight,
   IconCheckbox,
   IconFile,
   IconNews,
-  IconPackage,
+  IconSearch,
   IconShoppingCart,
+  IconUsers,
 } from '@tabler/icons-react';
-import type { ProjectTemplate } from '../data/templates';
-import { applyTemplate, PROJECT_TEMPLATES } from '../data/templates';
+import {
+  applyTemplate,
+  filterTemplates,
+  PROJECT_TEMPLATES,
+  TEMPLATE_CATEGORIES,
+  type ProjectTemplate,
+  type TemplateCategory,
+} from '../data/templates';
 import { useEntities, useEntityActions, useRelationActions, useServiceActions } from '../store';
 import { notify } from '../utils/notifications';
 
@@ -33,7 +44,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   IconShoppingCart: <IconShoppingCart size={24} />,
   IconNews: <IconNews size={24} />,
   IconCheckbox: <IconCheckbox size={24} />,
-  IconPackage: <IconPackage size={24} />,
+  IconUsers: <IconUsers size={24} />,
 };
 
 const COLOR_MAP: Record<string, string> = {
@@ -41,14 +52,31 @@ const COLOR_MAP: Record<string, string> = {
   ecommerce: 'blue',
   blog: 'orange',
   'task-manager': 'teal',
-  inventory: 'violet',
+  'user-management': 'violet',
+};
+
+const CATEGORY_COLOR_MAP: Record<TemplateCategory, string> = {
+  starter: 'green',
+  'full-stack': 'blue',
+  microservice: 'violet',
 };
 
 export function TemplateSelector({ opened, onClose }: Readonly<TemplateSelectorProps>) {
+  const [search, setSearch] = useState('');
+  const [debouncedSearch] = useDebouncedValue(search, 200);
+  const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
+
   const entities = useEntities();
   const { setEntities } = useEntityActions();
   const { setRelations } = useRelationActions();
   const { clearServices } = useServiceActions();
+
+  const filteredTemplates = useMemo(() => {
+    return filterTemplates(PROJECT_TEMPLATES, {
+      search: debouncedSearch,
+      category: selectedCategory,
+    });
+  }, [debouncedSearch, selectedCategory]);
 
   const applySelectedTemplate = (template: ProjectTemplate) => {
     // Clear services and their connections when applying any template
@@ -79,6 +107,8 @@ export function TemplateSelector({ opened, onClose }: Readonly<TemplateSelectorP
       }
     }
     onClose();
+    setSearch('');
+    setSelectedCategory('all');
   };
 
   const handleSelectTemplate = (template: ProjectTemplate) => {
@@ -95,10 +125,21 @@ export function TemplateSelector({ opened, onClose }: Readonly<TemplateSelectorP
     }
   };
 
+  const handleClose = () => {
+    onClose();
+    setSearch('');
+    setSelectedCategory('all');
+  };
+
+  const categoryOptions = [
+    { value: 'all', label: 'All' },
+    ...TEMPLATE_CATEGORIES.map((cat) => ({ value: cat.value, label: cat.label })),
+  ];
+
   return (
     <Modal
       opened={opened}
-      onClose={onClose}
+      onClose={handleClose}
       title={
         <Text fw={600} size="lg">
           Choose a Template
@@ -107,19 +148,43 @@ export function TemplateSelector({ opened, onClose }: Readonly<TemplateSelectorP
       size="xl"
       closeButtonProps={{ 'aria-label': 'Close' }}
     >
-      <Text c="dimmed" size="sm" mb="lg">
-        Start with a pre-configured template or create from scratch.
-      </Text>
+      <Stack gap="md">
+        <Text c="dimmed" size="sm">
+          Start with a pre-configured template or create from scratch.
+        </Text>
 
-      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-        {PROJECT_TEMPLATES.map((template) => (
-          <TemplateCard
-            key={template.id}
-            template={template}
-            onSelect={() => handleSelectTemplate(template)}
-          />
-        ))}
-      </SimpleGrid>
+        <TextInput
+          placeholder="Search templates..."
+          leftSection={<IconSearch size={16} />}
+          value={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+          aria-label="Search templates"
+        />
+
+        <SegmentedControl
+          value={selectedCategory}
+          onChange={(value) => setSelectedCategory(value as TemplateCategory | 'all')}
+          data={categoryOptions}
+          fullWidth
+          aria-label="Filter by category"
+        />
+
+        {filteredTemplates.length === 0 ? (
+          <Text c="dimmed" ta="center" py="xl">
+            No templates match your search criteria.
+          </Text>
+        ) : (
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+            {filteredTemplates.map((template) => (
+              <TemplateCard
+                key={template.id}
+                template={template}
+                onSelect={() => handleSelectTemplate(template)}
+              />
+            ))}
+          </SimpleGrid>
+        )}
+      </Stack>
     </Modal>
   );
 }
@@ -131,6 +196,7 @@ interface TemplateCardProps {
 
 function TemplateCard({ template, onSelect }: Readonly<TemplateCardProps>) {
   const color = COLOR_MAP[template.id] || 'blue';
+  const categoryColor = CATEGORY_COLOR_MAP[template.category];
 
   return (
     <Card
@@ -148,7 +214,7 @@ function TemplateCard({ template, onSelect }: Readonly<TemplateCardProps>) {
       }}
       tabIndex={0}
       role="button"
-      aria-label={`${template.name} template: ${template.description}. ${template.entities.length} entities, ${template.relations.length} relations`}
+      aria-label={`${template.name} template: ${template.description}. ${template.entities.length} entities, ${template.relations.length} relations. Category: ${template.category}`}
     >
       <Stack gap="sm">
         <Group justify="space-between" wrap="nowrap">
@@ -165,14 +231,34 @@ function TemplateCard({ template, onSelect }: Readonly<TemplateCardProps>) {
           </Group>
         </Group>
 
-        {template.entities.length > 0 && (
-          <Group gap={4} wrap="nowrap">
-            <Badge size="sm" variant="light" color={color}>
-              {template.entities.length} entities
-            </Badge>
-            <Badge size="sm" variant="outline" color="gray">
-              {template.relations.length} relations
-            </Badge>
+        <Group gap={4}>
+          <Badge size="xs" variant="filled" color={categoryColor}>
+            {template.category}
+          </Badge>
+          {template.entities.length > 0 && (
+            <>
+              <Badge size="xs" variant="light" color={color}>
+                {template.entities.length} entities
+              </Badge>
+              <Badge size="xs" variant="outline" color="gray">
+                {template.relations.length} relations
+              </Badge>
+            </>
+          )}
+        </Group>
+
+        {template.tags.length > 0 && (
+          <Group gap={4}>
+            {template.tags.slice(0, 4).map((tag) => (
+              <Badge key={tag} size="xs" variant="dot" color="gray">
+                {tag}
+              </Badge>
+            ))}
+            {template.tags.length > 4 && (
+              <Text size="xs" c="dimmed">
+                +{template.tags.length - 4} more
+              </Text>
+            )}
           </Group>
         )}
 
