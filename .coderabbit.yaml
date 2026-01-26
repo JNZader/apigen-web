@@ -9,8 +9,10 @@ reviews:
     - "!**/*.test.ts"
     - "!**/*.test.tsx"
     - "!**/node_modules/**"
-  review_instructions: |
-    - Seguir convenciones de CLAUDE.md
-    - Usar conventional commits
-    - Verificar tipos TypeScript
-    - Revisar imports no usados
+  path_instructions:
+    - path: "**/*"
+      instructions: |
+        - Seguir convenciones de CLAUDE.md
+        - Usar conventional commits
+        - Verificar tipos TypeScript
+        - Revisar imports no usados

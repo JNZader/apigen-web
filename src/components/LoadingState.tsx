@@ -12,7 +12,7 @@ import {
   Text,
 } from '@mantine/core';
 import { IconCode } from '@tabler/icons-react';
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 type LoadingVariant = 'spinner' | 'skeleton' | 'overlay';
 type LoadingSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -105,16 +105,25 @@ export const LoadingSkeleton = memo(function LoadingSkeleton({
   gap = 8,
   showHeader = false,
 }: LoadingSkeletonProps) {
+  const rowsData = useMemo(
+    () =>
+      Array.from({ length: rows }, (_, index) => ({
+        id: `skeleton-row-${index}`,
+        titleWidth: 70 + ((index * 7) % 20),
+        subtitleWidth: 40 + ((index * 11) % 30),
+      })),
+    [rows],
+  );
+
   return (
     <Stack gap={gap}>
       {showHeader && <Skeleton height={32} radius="sm" width="40%" mb="xs" />}
-      {Array.from({ length: rows }).map((_, index) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton items are static, have no state, and never reorder
-        <Group key={`skeleton-row-${index}`} gap="sm" wrap="nowrap">
+      {rowsData.map((row) => (
+        <Group key={row.id} gap="sm" wrap="nowrap">
           <Skeleton height={rowHeight} circle width={rowHeight} />
           <Stack gap={4} style={{ flex: 1 }}>
-            <Skeleton height={16} radius="sm" width={`${70 + Math.random() * 20}%`} />
-            <Skeleton height={12} radius="sm" width={`${40 + Math.random() * 30}%`} />
+            <Skeleton height={16} radius="sm" width={`${row.titleWidth}%`} />
+            <Skeleton height={12} radius="sm" width={`${row.subtitleWidth}%`} />
           </Stack>
         </Group>
       ))}
@@ -143,12 +152,23 @@ export const CardSkeleton = memo(function CardSkeleton({
   showFields = true,
   fieldCount = 3,
 }: CardSkeletonProps) {
+  const cardsData = useMemo(
+    () =>
+      Array.from({ length: count }, (_, cardIndex) => ({
+        id: `card-skeleton-${cardIndex}`,
+        fields: Array.from({ length: fieldCount }, (_, fieldIndex) => ({
+          id: `field-skeleton-${cardIndex}-${fieldIndex}`,
+          labelWidth: 60 + ((fieldIndex * 9) % 30),
+        })),
+      })),
+    [count, fieldCount],
+  );
+
   return (
     <Stack gap="md">
-      {Array.from({ length: count }).map((_, cardIndex) => (
+      {cardsData.map((card) => (
         <Card
-          // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton items are static, have no state, and never reorder
-          key={`card-skeleton-${cardIndex}`}
+          key={card.id}
           shadow="sm"
           padding="lg"
           radius="md"
@@ -169,10 +189,9 @@ export const CardSkeleton = memo(function CardSkeleton({
           {/* Fields section */}
           {showFields && (
             <Stack gap="xs" mt="md">
-              {Array.from({ length: fieldCount }).map((_, fieldIndex) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton items are static, have no state, and never reorder
-                <Group key={`field-skeleton-${fieldIndex}`} justify="space-between" wrap="nowrap">
-                  <Skeleton height={14} width={`${60 + Math.random() * 30}%`} radius="sm" />
+              {card.fields.map((field) => (
+                <Group key={field.id} justify="space-between" wrap="nowrap">
+                  <Skeleton height={14} width={`${field.labelWidth}%`} radius="sm" />
                   <Skeleton height={18} width={60} radius="xl" />
                 </Group>
               ))}
