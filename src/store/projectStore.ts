@@ -22,6 +22,7 @@ import { useEntityStore } from './entityStore';
 import type { CanvasView, LayoutPreset } from './layoutStore';
 import { useLayoutStore } from './layoutStore';
 import { useRelationStore } from './relationStore';
+import { useRustStore } from './rustSlice';
 import { useServiceConnectionStore } from './serviceConnectionStore';
 import { useServiceStore } from './serviceStore';
 
@@ -129,13 +130,16 @@ export const useProjectStoreInternal = create<ProjectState>()(
        * Updates Rust/Axum specific options
        * @param options - Partial Rust options to merge
        */
-      setRustOptions: (options) =>
+      setRustOptions: (options) => {
+        // Sync with rust slice store
+        useRustStore.getState().setOptions(options);
         set((state) => ({
           project: {
             ...state.project,
             rustOptions: { ...state.project.rustOptions, ...options },
           },
-        })),
+        }));
+      },
 
       /**
        * Updates Go/Chi specific options
@@ -159,6 +163,7 @@ export const useProjectStoreInternal = create<ProjectState>()(
         useServiceStore.setState({ services: [], selectedServiceId: null });
         useServiceConnectionStore.setState({ serviceConnections: [] });
         useLayoutStore.setState({ canvasView: CANVAS_VIEWS.ENTITIES, needsAutoLayout: false });
+        useRustStore.getState().reset();
         set({ project: defaultProjectConfig });
       },
 
