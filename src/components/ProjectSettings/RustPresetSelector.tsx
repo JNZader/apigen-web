@@ -1,19 +1,5 @@
-import {
-  Badge,
-  Card,
-  Group,
-  SimpleGrid,
-  Stack,
-  Text,
-  ThemeIcon,
-  Tooltip,
-} from '@mantine/core';
-import {
-  IconBrain,
-  IconCloud,
-  IconRouter,
-  IconTrendingUp,
-} from '@tabler/icons-react';
+import { Badge, Card, Group, SimpleGrid, Stack, Text, ThemeIcon, Tooltip } from '@mantine/core';
+import { IconBrain, IconCloud, IconRouter, IconTrendingUp } from '@tabler/icons-react';
 import { memo, useCallback } from 'react';
 import { useLanguageOptionsActions, useRustOptions } from '../../store';
 import { RUST_PRESET_DEFAULTS, type RustPreset } from '../../types/config/rust';
@@ -38,10 +24,16 @@ interface PresetMetadata {
 const PRESET_METADATA: Record<RustPreset, PresetMetadata> = {
   cloud: {
     label: 'Cloud',
-    description: 'Full-featured configuration for standard cloud deployments with maximum scalability',
+    description:
+      'Full-featured configuration for standard cloud deployments with maximum scalability',
     icon: <IconCloud size={28} />,
     color: 'blue',
-    features: ['Full middleware stack', 'Auto-scaling workers', 'Large request bodies', 'High connection limit'],
+    features: [
+      'Full middleware stack',
+      'Auto-scaling workers',
+      'Large request bodies',
+      'High connection limit',
+    ],
     specs: {
       memory: 'Unlimited',
       connections: '50,000',
@@ -256,8 +248,8 @@ export const RustPresetSelector = memo(function RustPresetSelector() {
           Select Deployment Preset
         </Text>
         <Text size="xs" c="dimmed" mb="md">
-          Choose a preset configuration optimized for your deployment scenario.
-          Each preset configures server, middleware, and edge-specific settings.
+          Choose a preset configuration optimized for your deployment scenario. Each preset
+          configures server, middleware, and edge-specific settings.
         </Text>
       </div>
 

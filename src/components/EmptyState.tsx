@@ -83,21 +83,8 @@ export const EmptyState = memo(function EmptyState({
   const actionLabel = customActionLabel ?? config.actionLabel;
 
   return (
-    <Stack
-      align="center"
-      justify="center"
-      gap="md"
-      py="xl"
-      role="region"
-      aria-label={title}
-    >
-      <ThemeIcon
-        size={80}
-        radius="xl"
-        variant="light"
-        color={config.iconColor}
-        aria-hidden="true"
-      >
+    <Stack align="center" justify="center" gap="md" py="xl" role="region" aria-label={title}>
+      <ThemeIcon size={80} radius="xl" variant="light" color={config.iconColor} aria-hidden="true">
         {config.icon}
       </ThemeIcon>
 
