@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ZodError } from 'zod';
 import * as apiClientModule from './apiClient';
+import {
+  type GenerateRequest,
+  GenerateRequestSchema,
+  validateGenerateRequest,
+} from './generatorApi';
 
 // Mock the apiClient module
 vi.mock('./apiClient', async () => {
@@ -107,6 +113,161 @@ describe('generatorApi', () => {
     it('should export TimeoutError type', async () => {
       const { TimeoutError } = await import('./generatorApi');
       expect(TimeoutError).toBeDefined();
+    });
+
+    it('should export GenerateRequestSchema', () => {
+      expect(GenerateRequestSchema).toBeDefined();
+      expect(typeof GenerateRequestSchema.parse).toBe('function');
+    });
+  });
+
+  describe('GenerateRequestSchema', () => {
+    const validRequest: GenerateRequest = {
+      project: {
+        name: 'Test Project',
+        groupId: 'com.example',
+        artifactId: 'test-api',
+        packageName: 'com.example.test',
+      },
+      sql: 'CREATE TABLE users (id INT PRIMARY KEY);',
+    };
+
+    it('should validate a minimal valid request', () => {
+      const result = GenerateRequestSchema.parse(validRequest);
+      expect(result.project.name).toBe('Test Project');
+      expect(result.sql).toBe('CREATE TABLE users (id INT PRIMARY KEY);');
+    });
+
+    it('should validate request with targetConfig', () => {
+      const requestWithTarget: GenerateRequest = {
+        ...validRequest,
+        project: {
+          ...validRequest.project,
+          targetConfig: {
+            language: 'java',
+            framework: 'spring-boot',
+            languageVersion: '21',
+            frameworkVersion: '4.0.0',
+          },
+        },
+      };
+      const result = GenerateRequestSchema.parse(requestWithTarget);
+      expect(result.project.targetConfig?.language).toBe('java');
+    });
+
+    it('should validate request with Feature Pack 2025 features', () => {
+      // Using plain object (not GenerateRequest type) since Zod schema allows partial features
+      const requestWithFeatures = {
+        ...validRequest,
+        project: {
+          ...validRequest.project,
+          features: {
+            socialLogin: true,
+            passwordReset: true,
+            mailService: true,
+            fileStorage: false,
+            jteTemplates: true,
+          },
+        },
+      };
+      const result = GenerateRequestSchema.parse(requestWithFeatures);
+      expect(result.project.features?.socialLogin).toBe(true);
+    });
+
+    it('should validate request with modules', () => {
+      // Using plain object (not GenerateRequest type) since Zod schema allows partial modules
+      const requestWithModules = {
+        ...validRequest,
+        project: {
+          ...validRequest.project,
+          modules: {
+            core: true,
+            security: true,
+            graphql: false,
+          },
+        },
+      };
+      const result = GenerateRequestSchema.parse(requestWithModules);
+      expect(result.project.modules?.security).toBe(true);
+    });
+
+    it('should reject request with empty name', () => {
+      const invalidRequest = {
+        ...validRequest,
+        project: {
+          ...validRequest.project,
+          name: '',
+        },
+      };
+      expect(() => GenerateRequestSchema.parse(invalidRequest)).toThrow(ZodError);
+    });
+
+    it('should reject request with empty sql', () => {
+      const invalidRequest = {
+        ...validRequest,
+        sql: '',
+      };
+      expect(() => GenerateRequestSchema.parse(invalidRequest)).toThrow(ZodError);
+    });
+
+    it('should reject request with invalid language', () => {
+      const invalidRequest = {
+        ...validRequest,
+        project: {
+          ...validRequest.project,
+          targetConfig: {
+            language: 'invalid-lang',
+            framework: 'spring-boot',
+            languageVersion: '21',
+            frameworkVersion: '4.0.0',
+          },
+        },
+      };
+      expect(() => GenerateRequestSchema.parse(invalidRequest)).toThrow(ZodError);
+    });
+
+    it('should allow additional fields with passthrough', () => {
+      const requestWithExtra = {
+        ...validRequest,
+        project: {
+          ...validRequest.project,
+          database: { type: 'postgresql' },
+          securityConfig: { mode: 'jwt' },
+        },
+      };
+      const result = GenerateRequestSchema.parse(requestWithExtra);
+      expect((result.project as Record<string, unknown>).database).toEqual({
+        type: 'postgresql',
+      });
+    });
+  });
+
+  describe('validateGenerateRequest', () => {
+    it('should return validated request for valid input', () => {
+      const request: GenerateRequest = {
+        project: {
+          name: 'Test',
+          groupId: 'com.test',
+          artifactId: 'test',
+          packageName: 'com.test',
+        },
+        sql: 'CREATE TABLE test (id INT);',
+      };
+      const result = validateGenerateRequest(request);
+      expect(result.project.name).toBe('Test');
+    });
+
+    it('should throw ZodError for invalid input', () => {
+      const invalidRequest = {
+        project: {
+          name: '',
+          groupId: 'com.test',
+          artifactId: 'test',
+          packageName: 'com.test',
+        },
+        sql: 'CREATE TABLE test (id INT);',
+      } as GenerateRequest;
+      expect(() => validateGenerateRequest(invalidRequest)).toThrow(ZodError);
     });
   });
 });

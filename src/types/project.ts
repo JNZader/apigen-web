@@ -18,11 +18,13 @@ import {
 } from './config/api';
 import { defaultCacheConfig } from './config/cache';
 import { defaultDatabaseConfig } from './config/database';
+import { defaultFeaturePackConfig } from './config/featurepack';
 import {
   defaultBatchConfig,
   defaultBulkConfig,
   defaultFeatureFlagsConfig,
 } from './config/features';
+import { defaultGoChiOptions } from './config/gochi';
 import { defaultI18nConfig, defaultWebhooksConfig } from './config/messaging';
 import {
   defaultEventSourcingConfig,
@@ -31,7 +33,9 @@ import {
 } from './config/microservices';
 import { defaultObservabilityConfig } from './config/observability';
 import { defaultResilienceConfig } from './config/resilience';
+import { defaultRustAxumOptions } from './config/rust';
 import { defaultSecurityConfig } from './config/security';
+import { defaultTargetConfig } from './target';
 
 // ============================================================================
 // RE-EXPORTS FROM CONFIG MODULES
@@ -70,6 +74,31 @@ export type {
   HikariConfig,
 } from './config/database';
 export { defaultDatabaseConfig } from './config/database';
+// Feature Pack 2025 types
+export type {
+  AzureStorageConfig,
+  FeaturePackConfig,
+  GcsStorageConfig,
+  JteConfig,
+  LocalStorageConfig,
+  MailConfig,
+  PasswordResetConfig,
+  S3StorageConfig,
+  SmtpEncryption,
+  SocialLoginConfig,
+  SocialProvider,
+  SocialProviderConfig,
+  StorageConfig,
+  StorageProvider,
+} from './config/featurepack';
+export {
+  defaultFeaturePackConfig,
+  defaultJteConfig,
+  defaultMailConfig,
+  defaultPasswordResetConfig,
+  defaultSocialLoginConfig,
+  defaultStorageConfig,
+} from './config/featurepack';
 // Feature types
 export type {
   BatchConfig,
@@ -83,6 +112,32 @@ export {
   defaultBulkConfig,
   defaultFeatureFlagsConfig,
 } from './config/features';
+// Go/Chi types
+export type {
+  GoChiCacheConfig,
+  GoChiCacheType,
+  GoChiMessagingConfig,
+  GoChiMessagingType,
+  GoChiOptions,
+  GoChiRedisConfig,
+  KafkaConfig,
+  MemcachedConfig,
+  MemoryCacheConfig,
+  NatsConfig,
+  RabbitMQConfig,
+} from './config/gochi';
+export {
+  defaultGoChiCacheConfig,
+  defaultGoChiMessagingConfig,
+  defaultGoChiOptions,
+  defaultGoChiRedisConfig,
+  defaultKafkaConfig,
+  defaultMemcachedConfig,
+  defaultMemoryCacheConfig,
+  defaultNatsConfig,
+  defaultRabbitMQConfig,
+  getDefaultGoChiOptions,
+} from './config/gochi';
 // Messaging types
 export type {
   I18nConfig,
@@ -119,6 +174,32 @@ export type {
   RetryConfig,
 } from './config/resilience';
 export { defaultResilienceConfig } from './config/resilience';
+// Rust/Axum types
+export type {
+  AxumMiddlewareConfig,
+  AxumServerConfig,
+  EdgeAiConfig,
+  EdgeAnomalyConfig,
+  EdgeConfig,
+  EdgeGatewayConfig,
+  RustAxumOptions,
+  RustPreset,
+} from './config/rust';
+export {
+  cloudPresetDefaults,
+  defaultAxumMiddlewareConfig,
+  defaultAxumServerConfig,
+  defaultEdgeAiConfig,
+  defaultEdgeAnomalyConfig,
+  defaultEdgeConfig,
+  defaultEdgeGatewayConfig,
+  defaultRustAxumOptions,
+  edgeAiPresetDefaults,
+  edgeAnomalyPresetDefaults,
+  edgeGatewayPresetDefaults,
+  getRustPresetDefaults,
+  RUST_PRESET_DEFAULTS,
+} from './config/rust';
 // Security types
 export type {
   JwtKeyRotationConfig,
@@ -131,6 +212,26 @@ export type {
   SecurityMode,
 } from './config/security';
 export { defaultSecurityConfig } from './config/security';
+// Target types
+export type {
+  Framework,
+  FrameworkMetadata,
+  Language,
+  LanguageFrameworkMap,
+  LanguageMetadata,
+  TargetConfig,
+} from './target';
+export {
+  createDefaultTargetConfig,
+  defaultTargetConfig,
+  FRAMEWORK_METADATA,
+  FRAMEWORKS,
+  getDefaultFramework,
+  getFrameworksForLanguage,
+  isFrameworkCompatible,
+  LANGUAGE_METADATA,
+  LANGUAGES,
+} from './target';
 
 // ============================================================================
 // PROJECT MODULES
@@ -200,6 +301,21 @@ export interface ProjectFeatures {
   domainEvents: boolean;
   /** Enable Server-Sent Events for updates */
   sseUpdates: boolean;
+
+  // ============================================================================
+  // FEATURE PACK 2025
+  // ============================================================================
+
+  /** Enable social login (OAuth2: Google, GitHub, Facebook, Apple, Microsoft) */
+  socialLogin: boolean;
+  /** Enable password reset functionality */
+  passwordReset: boolean;
+  /** Enable mail service (SMTP email sending) */
+  mailService: boolean;
+  /** Enable file storage (local, S3, GCS, Azure) */
+  fileStorage: boolean;
+  /** Enable JTE templates for email rendering */
+  jteTemplates: boolean;
 }
 
 // ============================================================================
@@ -218,25 +334,49 @@ export type SpringBootVersion = '4.0.0';
 
 /**
  * Main project configuration interface.
- * Contains all settings for generating a Spring Boot API project.
+ * Contains all settings for generating an API project.
+ * Supports multiple languages and frameworks through the target configuration.
  */
 export interface ProjectConfig {
   /** Project display name */
   name: string;
-  /** Maven group ID (e.g., 'com.example') */
+  /** Maven group ID (e.g., 'com.example') - for Java/Kotlin projects */
   groupId: string;
-  /** Maven artifact ID (e.g., 'my-api') */
+  /** Maven artifact ID (e.g., 'my-api') - for Java/Kotlin projects */
   artifactId: string;
-  /** Java package name (e.g., 'com.example.myapi') */
+  /** Java package name (e.g., 'com.example.myapi') - for Java/Kotlin projects */
   packageName: string;
-  /** Java version to target */
+  /**
+   * Java version to target
+   * @deprecated Use targetConfig.languageVersion instead for multi-language support
+   */
   javaVersion: JavaVersion;
-  /** Spring Boot version to use */
+  /**
+   * Spring Boot version to use
+   * @deprecated Use targetConfig.frameworkVersion instead for multi-language support
+   */
   springBootVersion: SpringBootVersion;
+
+  // ============================================================================
+  // TARGET CONFIGURATION (Multi-language support)
+  // ============================================================================
+
+  /** Target language and framework configuration */
+  targetConfig: import('./target').TargetConfig;
+
+  // ============================================================================
+  // MODULE & FEATURE SELECTION
+  // ============================================================================
+
   /** Module selection */
   modules: ProjectModules;
   /** Feature selection */
   features: ProjectFeatures;
+
+  // ============================================================================
+  // CORE CONFIGURATIONS
+  // ============================================================================
+
   /** Database configuration */
   database: import('./config/database').DatabaseConfig;
   /** Security configuration */
@@ -273,6 +413,22 @@ export interface ProjectConfig {
   grpcConfig: import('./config/api').GrpcConfig;
   /** API Gateway configuration */
   gatewayConfig: import('./config/api').GatewayConfig;
+
+  // ============================================================================
+  // FEATURE PACK 2025
+  // ============================================================================
+
+  /** Feature Pack 2025 configuration (social login, password reset, mail, storage, JTE) */
+  featurePackConfig: import('./config/featurepack').FeaturePackConfig;
+
+  // ============================================================================
+  // LANGUAGE-SPECIFIC OPTIONS
+  // ============================================================================
+
+  /** Rust/Axum specific options (only used when target.language is 'rust') */
+  rustOptions: import('./config/rust').RustAxumOptions;
+  /** Go/Chi specific options (only used when target.framework is 'chi') */
+  goChiOptions: import('./config/gochi').GoChiOptions;
 }
 
 // ============================================================================
@@ -290,6 +446,10 @@ export const defaultProjectConfig: ProjectConfig = {
   packageName: 'com.example.myapi',
   javaVersion: '25',
   springBootVersion: '4.0.0',
+
+  // Target configuration (multi-language support)
+  targetConfig: defaultTargetConfig,
+
   modules: {
     core: true,
     security: false,
@@ -317,6 +477,12 @@ export const defaultProjectConfig: ProjectConfig = {
     etagSupport: true,
     domainEvents: true,
     sseUpdates: false,
+    // Feature Pack 2025
+    socialLogin: false,
+    passwordReset: false,
+    mailService: false,
+    fileStorage: false,
+    jteTemplates: false,
   },
   database: defaultDatabaseConfig,
   securityConfig: defaultSecurityConfig,
@@ -336,4 +502,11 @@ export const defaultProjectConfig: ProjectConfig = {
   graphqlConfig: defaultGraphQLConfig,
   grpcConfig: defaultGrpcConfig,
   gatewayConfig: defaultGatewayConfig,
+
+  // Feature Pack 2025 configuration
+  featurePackConfig: defaultFeaturePackConfig,
+
+  // Language-specific options
+  rustOptions: defaultRustAxumOptions,
+  goChiOptions: defaultGoChiOptions,
 };

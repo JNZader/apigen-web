@@ -7,6 +7,13 @@ export {
   useIsMac,
   useKeyboardShortcuts,
 } from './useKeyboardShortcuts';
+export type {
+  DisabledDependentsResult,
+  DisabledFeaturesResult,
+  EnabledDependenciesResult,
+  LanguageFeatureSyncResult,
+} from './useLanguageFeatureSync';
+export { useLanguageFeatureSync } from './useLanguageFeatureSync';
 export { useMultiServiceExport } from './useMultiServiceExport';
 export { useProjectGeneration } from './useProjectGeneration';
 export { useSelectedEntity } from './useSelectedEntity';
