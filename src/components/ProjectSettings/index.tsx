@@ -103,6 +103,9 @@ export { RateLimitSettingsForm } from './RateLimitSettingsForm';
 export { ResilienceSettingsForm } from './ResilienceSettingsForm';
 export { SecuritySettingsForm } from './SecuritySettingsForm';
 
+// Rust/Axum Settings
+export { RustOptionsPanel } from './RustOptionsPanel';
+
 // Types
 export type { SettingsFormProps } from './types';
 
