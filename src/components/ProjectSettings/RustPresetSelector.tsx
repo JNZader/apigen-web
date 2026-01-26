@@ -248,8 +248,8 @@ export const RustPresetSelector = memo(function RustPresetSelector() {
           Select Deployment Preset
         </Text>
         <Text size="xs" c="dimmed" mb="md">
-          Choose a preset configuration optimized for your deployment scenario.
-          Each preset configures server, middleware, and edge-specific settings.
+          Choose a preset configuration optimized for your deployment scenario. Each preset
+          configures server, middleware, and edge-specific settings.
         </Text>
       </div>
 
