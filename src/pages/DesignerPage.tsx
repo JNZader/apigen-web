@@ -31,6 +31,7 @@ import { EntityDetailPanel } from '../components/EntityDetailPanel';
 import { EntityForm } from '../components/EntityForm';
 import { EntityList } from '../components/EntityList';
 import { EventMessageDesigner } from '../components/EventMessageDesigner';
+import { KeyboardShortcutsModal } from '../components/KeyboardShortcutsModal';
 import { Layout } from '../components/Layout';
 import { MultiServiceExport } from '../components/MultiServiceExport';
 import { RelationForm } from '../components/RelationForm';
@@ -55,6 +56,7 @@ export function DesignerPage() {
     useDisclosure(false);
   const [serviceExportOpened, { open: openServiceExport, close: closeServiceExport }] =
     useDisclosure(false);
+  const [shortcutsOpened, { open: openShortcuts, close: closeShortcuts }] = useDisclosure(false);
   const [editingEntity, setEditingEntity] = useState<string | null>(null);
   const [relationSource, setRelationSource] = useState<string>('');
   const [relationTarget, setRelationTarget] = useState<string>('');
@@ -146,7 +148,9 @@ export function DesignerPage() {
       }
     },
     onEscape: () => {
-      if (entityFormOpened) {
+      if (shortcutsOpened) {
+        closeShortcuts();
+      } else if (entityFormOpened) {
         closeEntityForm();
         setEditingEntity(null);
       } else if (relationFormOpened) {
@@ -155,6 +159,7 @@ export function DesignerPage() {
         clearSelection();
       }
     },
+    onShowHelp: openShortcuts,
   });
 
   const sidebar = <EntityList onAddEntity={handleAddEntity} />;
@@ -440,6 +445,9 @@ export function DesignerPage() {
       >
         <MultiServiceExport />
       </Drawer>
+
+      {/* Keyboard shortcuts modal */}
+      <KeyboardShortcutsModal opened={shortcutsOpened} onClose={closeShortcuts} />
     </Layout>
   );
 }
