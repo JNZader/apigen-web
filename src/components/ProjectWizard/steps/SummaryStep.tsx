@@ -1,143 +1,349 @@
 import {
   Badge,
+  Card,
   Divider,
   Group,
   List,
-  Paper,
+  SimpleGrid,
   Stack,
   Text,
   ThemeIcon,
 } from '@mantine/core';
-import { IconCheck, IconCode, IconPackage, IconSettings } from '@tabler/icons-react';
-import { memo, createElement } from 'react';
-import { LANGUAGE_CONFIGS, FRAMEWORK_CONFIGS } from '@/config/languageConfigs';
-import type { Language, Framework } from '@/types/target';
+import {
+  IconApi,
+  IconBrandDocker,
+  IconBrandGolang,
+  IconBrandPhp,
+  IconBrandPython,
+  IconBrandRust,
+  IconBrandTypescript,
+  IconCheck,
+  IconCode,
+  IconCoffee,
+  IconDatabase,
+  IconDiamond,
+  IconHash,
+  IconPackage,
+  IconServer,
+  IconSettings,
+} from '@tabler/icons-react';
+import { useFeatures, useProject, useTargetConfig } from '../../../store';
+import {
+  FEATURE_LABELS,
+  type FeatureKey,
+} from '../../../types/config/featureCompatibility';
+import type { ProjectFeatures } from '../../../types/project';
+import { FRAMEWORK_METADATA, LANGUAGE_METADATA, type Language } from '../../../types/target';
 
-interface SummaryStepProps {
-  readonly data: {
-    projectName: string;
-    description: string;
-    packageName: string;
-    language: string;
-    framework: string;
-    features: string[];
-  };
-}
-
-const FEATURE_LABELS: Record<string, string> = {
-  SOCIAL_LOGIN: 'Social Login',
-  MAIL_SERVICE: 'Mail Service',
-  FILE_STORAGE: 'File Storage',
-  PASSWORD_RESET: 'Password Reset',
-  JTE_TEMPLATES: 'JTE Templates',
+const LANGUAGE_ICONS: Record<Language, React.ReactNode> = {
+  java: <IconCoffee size={24} />,
+  kotlin: <IconDiamond size={24} />,
+  python: <IconBrandPython size={24} />,
+  typescript: <IconBrandTypescript size={24} />,
+  php: <IconBrandPhp size={24} />,
+  go: <IconBrandGolang size={24} />,
+  rust: <IconBrandRust size={24} />,
+  csharp: <IconHash size={24} />,
 };
 
-export const SummaryStep = memo(function SummaryStep({ data }: SummaryStepProps) {
-  const languageConfig = LANGUAGE_CONFIGS[data.language as Language];
-  const frameworkConfig = FRAMEWORK_CONFIGS[data.framework as Framework];
+const LANGUAGE_COLORS: Record<Language, string> = {
+  java: 'orange',
+  kotlin: 'grape',
+  python: 'yellow',
+  typescript: 'blue',
+  php: 'indigo',
+  go: 'cyan',
+  rust: 'orange.8',
+  csharp: 'violet',
+};
+
+interface FeatureGroup {
+  title: string;
+  icon: React.ReactNode;
+  color: string;
+  features: FeatureKey[];
+}
+
+const FEATURE_GROUPS: FeatureGroup[] = [
+  {
+    title: 'Core',
+    icon: <IconServer size={16} />,
+    color: 'blue',
+    features: ['hateoas', 'swagger', 'softDelete', 'auditing', 'virtualThreads'],
+  },
+  {
+    title: 'Data',
+    icon: <IconDatabase size={16} />,
+    color: 'green',
+    features: ['caching', 'cursorPagination', 'etagSupport'],
+  },
+  {
+    title: 'Advanced',
+    icon: <IconApi size={16} />,
+    color: 'violet',
+    features: [
+      'rateLimiting',
+      'i18n',
+      'webhooks',
+      'bulkOperations',
+      'batchOperations',
+      'domainEvents',
+      'sseUpdates',
+    ],
+  },
+  {
+    title: 'Architecture',
+    icon: <IconSettings size={16} />,
+    color: 'orange',
+    features: ['multiTenancy', 'eventSourcing', 'apiVersioning'],
+  },
+  {
+    title: 'Security',
+    icon: <IconPackage size={16} />,
+    color: 'red',
+    features: ['socialLogin', 'passwordReset'],
+  },
+  {
+    title: 'Services',
+    icon: <IconCode size={16} />,
+    color: 'cyan',
+    features: ['mailService', 'fileStorage', 'jteTemplates'],
+  },
+  {
+    title: 'Deployment',
+    icon: <IconBrandDocker size={16} />,
+    color: 'gray',
+    features: ['docker'],
+  },
+];
+
+export function SummaryStep() {
+  const project = useProject();
+  const targetConfig = useTargetConfig();
+  const features = useFeatures();
+
+  const languageMeta = LANGUAGE_METADATA[targetConfig.language];
+  const frameworkMeta = FRAMEWORK_METADATA[targetConfig.framework];
+  const languageColor = LANGUAGE_COLORS[targetConfig.language];
+
+  const enabledFeatures = (Object.keys(features) as FeatureKey[]).filter(
+    (key) => features[key as keyof ProjectFeatures],
+  );
+
+  const getEnabledFeaturesForGroup = (group: FeatureGroup) =>
+    group.features.filter((f) => features[f as keyof ProjectFeatures]);
 
   return (
-    <Stack gap="md">
-      <Text fw={500} size="lg">
-        Review Your Project
-      </Text>
+    <Stack gap="xl">
+      <div>
+        <Text fw={600} size="lg" mb="md">
+          Project Summary
+        </Text>
+        <Text size="sm" c="dimmed" mb="lg">
+          Review your configuration before completing the wizard.
+        </Text>
+      </div>
 
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="sm">
-          <Group justify="space-between">
-            <Group gap="xs">
-              <IconPackage size={20} />
-              <Text fw={500}>Project Info</Text>
-            </Group>
-          </Group>
-          <Divider />
-          <div>
-            <Text size="sm" c="dimmed">
-              Name
-            </Text>
-            <Text fw={500}>{data.projectName}</Text>
-          </div>
-          {data.description && (
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
+        <Card withBorder padding="lg" radius="md">
+          <Group gap="md" mb="md">
+            <ThemeIcon size="xl" radius="md" color={languageColor} variant="filled">
+              {LANGUAGE_ICONS[targetConfig.language]}
+            </ThemeIcon>
             <div>
-              <Text size="sm" c="dimmed">
-                Description
+              <Text fw={600} size="lg">
+                {languageMeta.label}
               </Text>
-              <Text size="sm">{data.description}</Text>
+              <Text size="sm" c="dimmed">
+                Version {targetConfig.languageVersion}
+              </Text>
             </div>
-          )}
+          </Group>
+          <Divider mb="md" />
+          <Stack gap="xs">
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed">
+                Package Manager
+              </Text>
+              <Badge variant="light" color="gray">
+                {languageMeta.packageManager}
+              </Badge>
+            </Group>
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed">
+                File Extension
+              </Text>
+              <Badge variant="light" color="gray">
+                {languageMeta.fileExtension}
+              </Badge>
+            </Group>
+          </Stack>
+        </Card>
+
+        <Card withBorder padding="lg" radius="md">
+          <Group gap="md" mb="md">
+            <ThemeIcon size="xl" radius="md" color="blue" variant="filled">
+              <IconCode size={24} />
+            </ThemeIcon>
+            <div>
+              <Text fw={600} size="lg">
+                {frameworkMeta.label}
+              </Text>
+              <Text size="sm" c="dimmed">
+                Version {targetConfig.frameworkVersion}
+              </Text>
+            </div>
+          </Group>
+          <Divider mb="md" />
+          <Stack gap="xs">
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed">
+                Documentation
+              </Text>
+              <Badge
+                component="a"
+                href={frameworkMeta.docsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="light"
+                color="blue"
+                style={{ cursor: 'pointer' }}
+              >
+                View Docs
+              </Badge>
+            </Group>
+          </Stack>
+        </Card>
+      </SimpleGrid>
+
+      <Card withBorder padding="lg" radius="md">
+        <Group gap="md" mb="md">
+          <ThemeIcon size="lg" radius="md" color="green" variant="filled">
+            <IconCheck size={20} />
+          </ThemeIcon>
           <div>
-            <Text size="sm" c="dimmed">
-              Package
+            <Text fw={600} size="md">
+              Enabled Features
             </Text>
-            <Text size="sm" style={{ fontFamily: 'monospace' }}>
-              {data.packageName}
+            <Text size="sm" c="dimmed">
+              {enabledFeatures.length} features selected
             </Text>
           </div>
-        </Stack>
-      </Paper>
+        </Group>
+        <Divider mb="md" />
 
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="sm">
-          <Group gap="xs">
-            <IconCode size={20} />
-            <Text fw={500}>Technology Stack</Text>
-          </Group>
-          <Divider />
-          <Group gap="xs">
-            {languageConfig && (
-              <Badge color={languageConfig.color} size="lg" leftSection={
-                createElement(languageConfig.icon, { size: 14 })
-              }>
-                {languageConfig.label}
-              </Badge>
-            )}
-            {frameworkConfig && (
-              <Badge variant="outline" size="lg" leftSection={
-                createElement(frameworkConfig.icon, { size: 14 })
-              }>
-                {frameworkConfig.label}
-              </Badge>
-            )}
-          </Group>
-        </Stack>
-      </Paper>
+        {enabledFeatures.length === 0 ? (
+          <Text size="sm" c="dimmed" ta="center" py="md">
+            No features selected. You can always enable them later in Project Settings.
+          </Text>
+        ) : (
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+            {FEATURE_GROUPS.map((group) => {
+              const enabled = getEnabledFeaturesForGroup(group);
+              if (enabled.length === 0) return null;
 
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="sm">
-          <Group gap="xs">
-            <IconSettings size={20} />
-            <Text fw={500}>Selected Features</Text>
-          </Group>
-          <Divider />
-          {data.features.length > 0 ? (
-            <List
-              spacing="xs"
-              icon={
-                <ThemeIcon color="green" size={20} radius="xl">
-                  <IconCheck size={12} />
-                </ThemeIcon>
-              }
-            >
-              {data.features.map((feature) => (
-                <List.Item key={feature}>
-                  <Text size="sm">
-                    {FEATURE_LABELS[feature] || feature}
-                  </Text>
-                </List.Item>
-              ))}
-            </List>
-          ) : (
-            <Text size="sm" c="dimmed">
-              No additional features selected
+              return (
+                <Card key={group.title} withBorder padding="sm" radius="md">
+                  <Group gap="xs" mb="xs">
+                    <ThemeIcon size="sm" radius="sm" color={group.color} variant="light">
+                      {group.icon}
+                    </ThemeIcon>
+                    <Text size="sm" fw={500}>
+                      {group.title}
+                    </Text>
+                    <Badge size="xs" variant="light" color={group.color}>
+                      {enabled.length}
+                    </Badge>
+                  </Group>
+                  <List
+                    size="xs"
+                    spacing={2}
+                    icon={
+                      <ThemeIcon size={14} radius="xl" color="green" variant="light">
+                        <IconCheck size={8} />
+                      </ThemeIcon>
+                    }
+                  >
+                    {enabled.map((feature) => (
+                      <List.Item key={feature}>
+                        <Text size="xs">{FEATURE_LABELS[feature]}</Text>
+                      </List.Item>
+                    ))}
+                  </List>
+                </Card>
+              );
+            })}
+          </SimpleGrid>
+        )}
+      </Card>
+
+      <Card withBorder padding="lg" radius="md" bg="var(--mantine-color-gray-light)">
+        <Group gap="md" mb="md">
+          <ThemeIcon size="lg" radius="md" color="gray" variant="filled">
+            <IconPackage size={20} />
+          </ThemeIcon>
+          <div>
+            <Text fw={600} size="md">
+              Project Details
             </Text>
-          )}
-        </Stack>
-      </Paper>
+            <Text size="sm" c="dimmed">
+              Basic project configuration
+            </Text>
+          </div>
+        </Group>
+        <Divider mb="md" />
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+          <Group justify="space-between">
+            <Text size="sm" c="dimmed">
+              Project Name
+            </Text>
+            <Text size="sm" fw={500}>
+              {project.name}
+            </Text>
+          </Group>
+          <Group justify="space-between">
+            <Text size="sm" c="dimmed">
+              Group ID
+            </Text>
+            <Text size="sm" fw={500}>
+              {project.groupId}
+            </Text>
+          </Group>
+          <Group justify="space-between">
+            <Text size="sm" c="dimmed">
+              Artifact ID
+            </Text>
+            <Text size="sm" fw={500}>
+              {project.artifactId}
+            </Text>
+          </Group>
+          <Group justify="space-between">
+            <Text size="sm" c="dimmed">
+              Package Name
+            </Text>
+            <Text size="sm" fw={500}>
+              {project.packageName}
+            </Text>
+          </Group>
+        </SimpleGrid>
+      </Card>
 
-      <Text size="sm" c="dimmed" ta="center">
-        Click "Create Project" to generate your project with these settings. You can modify
-        settings anytime from Project Settings.
-      </Text>
+      <Card withBorder padding="md" radius="md" bg="var(--mantine-color-blue-light)">
+        <Group gap="md" align="flex-start">
+          <ThemeIcon size="lg" radius="md" color="blue" variant="filled">
+            <IconCheck size={20} />
+          </ThemeIcon>
+          <div>
+            <Text fw={600} size="sm">
+              Ready to Start
+            </Text>
+            <Text size="xs" c="dimmed">
+              Click "Complete" to finish the wizard and start designing your API. You can always
+              modify these settings later in Project Settings.
+            </Text>
+          </div>
+        </Group>
+      </Card>
     </Stack>
   );
-});
+}

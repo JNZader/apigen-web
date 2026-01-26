@@ -7,6 +7,7 @@ interface KeyboardShortcutsConfig {
   onAddEntity?: () => void;
   onDelete?: () => void;
   onEscape?: () => void;
+  onShowHelp?: () => void;
 }
 
 /**
@@ -20,6 +21,7 @@ export function useKeyboardShortcuts({
   onAddEntity,
   onDelete,
   onEscape,
+  onShowHelp,
 }: KeyboardShortcutsConfig) {
   // Define all keyboard shortcuts
   useHotkeys([
@@ -42,6 +44,9 @@ export function useKeyboardShortcuts({
 
     // Escape: Cancel/Close
     ['escape', () => onEscape?.()],
+
+    // Help: ? key
+    ['shift+/', () => onShowHelp?.()],
   ]);
 }
 
@@ -56,6 +61,7 @@ export const KEYBOARD_SHORTCUTS = [
   { keys: ['Ctrl', 'N'], mac: ['Cmd', 'N'], action: 'Add new entity' },
   { keys: ['Delete'], mac: ['Delete'], action: 'Delete selected' },
   { keys: ['Escape'], mac: ['Escape'], action: 'Cancel/Close' },
+  { keys: ['?'], mac: ['?'], action: 'Show keyboard shortcuts' },
 ] as const;
 
 /**

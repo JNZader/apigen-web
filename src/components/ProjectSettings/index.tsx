@@ -1,4 +1,4 @@
-import { Alert, Button, Group, Modal, ScrollArea, Stack, Tabs, Text, Badge } from '@mantine/core';
+import { Alert, Badge, Button, Group, Modal, ScrollArea, Stack, Tabs, Text } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import {
   IconAlertTriangle,
@@ -101,14 +101,12 @@ export { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
 export { PasswordResetSettingsForm } from './PasswordResetSettingsForm';
 export { RateLimitSettingsForm } from './RateLimitSettingsForm';
 export { ResilienceSettingsForm } from './ResilienceSettingsForm';
-export { SecuritySettingsForm } from './SecuritySettingsForm';
-
-// Feature Pack Forms
-export { SocialLoginSettingsForm } from './SocialLoginSettingsForm';
-
 // Rust/Axum Settings
 export { RustOptionsPanel } from './RustOptionsPanel';
 export { RustPresetSelector } from './RustPresetSelector';
+export { SecuritySettingsForm } from './SecuritySettingsForm';
+// Feature Pack Forms
+export { SocialLoginSettingsForm } from './SocialLoginSettingsForm';
 
 // Types
 export type { SettingsFormProps } from './types';
@@ -264,7 +262,7 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             <Tabs.Panel value="rust" pl="md">
               <ScrollArea h={600}>
                 <Stack gap="xl">
-                  <RustPresetSelector form={form} />
+                  <RustPresetSelector />
                   <RustOptionsPanel />
                 </Stack>
               </ScrollArea>
@@ -351,7 +349,7 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
 
           <Tabs.Panel value="feature-pack" pl="md">
             <ScrollArea h={600}>
-              <FeaturePackSection form={form} />
+              <FeaturePackSection />
             </ScrollArea>
           </Tabs.Panel>
         </Tabs>

@@ -1,16 +1,25 @@
-import { Button, Group, Modal, Progress, Stack, Stepper } from '@mantine/core';
+import {
+  Box,
+  Button,
+  Group,
+  Modal,
+  Progress,
+  Stack,
+  Stepper,
+  Text,
+} from '@mantine/core';
+import { useForm } from '@mantine/form';
 import {
   IconArrowLeft,
   IconArrowRight,
   IconCheck,
-  IconCode,
-  IconFileDescription,
-  IconSettings,
+  IconWand,
 } from '@tabler/icons-react';
-import { memo, useCallback, useState } from 'react';
-import { useProjectStoreInternal } from '@/store/projectStore';
-import type { Language, Framework } from '@/types/target';
-import { notify } from '@/utils/notifications';
+import { useCallback, useState } from 'react';
+import { useProjectActions } from '../../store';
+import { defaultProjectConfig, type ProjectConfig } from '../../types';
+import { notify } from '../../utils/notifications';
+import { isValidArtifactId, isValidGroupId, isValidPackageName } from '../../utils/validation';
 import { BasicInfoStep } from './steps/BasicInfoStep';
 import { FeaturesStep } from './steps/FeaturesStep';
 import { LanguageStep } from './steps/LanguageStep';
@@ -22,195 +31,159 @@ interface ProjectWizardProps {
   readonly onComplete?: () => void;
 }
 
-interface WizardData {
-  projectName: string;
-  description: string;
-  packageName: string;
-  language: string;
-  framework: string;
-  features: string[];
-}
+const TOTAL_STEPS = 4;
 
-const STEPS = [
-  { label: 'Basic Info', icon: IconFileDescription },
-  { label: 'Language', icon: IconCode },
-  { label: 'Features', icon: IconSettings },
-  { label: 'Summary', icon: IconCheck },
-];
+export function ProjectWizard({ opened, onClose, onComplete }: ProjectWizardProps) {
+  const [activeStep, setActiveStep] = useState(0);
+  const { setProject } = useProjectActions();
 
-const INITIAL_DATA: WizardData = {
-  projectName: '',
-  description: '',
-  packageName: 'com.example',
-  language: 'java',
-  framework: 'spring-boot',
-  features: [],
-};
+  const form = useForm<ProjectConfig>({
+    initialValues: defaultProjectConfig,
+    validate: {
+      name: (v) => (v ? null : 'Project name is required'),
+      groupId: (v) => (isValidGroupId(v) ? null : 'Invalid group ID (e.g., com.example)'),
+      artifactId: (v) =>
+        isValidArtifactId(v) ? null : 'Invalid artifact ID (lowercase, hyphens allowed)',
+      packageName: (v) =>
+        isValidPackageName(v) ? null : 'Invalid package name (e.g., com.example.myapi)',
+    },
+    validateInputOnBlur: true,
+  });
 
-export const ProjectWizard = memo(function ProjectWizard({
-  opened,
-  onClose,
-  onComplete,
-}: ProjectWizardProps) {
-  const [active, setActive] = useState(0);
-  const [data, setData] = useState<WizardData>(INITIAL_DATA);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const setProject = useProjectStoreInternal((s) => s.setProject);
-  const setTargetConfig = useProjectStoreInternal((s) => s.setTargetConfig);
-  const setFeaturePackConfig = useProjectStoreInternal((s) => s.setFeaturePackConfig);
-
-  const updateData = useCallback((updates: Partial<WizardData>) => {
-    setData((prev) => ({ ...prev, ...updates }));
-    const keys = Object.keys(updates);
-    setErrors((prev) => {
-      const next = { ...prev };
-      for (const k of keys) {
-        delete next[k];
+  const validateCurrentStep = useCallback((): boolean => {
+    switch (activeStep) {
+      case 0: {
+        const validation = form.validateField('name');
+        const groupValidation = form.validateField('groupId');
+        const artifactValidation = form.validateField('artifactId');
+        const packageValidation = form.validateField('packageName');
+        return (
+          !validation.hasError &&
+          !groupValidation.hasError &&
+          !artifactValidation.hasError &&
+          !packageValidation.hasError
+        );
       }
-      return next;
-    });
+      case 1:
+        return true;
+      case 2:
+        return true;
+      case 3:
+        return true;
+      default:
+        return true;
+    }
+  }, [activeStep, form]);
+
+  const handleNext = useCallback(() => {
+    if (validateCurrentStep()) {
+      setActiveStep((current) => Math.min(current + 1, TOTAL_STEPS - 1));
+    }
+  }, [validateCurrentStep]);
+
+  const handleBack = useCallback(() => {
+    setActiveStep((current) => Math.max(current - 1, 0));
   }, []);
 
-  const validateStep = useCallback(
-    (step: number): boolean => {
-      const newErrors: Record<string, string> = {};
-
-      if (step === 0) {
-        if (!data.projectName.trim()) {
-          newErrors.projectName = 'Project name is required';
-        } else if (!/^[a-zA-Z][a-zA-Z0-9-_]*$/.test(data.projectName)) {
-          newErrors.projectName =
-            'Project name must start with a letter and contain only letters, numbers, hyphens, and underscores';
-        }
-
-        if (!data.packageName.trim()) {
-          newErrors.packageName = 'Package name is required';
-        } else if (!/^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)*$/.test(data.packageName)) {
-          newErrors.packageName =
-            'Package name must be lowercase, start with a letter, and use dots as separators';
-        }
+  const handleStepClick = useCallback(
+    (step: number) => {
+      if (step < activeStep) {
+        setActiveStep(step);
+      } else if (step === activeStep + 1 && validateCurrentStep()) {
+        setActiveStep(step);
       }
-
-      if (step === 1) {
-        if (!data.language) {
-          newErrors.language = 'Please select a language';
-        }
-      }
-
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0;
     },
-    [data]
+    [activeStep, validateCurrentStep],
   );
 
-  const nextStep = useCallback(() => {
-    if (validateStep(active)) {
-      setActive((prev) => Math.min(prev + 1, STEPS.length - 1));
-    }
-  }, [active, validateStep]);
-
-  const prevStep = useCallback(() => {
-    setActive((prev) => Math.max(prev - 1, 0));
-  }, []);
-
   const handleComplete = useCallback(() => {
-    // Apply configuration to store
-    setProject({
-      name: data.projectName,
-      description: data.description,
-      groupId: data.packageName,
-      artifactId: data.projectName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-    });
+    if (!validateCurrentStep()) return;
 
-    setTargetConfig({
-      language: data.language as Language,
-      framework: data.framework as Framework,
-    });
-
-    // Apply selected features to featurePackConfig
-    const featureUpdates: Record<string, { enabled: boolean }> = {};
-    for (const feature of data.features) {
-      const featureKey = feature.toLowerCase().replace(/_/g, '');
-      if (feature === 'SOCIAL_LOGIN') {
-        featureUpdates.socialLogin = { enabled: true };
-      } else if (feature === 'MAIL_SERVICE') {
-        featureUpdates.mailService = { enabled: true };
-      } else if (feature === 'FILE_STORAGE') {
-        featureUpdates.fileStorage = { enabled: true };
-      } else if (feature === 'PASSWORD_RESET') {
-        featureUpdates.passwordReset = { enabled: true };
-      } else if (feature === 'JTE_TEMPLATES') {
-        featureUpdates.jteTemplates = { enabled: true };
-      }
-    }
-    if (Object.keys(featureUpdates).length > 0) {
-      setFeaturePackConfig(featureUpdates);
-    }
-
+    setProject(form.values);
     notify.success({
-      title: 'Project created',
-      message: `Project "${data.projectName}" has been configured successfully`,
+      title: 'Project Created',
+      message: `Project "${form.values.name}" has been configured successfully`,
     });
-
     onComplete?.();
-    handleClose();
-  }, [data, setProject, setTargetConfig, setFeaturePackConfig, onComplete]);
+    onClose();
+    setActiveStep(0);
+    form.reset();
+  }, [form, onClose, onComplete, setProject, validateCurrentStep]);
 
   const handleClose = useCallback(() => {
-    setActive(0);
-    setData(INITIAL_DATA);
-    setErrors({});
     onClose();
-  }, [onClose]);
+    setActiveStep(0);
+    form.reset();
+  }, [form, onClose]);
 
-  const progress = ((active + 1) / STEPS.length) * 100;
+  const progress = ((activeStep + 1) / TOTAL_STEPS) * 100;
+  const isLastStep = activeStep === TOTAL_STEPS - 1;
 
   return (
     <Modal
       opened={opened}
       onClose={handleClose}
-      title="Create New Project"
+      title={
+        <Group gap="sm">
+          <IconWand size={20} />
+          <Text fw={500}>Project Setup Wizard</Text>
+        </Group>
+      }
       size="lg"
-      closeOnClickOutside={false}
+      padding="lg"
+      centered
     >
       <Stack gap="lg">
-        <Progress value={progress} size="sm" aria-label="Wizard progress" />
+        <Progress value={progress} size="sm" radius="xl" animated />
 
-        <Stepper active={active} size="sm">
-          {STEPS.map((step) => (
-            <Stepper.Step key={step.label} label={step.label} icon={<step.icon size={18} />} />
-          ))}
+        <Stepper
+          active={activeStep}
+          onStepClick={handleStepClick}
+          size="sm"
+          allowNextStepsSelect={false}
+        >
+          <Stepper.Step label="Basic Info" description="Project details" />
+          <Stepper.Step label="Language" description="Tech stack" />
+          <Stepper.Step label="Features" description="Capabilities" />
+          <Stepper.Step label="Summary" description="Review" />
         </Stepper>
 
-        <div style={{ minHeight: 300 }}>
-          {active === 0 && <BasicInfoStep data={data} errors={errors} onChange={updateData} />}
-          {active === 1 && <LanguageStep data={data} errors={errors} onChange={updateData} />}
-          {active === 2 && <FeaturesStep data={data} onChange={updateData} />}
-          {active === 3 && <SummaryStep data={data} />}
-        </div>
+        <Box mih={300}>
+          {activeStep === 0 && <BasicInfoStep form={form} />}
+          {activeStep === 1 && <LanguageStep />}
+          {activeStep === 2 && <FeaturesStep />}
+          {activeStep === 3 && <SummaryStep />}
+        </Box>
 
-        <Group justify="space-between">
+        <Group justify="space-between" mt="md">
           <Button
             variant="default"
-            onClick={prevStep}
-            disabled={active === 0}
+            onClick={handleBack}
+            disabled={activeStep === 0}
             leftSection={<IconArrowLeft size={16} />}
           >
             Back
           </Button>
-
-          {active < STEPS.length - 1 ? (
-            <Button onClick={nextStep} rightSection={<IconArrowRight size={16} />}>
-              Next
+          <Group gap="sm">
+            <Button variant="subtle" onClick={handleClose}>
+              Cancel
             </Button>
-          ) : (
-            <Button onClick={handleComplete} color="green" leftSection={<IconCheck size={16} />}>
-              Create Project
-            </Button>
-          )}
+            {isLastStep ? (
+              <Button
+                color="teal"
+                onClick={handleComplete}
+                leftSection={<IconCheck size={16} />}
+              >
+                Create Project
+              </Button>
+            ) : (
+              <Button onClick={handleNext} rightSection={<IconArrowRight size={16} />}>
+                Next
+              </Button>
+            )}
+          </Group>
         </Group>
       </Stack>
     </Modal>
   );
-});
+}
