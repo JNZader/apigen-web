@@ -1,19 +1,5 @@
-import {
-  Badge,
-  Card,
-  Group,
-  SimpleGrid,
-  Stack,
-  Text,
-  ThemeIcon,
-  Tooltip,
-} from '@mantine/core';
-import {
-  IconBrain,
-  IconCloud,
-  IconRouter,
-  IconTrendingUp,
-} from '@tabler/icons-react';
+import { Badge, Card, Group, SimpleGrid, Stack, Text, ThemeIcon, Tooltip } from '@mantine/core';
+import { IconBrain, IconCloud, IconRouter, IconTrendingUp } from '@tabler/icons-react';
 import { memo, useCallback } from 'react';
 import { useLanguageOptionsActions, useRustOptions } from '../../store';
 import { RUST_PRESET_DEFAULTS, type RustPreset } from '../../types/config/rust';
@@ -38,10 +24,16 @@ interface PresetMetadata {
 const PRESET_METADATA: Record<RustPreset, PresetMetadata> = {
   cloud: {
     label: 'Cloud',
-    description: 'Full-featured configuration for standard cloud deployments with maximum scalability',
+    description:
+      'Full-featured configuration for standard cloud deployments with maximum scalability',
     icon: <IconCloud size={28} />,
     color: 'blue',
-    features: ['Full middleware stack', 'Auto-scaling workers', 'Large request bodies', 'High connection limit'],
+    features: [
+      'Full middleware stack',
+      'Auto-scaling workers',
+      'Large request bodies',
+      'High connection limit',
+    ],
     specs: {
       memory: 'Unlimited',
       connections: '50,000',
