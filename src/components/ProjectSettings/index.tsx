@@ -1,8 +1,9 @@
-import { Alert, Button, Group, Modal, ScrollArea, Stack, Tabs, Text } from '@mantine/core';
+import { Alert, Button, Group, Modal, ScrollArea, Stack, Tabs, Text, Badge } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import {
   IconAlertTriangle,
   IconBrandGraphql,
+  IconBrandRust,
   IconClock,
   IconCode,
   IconDatabase,
@@ -38,6 +39,8 @@ import { FeaturePackSection } from './FeaturePackSection';
 import { ObservabilitySettingsForm } from './ObservabilitySettingsForm';
 import { RateLimitSettingsForm } from './RateLimitSettingsForm';
 import { ResilienceSettingsForm } from './ResilienceSettingsForm';
+import { RustOptionsPanel } from './RustOptionsPanel';
+import { RustPresetSelector } from './RustPresetSelector';
 import { SecuritySettingsForm } from './SecuritySettingsForm';
 
 /**
@@ -103,6 +106,10 @@ export { RateLimitSettingsForm } from './RateLimitSettingsForm';
 export { ResilienceSettingsForm } from './ResilienceSettingsForm';
 export { SecuritySettingsForm } from './SecuritySettingsForm';
 
+// Rust/Axum Configuration
+export { RustPresetSelector } from './RustPresetSelector';
+export { RustOptionsPanel } from './RustOptionsPanel';
+
 // Types
 export type { SettingsFormProps } from './types';
 
@@ -131,6 +138,9 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
         isValidPackageName(v) ? null : 'Invalid package name (e.g., com.example.myapi)',
     },
   });
+
+  // Detect if Rust is selected
+  const isRust = form.values.targetConfig?.language === 'rust';
 
   const handleLanguageChange = (language: Language, framework: Framework) => {
     // Check for incompatible features
@@ -170,6 +180,19 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             <Tabs.Tab value="language" leftSection={<IconCode size={16} />}>
               Language
             </Tabs.Tab>
+            {isRust && (
+              <Tabs.Tab
+                value="rust"
+                leftSection={<IconBrandRust size={16} />}
+                rightSection={
+                  <Badge size="xs" variant="light" color="orange">
+                    Axum
+                  </Badge>
+                }
+              >
+                Rust
+              </Tabs.Tab>
+            )}
             <Tabs.Tab value="basic" leftSection={<IconFileText size={16} />}>
               Basic
             </Tabs.Tab>
@@ -241,6 +264,17 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
               </Stack>
             </ScrollArea>
           </Tabs.Panel>
+
+          {isRust && (
+            <Tabs.Panel value="rust" pl="md">
+              <ScrollArea h={600}>
+                <Stack gap="xl">
+                  <RustPresetSelector form={form} />
+                  <RustOptionsPanel form={form} />
+                </Stack>
+              </ScrollArea>
+            </Tabs.Panel>
+          )}
 
           <Tabs.Panel value="basic" pl="md">
             <ScrollArea h={600}>
