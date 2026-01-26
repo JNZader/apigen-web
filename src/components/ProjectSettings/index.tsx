@@ -8,6 +8,7 @@ import {
   IconDatabase,
   IconEye,
   IconFileText,
+  IconFolder,
   IconGlobe,
   IconNetwork,
   IconRefresh,
@@ -28,6 +29,7 @@ import { CacheSettingsForm } from './CacheSettingsForm';
 import { CorsSettingsForm } from './CorsSettingsForm';
 import { DatabaseSettingsForm } from './DatabaseSettingsForm';
 import { FeaturesSettingsForm } from './FeaturesSettingsForm';
+import { FileStorageSettingsForm } from './FileStorageSettingsForm';
 import { GatewaySettingsForm } from './GatewaySettingsForm';
 import { GraphQLSettingsForm } from './GraphQLSettingsForm';
 import { GrpcSettingsForm } from './GrpcSettingsForm';
@@ -141,6 +143,9 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             <Tabs.Tab value="cache" leftSection={<IconRefresh size={16} />}>
               Cache
             </Tabs.Tab>
+            <Tabs.Tab value="file-storage" leftSection={<IconFolder size={16} />}>
+              File Storage
+            </Tabs.Tab>
             <Tabs.Tab value="features" leftSection={<IconRocket size={16} />}>
               Features
             </Tabs.Tab>
@@ -219,6 +224,12 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
           <Tabs.Panel value="cache" pl="md">
             <ScrollArea h={600}>
               <CacheSettingsForm form={form} />
+            </ScrollArea>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="file-storage" pl="md">
+            <ScrollArea h={600}>
+              <FileStorageSettingsForm form={form} />
             </ScrollArea>
           </Tabs.Panel>
 
