@@ -21,9 +21,8 @@ import {
 } from '@tabler/icons-react';
 import { useCallback } from 'react';
 
-import { githubApi } from '../../api/githubApi';
+import { githubApi, type PushToRepoRequest } from '../../api/githubApi';
 import {
-  useGitHubAccessToken,
   useGitHubActions,
   useGitHubAuthenticated,
   useGitHubPushState,
@@ -31,17 +30,23 @@ import {
 } from '../../store/githubStore';
 import { RepoSelectorModal } from './RepoSelectorModal';
 
+/** Project configuration for push */
+interface ProjectGenerateConfig {
+  project: Record<string, unknown>;
+  target?: { language: string; framework: string };
+  sql: string;
+}
+
 interface PushToGitHubButtonProps {
-  /** Function that generates the project and returns the ZIP blob */
-  readonly generateProjectZip: () => Promise<Blob>;
+  /** Function that returns the project configuration for generation */
+  readonly getProjectConfig: () => ProjectGenerateConfig;
   /** Whether generation is disabled (e.g., no entities) */
   readonly disabled?: boolean;
 }
 
-export function PushToGitHubButton({ generateProjectZip, disabled }: PushToGitHubButtonProps) {
+export function PushToGitHubButton({ getProjectConfig, disabled }: PushToGitHubButtonProps) {
   const isAuthenticated = useGitHubAuthenticated();
   const selectedRepo = useGitHubSelectedRepo();
-  const accessToken = useGitHubAccessToken();
   const { isPushing, lastPushResult } = useGitHubPushState();
   const { setPushing, setPushResult, clearPushResult, setError } = useGitHubActions();
 
@@ -54,7 +59,7 @@ export function PushToGitHubButton({ generateProjectZip, disabled }: PushToGitHu
       return;
     }
 
-    if (!accessToken) {
+    if (!isAuthenticated) {
       setError('Not authenticated');
       return;
     }
@@ -64,17 +69,36 @@ export function PushToGitHubButton({ generateProjectZip, disabled }: PushToGitHu
     clearPushResult();
 
     try {
-      // First generate the project
-      const projectZip = await generateProjectZip();
+      // Get project configuration
+      const projectConfig = getProjectConfig();
 
-      // Then push to GitHub
-      const result = await githubApi.pushToRepo(accessToken, selectedRepo, projectZip, {
+      // Parse owner/repo from selectedRepo (format: "owner/repo")
+      const [owner, repo] = selectedRepo.includes('/')
+        ? selectedRepo.split('/')
+        : ['', selectedRepo];
+
+      if (!owner) {
+        throw new Error('Repository must include owner (e.g., "username/repo-name")');
+      }
+
+      // Push to GitHub (uses HttpOnly cookie for auth)
+      const request: PushToRepoRequest = {
+        owner,
+        repo,
+        branch: 'main',
         commitMessage: 'Initial commit from APiGen Studio',
-      });
+        generateRequest: projectConfig,
+      };
+
+      const result = await githubApi.pushToRepo(request);
+
+      if (!result.success) {
+        throw new Error(result.error ?? 'Push failed');
+      }
 
       setPushResult({
         success: true,
-        commitUrl: result.commitUrl,
+        commitUrl: result.repositoryUrl,
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to push to GitHub';
@@ -86,8 +110,8 @@ export function PushToGitHubButton({ generateProjectZip, disabled }: PushToGitHu
     }
   }, [
     selectedRepo,
-    accessToken,
-    generateProjectZip,
+    isAuthenticated,
+    getProjectConfig,
     setPushing,
     setPushResult,
     clearPushResult,

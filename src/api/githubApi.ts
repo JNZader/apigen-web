@@ -12,6 +12,7 @@ import { type ApiClient, createApiClient } from './apiClient';
 const API_BASE_URL = API_CONFIG.BASE_URL;
 
 // Create the API client instance for GitHub endpoints
+// Uses credentials: 'include' to send HttpOnly cookies automatically
 const apiClient: ApiClient = createApiClient({
   baseUrl: API_BASE_URL,
   timeoutMs: 30000, // 30 seconds for GitHub operations
@@ -19,6 +20,7 @@ const apiClient: ApiClient = createApiClient({
   defaultHeaders: {
     Accept: 'application/json',
   },
+  credentials: 'include', // Send cookies with requests
 });
 
 // ============================================================================
@@ -58,12 +60,16 @@ export const GitHubReposSchema = z.array(GitHubRepoSchema);
 export const CreateRepoResponseSchema = GitHubRepoSchema;
 
 /**
- * Push response schema.
+ * Push response schema (matches backend PushProjectResponse).
  */
 export const PushResponseSchema = z.object({
-  commitUrl: z.string().url(),
+  success: z.boolean(),
   commitSha: z.string().optional(),
-  message: z.string().optional(),
+  repositoryUrl: z.string().url().optional(),
+  branch: z.string().optional(),
+  filesCount: z.number().optional(),
+  files: z.array(z.string()).optional(),
+  error: z.string().optional(),
 });
 
 /**
@@ -97,7 +103,15 @@ export interface CreateRepoRequest {
  * Request to push project to repository.
  */
 export interface PushToRepoRequest {
+  owner: string;
+  repo: string;
+  branch?: string;
   commitMessage?: string;
+  generateRequest: {
+    project: Record<string, unknown>;
+    target?: { language: string; framework: string };
+    sql: string;
+  };
 }
 
 // ============================================================================
@@ -113,15 +127,54 @@ export function getAuthUrl(): string {
 }
 
 /**
- * Check if user is authenticated with GitHub.
- * @param token - Optional access token to verify
+ * Check if user is authenticated with GitHub using HttpOnly cookie.
+ * No token parameter needed - the cookie is sent automatically.
+ * @param signal - Optional abort signal
  */
-export async function checkAuthStatus(token?: string, signal?: AbortSignal): Promise<AuthStatus> {
+export async function checkAuthStatus(signal?: AbortSignal): Promise<AuthStatus> {
+  try {
+    const response = await apiClient.get<{
+      authenticated: boolean;
+      login?: string;
+      avatarUrl?: string;
+      name?: string | null;
+      email?: string | null;
+    }>('/api/github/auth/status', {
+      signal,
+      maxRetries: 1,
+    });
+
+    if (response.data.authenticated && response.data.login) {
+      return {
+        authenticated: true,
+        user: {
+          login: response.data.login,
+          avatarUrl: response.data.avatarUrl ?? '',
+          name: response.data.name ?? null,
+          email: response.data.email ?? null,
+        },
+      };
+    }
+    return { authenticated: false };
+  } catch {
+    return { authenticated: false };
+  }
+}
+
+/**
+ * Check if user is authenticated with GitHub (legacy - uses token).
+ * @deprecated Use checkAuthStatus() without token instead (uses HttpOnly cookie)
+ * @param token - Access token to verify
+ */
+export async function checkAuthStatusWithToken(
+  token: string,
+  signal?: AbortSignal,
+): Promise<AuthStatus> {
   if (!token) {
     return { authenticated: false };
   }
   try {
-    const user = await getUser(token, signal);
+    const user = await getUserWithToken(token, signal);
     return { authenticated: true, user };
   } catch {
     return { authenticated: false };
@@ -129,11 +182,26 @@ export async function checkAuthStatus(token?: string, signal?: AbortSignal): Pro
 }
 
 /**
- * Get the authenticated GitHub user info.
+ * Get the authenticated GitHub user info using HttpOnly cookie.
+ * @throws ApiError if not authenticated (401)
+ */
+export async function getUser(signal?: AbortSignal): Promise<GitHubUser> {
+  const response = await apiClient.get<GitHubUser>('/api/github/user', {
+    schema: GitHubUserSchema,
+    signal,
+    maxRetries: 1,
+  });
+
+  return response.data;
+}
+
+/**
+ * Get the authenticated GitHub user info using token (legacy).
+ * @deprecated Use getUser() without token instead (uses HttpOnly cookie)
  * @param token - GitHub access token
  * @throws ApiError if not authenticated (401)
  */
-export async function getUser(token: string, signal?: AbortSignal): Promise<GitHubUser> {
+export async function getUserWithToken(token: string, signal?: AbortSignal): Promise<GitHubUser> {
   const response = await apiClient.get<GitHubUser>('/api/github/user', {
     schema: GitHubUserSchema,
     signal,
@@ -147,29 +215,23 @@ export async function getUser(token: string, signal?: AbortSignal): Promise<GitH
 }
 
 /**
- * List repositories for the authenticated user.
- * @param token - GitHub access token
+ * List repositories for the authenticated user using HttpOnly cookie.
  * @throws ApiError if not authenticated (401)
  */
-export async function getRepos(token: string, signal?: AbortSignal): Promise<GitHubRepo[]> {
+export async function getRepos(signal?: AbortSignal): Promise<GitHubRepo[]> {
   const response = await apiClient.get<GitHubRepo[]>('/api/github/repos', {
     schema: GitHubReposSchema,
     signal,
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
   });
 
   return response.data;
 }
 
 /**
- * Create a new repository for the authenticated user.
- * @param token - GitHub access token
+ * Create a new repository for the authenticated user using HttpOnly cookie.
  * @throws ApiError if not authenticated (401) or repo already exists (422)
  */
 export async function createRepo(
-  token: string,
   request: CreateRepoRequest,
   signal?: AbortSignal,
 ): Promise<CreateRepoResponse> {
@@ -177,80 +239,45 @@ export async function createRepo(
     schema: CreateRepoResponseSchema,
     signal,
     skipRetry: true, // Don't retry creation (could cause issues)
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
   });
 
   return response.data;
 }
 
 /**
- * Push a generated project ZIP to a GitHub repository.
- * The project ZIP should be sent as FormData with the file.
+ * Push a generated project to a GitHub repository using HttpOnly cookie.
+ * Sends the project configuration to the backend, which generates and pushes the files.
  *
- * @param token - GitHub access token
- * @param repoName - The name of the repository to push to
- * @param projectZip - The generated project as a Blob
- * @param options - Push options (commit message, etc.)
+ * @param request - Push request with repo info and project configuration
+ * @param signal - Optional abort signal
  * @throws ApiError if not authenticated (401) or push fails
  */
 export async function pushToRepo(
-  token: string,
-  repoName: string,
-  projectZip: Blob,
-  options?: PushToRepoRequest,
+  request: PushToRepoRequest,
   signal?: AbortSignal,
 ): Promise<PushResponse> {
-  // Create FormData for multipart upload
-  const formData = new FormData();
-  formData.append('file', projectZip, 'project.zip');
+  const response = await apiClient.post<PushResponse>('/api/github/push', request, {
+    schema: PushResponseSchema,
+    signal,
+    timeoutMs: 60000, // 60 seconds for push
+    skipRetry: true, // Don't retry push (could cause duplicate commits)
+  });
 
-  if (options?.commitMessage) {
-    formData.append('commitMessage', options.commitMessage);
-  }
-
-  // Use fetch directly for FormData (apiClient expects JSON)
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 seconds for push
-
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/github/repos/${encodeURIComponent(repoName)}/push`,
-      {
-        method: 'POST',
-        body: formData,
-        signal: signal ?? controller.signal,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errorBody = await response.json().catch(() => ({}));
-      const message =
-        (errorBody as { message?: string }).message ?? `Push failed: ${response.status}`;
-      throw new Error(message);
-    }
-
-    const data = await response.json();
-    return PushResponseSchema.parse(data);
-  } finally {
-    clearTimeout(timeoutId);
-  }
+  return response.data;
 }
 
 /**
- * Logout from GitHub (clear session).
+ * Logout from GitHub (clears HttpOnly cookie on server).
  */
 export async function logout(signal?: AbortSignal): Promise<void> {
-  await apiClient.post('/api/github/logout', undefined, {
-    signal,
-    maxRetries: 0,
-  });
+  try {
+    await apiClient.post('/api/github/logout', undefined, {
+      signal,
+      maxRetries: 0,
+    });
+  } catch {
+    // Ignore logout errors - cookie may already be cleared
+  }
 }
 
 // ============================================================================
