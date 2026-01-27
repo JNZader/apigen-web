@@ -6,6 +6,7 @@
 import { z } from 'zod';
 
 import { API_CONFIG } from '../config/constants';
+import { logger } from '../utils/logger';
 import { type ApiClient, createApiClient } from './apiClient';
 
 // Use centralized API configuration
@@ -256,14 +257,32 @@ export async function pushToRepo(
   request: PushToRepoRequest,
   signal?: AbortSignal,
 ): Promise<PushResponse> {
-  const response = await apiClient.post<PushResponse>('/api/github/push', request, {
-    schema: PushResponseSchema,
-    signal,
-    timeoutMs: 60000, // 60 seconds for push
-    skipRetry: true, // Don't retry push (could cause duplicate commits)
-  });
+  try {
+    // First, get raw response without Zod validation to debug
+    const rawResponse = await apiClient.post<PushResponse>('/api/github/push', request, {
+      signal,
+      timeoutMs: 60000, // 60 seconds for push
+      skipRetry: true, // Don't retry push (could cause duplicate commits)
+    });
 
-  return response.data;
+    logger.debug('Raw response', 'GitHubPush', rawResponse.data);
+
+    // Manually validate with Zod to catch validation errors
+    const validationResult = PushResponseSchema.safeParse(rawResponse.data);
+    if (!validationResult.success) {
+      logger.warn('Zod validation failed', 'GitHubPush', validationResult.error.issues);
+      // Return raw data anyway if it has success=true
+      if (rawResponse.data && typeof rawResponse.data === 'object' && 'success' in rawResponse.data) {
+        return rawResponse.data as PushResponse;
+      }
+      throw new Error(`Validation failed: ${validationResult.error.issues[0]?.message}`);
+    }
+
+    return validationResult.data;
+  } catch (err) {
+    logger.error('Push failed', err, 'GitHubPush');
+    throw err;
+  }
 }
 
 /**
