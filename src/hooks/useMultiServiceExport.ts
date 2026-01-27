@@ -110,11 +110,13 @@ export function useMultiServiceExport() {
 
         const projectConfig = buildProjectConfig(project, service);
 
-        // Extract target config to send at request level (backend expects it there)
-        const target = projectConfig.targetConfig
+        // Use service-specific target config if defined, otherwise use project target config
+        // This enables multi-language microservices support
+        const effectiveTarget = service.config.targetConfig ?? project.targetConfig;
+        const target = effectiveTarget
           ? {
-              language: projectConfig.targetConfig.language,
-              framework: projectConfig.targetConfig.framework,
+              language: effectiveTarget.language,
+              framework: effectiveTarget.framework,
             }
           : undefined;
 

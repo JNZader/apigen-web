@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useShallow } from 'zustand/shallow';
-import type { ServiceDesign } from '../types';
+import type { ServiceDesign, TargetConfig } from '../types';
 import { defaultServiceConfig, getNextServiceColor } from '../types';
 import { useEntityStore } from './entityStore';
 
@@ -63,6 +63,9 @@ interface ServiceState {
   assignEntitiesToService: (entityIds: string[], serviceId: string) => void;
   removeEntityFromService: (entityId: string, serviceId: string) => void;
   clearServices: () => void;
+
+  // Target Config Actions (multi-language support)
+  setServiceTargetConfig: (serviceId: string, targetConfig: TargetConfig | undefined) => void;
 
   // Layout
   updateServicePositions: (positions: Map<string, { x: number; y: number }>) => void;
@@ -153,6 +156,14 @@ export const useServiceStore = create<ServiceState>()(
         set({ services: [], selectedServiceId: null });
       },
 
+      // Target Config Actions (multi-language support)
+      setServiceTargetConfig: (serviceId, targetConfig) =>
+        set((state) => ({
+          services: state.services.map((s) =>
+            s.id === serviceId ? { ...s, config: { ...s.config, targetConfig } } : s,
+          ),
+        })),
+
       // Layout
       updateServicePositions: (positions) =>
         set((state) => ({
@@ -227,5 +238,6 @@ export const useServiceActions = () =>
       removeEntityFromService: state.removeEntityFromService,
       clearServices: state.clearServices,
       updateServiceDimensions: state.updateServiceDimensions,
+      setServiceTargetConfig: state.setServiceTargetConfig,
     })),
   );

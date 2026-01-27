@@ -238,3 +238,16 @@ export {
   getRustPresetDefaults,
   RUST_PRESET_DEFAULTS,
 } from './rust';
+
+// ============================================================================
+// DATABASE COMPATIBILITY EXPORTS
+// ============================================================================
+
+export {
+  DATABASE_COMPATIBILITY,
+  getCompatibleDatabases,
+  getDatabaseCompatibilityWarning,
+  H2_COMPATIBLE_LANGUAGES,
+  isDatabaseCompatible,
+  isH2Compatible,
+} from './databaseCompatibility';
