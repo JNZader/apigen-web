@@ -20,6 +20,7 @@ import {
   IconArrowRight,
   IconCheck,
   IconCloud,
+  IconCode,
   IconDatabase,
   IconNetwork,
   IconServer,
@@ -27,10 +28,17 @@ import {
   IconShield,
 } from '@tabler/icons-react';
 import { useCallback, useState } from 'react';
-import { useServiceActions, useServices } from '../../store/projectStore';
-import type { ServiceConfig, ServiceDatabaseType, ServiceDiscoveryType } from '../../types';
+import { useServiceActions, useServices, useTargetConfig } from '../../store/projectStore';
+import type {
+  ServiceConfig,
+  ServiceDatabaseType,
+  ServiceDiscoveryType,
+  TargetConfig,
+} from '../../types';
 import { defaultServiceConfig, getNextServiceColor } from '../../types';
+import { FRAMEWORK_METADATA, LANGUAGE_METADATA } from '../../types/target';
 import { notify } from '../../utils/notifications';
+import { ServiceLanguageSelector } from '../ServiceLanguageSelector';
 
 interface ServiceWizardProps {
   readonly opened: boolean;
@@ -38,7 +46,7 @@ interface ServiceWizardProps {
   readonly onComplete?: (serviceId: string) => void;
 }
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 const DATABASE_OPTIONS: Array<{ value: ServiceDatabaseType; label: string; description: string }> =
   [
@@ -64,16 +72,19 @@ export function ServiceWizard({ opened, onClose, onComplete }: ServiceWizardProp
   const [activeStep, setActiveStep] = useState(0);
   const services = useServices();
   const { addService, updateService } = useServiceActions();
+  const projectTarget = useTargetConfig();
 
   // Form state
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [config, setConfig] = useState<ServiceConfig>({ ...defaultServiceConfig });
+  const [targetConfig, setTargetConfig] = useState<TargetConfig | undefined>(undefined);
 
   const resetForm = useCallback(() => {
     setName('');
     setDescription('');
     setConfig({ ...defaultServiceConfig });
+    setTargetConfig(undefined);
     setActiveStep(0);
   }, []);
 
@@ -132,11 +143,14 @@ export function ServiceWizard({ opened, onClose, onComplete }: ServiceWizardProp
     // Add the service (returns ServiceDesign object)
     const newService = addService(name.trim());
 
-    // Update with full config
+    // Update with full config including target
     updateService(newService.id, {
       description: description.trim() || undefined,
       color,
-      config,
+      config: {
+        ...config,
+        targetConfig,
+      },
     });
 
     notify.success({
@@ -151,6 +165,7 @@ export function ServiceWizard({ opened, onClose, onComplete }: ServiceWizardProp
     name,
     description,
     config,
+    targetConfig,
     services,
     addService,
     updateService,
@@ -198,6 +213,7 @@ export function ServiceWizard({ opened, onClose, onComplete }: ServiceWizardProp
           <Stepper.Step label="Basic Info" description="Name & description" />
           <Stepper.Step label="Database" description="Storage type" />
           <Stepper.Step label="Features" description="Capabilities" />
+          <Stepper.Step label="Language" description="Tech stack" />
           <Stepper.Step label="Summary" description="Review" />
         </Stepper>
 
@@ -422,8 +438,28 @@ export function ServiceWizard({ opened, onClose, onComplete }: ServiceWizardProp
             </Stack>
           )}
 
-          {/* Step 4: Summary */}
+          {/* Step 4: Language */}
           {activeStep === 3 && (
+            <Stack gap="md">
+              <Group gap="xs">
+                <IconCode size={18} />
+                <Text size="sm" c="dimmed">
+                  Configure the programming language and framework for this service. You can use a
+                  different language than the project default for polyglot microservices.
+                </Text>
+              </Group>
+
+              <ServiceLanguageSelector
+                currentTarget={targetConfig}
+                projectTarget={projectTarget}
+                onTargetChange={setTargetConfig}
+                databaseType={config.databaseType}
+              />
+            </Stack>
+          )}
+
+          {/* Step 5: Summary */}
+          {activeStep === 4 && (
             <Stack gap="md">
               <Text size="sm" c="dimmed">
                 Review your service configuration before creating.
@@ -520,6 +556,33 @@ export function ServiceWizard({ opened, onClose, onComplete }: ServiceWizardProp
                       </Badge>
                     </Group>
                   )}
+
+                  <Group justify="space-between">
+                    <Text size="sm" c="dimmed">
+                      Language / Framework
+                    </Text>
+                    <Group gap="xs">
+                      {targetConfig ? (
+                        <>
+                          <Badge color="violet" variant="light">
+                            {LANGUAGE_METADATA[targetConfig.language].label}
+                          </Badge>
+                          <Badge color="gray" variant="outline">
+                            {FRAMEWORK_METADATA[targetConfig.framework].label}
+                          </Badge>
+                        </>
+                      ) : (
+                        <>
+                          <Badge color="gray" variant="light">
+                            {LANGUAGE_METADATA[projectTarget.language].label}
+                          </Badge>
+                          <Badge size="xs" variant="dot" color="gray">
+                            Inherited
+                          </Badge>
+                        </>
+                      )}
+                    </Group>
+                  </Group>
                 </Stack>
               </Box>
 
