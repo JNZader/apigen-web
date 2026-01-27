@@ -316,6 +316,21 @@ export interface ProjectFeatures {
   fileStorage: boolean;
   /** Enable JTE templates for email rendering */
   jteTemplates: boolean;
+
+  // ============================================================================
+  // DEVELOPER EXPERIENCE FEATURES (v2.19.0+)
+  // ============================================================================
+
+  /** Enable mise task runner configuration (mise.toml) */
+  miseTasks: boolean;
+  /** Enable pre-commit hooks (.pre-commit-config.yaml) */
+  preCommit: boolean;
+  /** Enable automated setup scripts (scripts/setup.sh, scripts/setup.ps1) */
+  setupScript: boolean;
+  /** Enable GitHub PR and Issue templates (.github/) */
+  githubTemplates: boolean;
+  /** Enable enhanced docker-compose for development */
+  devCompose: boolean;
 }
 
 // ============================================================================
@@ -483,6 +498,12 @@ export const defaultProjectConfig: ProjectConfig = {
     mailService: false,
     fileStorage: false,
     jteTemplates: false,
+    // Developer Experience (DX) Features
+    miseTasks: true,
+    preCommit: true,
+    setupScript: true,
+    githubTemplates: true,
+    devCompose: true,
   },
   database: defaultDatabaseConfig,
   securityConfig: defaultSecurityConfig,

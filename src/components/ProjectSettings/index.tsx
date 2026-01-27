@@ -19,6 +19,7 @@ import {
   IconSettings,
   IconShield,
   IconShieldCheck,
+  IconTools,
 } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useProject, useProjectActions } from '../../store';
@@ -30,6 +31,7 @@ import { BasicSettingsForm } from './BasicSettingsForm';
 import { CacheSettingsForm } from './CacheSettingsForm';
 import { CorsSettingsForm } from './CorsSettingsForm';
 import { DatabaseSettingsForm } from './DatabaseSettingsForm';
+import { DxFeaturesSection } from './DxFeaturesSection';
 import { FeaturePackSection } from './FeaturePackSection';
 import { FeaturesSettingsForm } from './FeaturesSettingsForm';
 import { FileStorageSettingsForm } from './FileStorageSettingsForm';
@@ -89,6 +91,7 @@ export { CorsSettingsForm } from './CorsSettingsForm';
 export { DatabaseSettingsForm } from './DatabaseSettingsForm';
 
 // Containers
+export { DxFeaturesSection } from './DxFeaturesSection';
 export { FeaturePackSection } from './FeaturePackSection';
 export { FeaturesSettingsForm } from './FeaturesSettingsForm';
 export { FileStorageSettingsForm } from './FileStorageSettingsForm';
@@ -225,6 +228,9 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
             <Tabs.Tab value="feature-pack" leftSection={<IconPackage size={16} />}>
               Feature Pack
             </Tabs.Tab>
+            <Tabs.Tab value="dx-features" leftSection={<IconTools size={16} />}>
+              DX Features
+            </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="language" pl="md">
@@ -347,6 +353,12 @@ export function ProjectSettings({ opened, onClose }: ProjectSettingsProps) {
           <Tabs.Panel value="feature-pack" pl="md">
             <ScrollArea h={600}>
               <FeaturePackSection />
+            </ScrollArea>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="dx-features" pl="md">
+            <ScrollArea h={600}>
+              <DxFeaturesSection />
             </ScrollArea>
           </Tabs.Panel>
         </Tabs>
