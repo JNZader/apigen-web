@@ -514,9 +514,7 @@ export function SqlImportExport({ opened, onClose }: Readonly<SqlImportExportPro
                 <Dropzone
                   onDrop={handleOpenApiFileDrop}
                   onReject={() =>
-                    setOpenApiError(
-                      'Invalid file type. Please use .json, .yaml, or .yml files.',
-                    )
+                    setOpenApiError('Invalid file type. Please use .json, .yaml, or .yml files.')
                   }
                   maxSize={5 * 1024 * 1024}
                   accept={{
