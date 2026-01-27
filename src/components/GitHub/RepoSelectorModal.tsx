@@ -70,8 +70,8 @@ export function RepoSelectorModal({ opened, onClose, onSelect }: RepoSelectorMod
       // Add to repos list
       setRepos([newRepo, ...repos]);
 
-      // Select the new repo
-      setLocalSelection(newRepo.name);
+      // Select the new repo (use fullName for owner/repo format)
+      setLocalSelection(newRepo.fullName);
 
       notify.success({
         title: 'Repository Created',
@@ -156,12 +156,12 @@ export function RepoSelectorModal({ opened, onClose, onSelect }: RepoSelectorMod
                   <Stack gap="xs">
                     {filteredRepos.map((repo) => (
                       <Radio
-                        key={repo.name}
-                        value={repo.name}
+                        key={repo.fullName}
+                        value={repo.fullName}
                         label={
                           <Group gap="xs">
                             <Text size="sm" fw={500}>
-                              {repo.name}
+                              {repo.fullName}
                             </Text>
                             {repo.private && (
                               <Text size="xs" c="dimmed">
@@ -170,7 +170,7 @@ export function RepoSelectorModal({ opened, onClose, onSelect }: RepoSelectorMod
                             )}
                           </Group>
                         }
-                        description={repo.description ?? repo.fullName}
+                        description={repo.description}
                       />
                     ))}
                   </Stack>
