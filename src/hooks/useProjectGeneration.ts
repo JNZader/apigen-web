@@ -48,7 +48,7 @@ export function useProjectGeneration() {
       : undefined;
 
     return {
-      project: projectConfig as Record<string, unknown>,
+      project: projectConfig as unknown as Record<string, unknown>,
       target,
       sql,
     };
