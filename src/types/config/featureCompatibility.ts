@@ -56,6 +56,12 @@ export const LANGUAGE_SUPPORTED_FEATURES: Record<Language, FeatureKey[]> = {
     'mailService',
     'fileStorage',
     'jteTemplates',
+    // Developer Experience (DX) Features
+    'miseTasks',
+    'preCommit',
+    'setupScript',
+    'githubTemplates',
+    'devCompose',
   ],
   kotlin: [
     // Core - all supported (same as Java)
@@ -87,6 +93,12 @@ export const LANGUAGE_SUPPORTED_FEATURES: Record<Language, FeatureKey[]> = {
     'mailService',
     'fileStorage',
     'jteTemplates',
+    // Developer Experience (DX) Features
+    'miseTasks',
+    'preCommit',
+    'setupScript',
+    'githubTemplates',
+    'devCompose',
   ],
   python: [
     // Core
@@ -115,6 +127,12 @@ export const LANGUAGE_SUPPORTED_FEATURES: Record<Language, FeatureKey[]> = {
     'passwordReset',
     'mailService',
     'fileStorage',
+    // Developer Experience (DX) Features
+    'miseTasks',
+    'preCommit',
+    'setupScript',
+    'githubTemplates',
+    'devCompose',
   ],
   typescript: [
     // Core
@@ -143,6 +161,12 @@ export const LANGUAGE_SUPPORTED_FEATURES: Record<Language, FeatureKey[]> = {
     'passwordReset',
     'mailService',
     'fileStorage',
+    // Developer Experience (DX) Features
+    'miseTasks',
+    'preCommit',
+    'setupScript',
+    'githubTemplates',
+    'devCompose',
   ],
   php: [
     // Core
@@ -170,6 +194,12 @@ export const LANGUAGE_SUPPORTED_FEATURES: Record<Language, FeatureKey[]> = {
     'passwordReset',
     'mailService',
     'fileStorage',
+    // Developer Experience (DX) Features
+    'miseTasks',
+    'preCommit',
+    'setupScript',
+    'githubTemplates',
+    'devCompose',
   ],
   go: [
     // Core
@@ -194,6 +224,12 @@ export const LANGUAGE_SUPPORTED_FEATURES: Record<Language, FeatureKey[]> = {
     'passwordReset',
     'mailService',
     'fileStorage',
+    // Developer Experience (DX) Features
+    'miseTasks',
+    'preCommit',
+    'setupScript',
+    'githubTemplates',
+    'devCompose',
   ],
   rust: [
     // Core
@@ -216,6 +252,12 @@ export const LANGUAGE_SUPPORTED_FEATURES: Record<Language, FeatureKey[]> = {
     'passwordReset',
     'mailService',
     'fileStorage',
+    // Developer Experience (DX) Features
+    'miseTasks',
+    'preCommit',
+    'setupScript',
+    'githubTemplates',
+    'devCompose',
   ],
   csharp: [
     // Core
@@ -245,6 +287,12 @@ export const LANGUAGE_SUPPORTED_FEATURES: Record<Language, FeatureKey[]> = {
     'passwordReset',
     'mailService',
     'fileStorage',
+    // Developer Experience (DX) Features
+    'miseTasks',
+    'preCommit',
+    'setupScript',
+    'githubTemplates',
+    'devCompose',
   ],
 };
 
@@ -332,6 +380,12 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   mailService: 'Mail Service',
   fileStorage: 'File Storage',
   jteTemplates: 'JTE Templates',
+  // Developer Experience (DX) Features
+  miseTasks: 'Mise Tasks',
+  preCommit: 'Pre-commit Hooks',
+  setupScript: 'Setup Scripts',
+  githubTemplates: 'GitHub Templates',
+  devCompose: 'Dev Compose',
 };
 
 // ============================================================================
@@ -394,6 +448,12 @@ export function getUnsupportedFeatures(language: Language, framework: Framework)
     'mailService',
     'fileStorage',
     'jteTemplates',
+    // Developer Experience (DX) Features
+    'miseTasks',
+    'preCommit',
+    'setupScript',
+    'githubTemplates',
+    'devCompose',
   ];
 
   return allFeatures.filter(
@@ -430,6 +490,12 @@ export function getSupportedFeatures(language: Language, framework: Framework): 
     'mailService',
     'fileStorage',
     'jteTemplates',
+    // Developer Experience (DX) Features
+    'miseTasks',
+    'preCommit',
+    'setupScript',
+    'githubTemplates',
+    'devCompose',
   ];
 
   return allFeatures.filter((feature) =>
