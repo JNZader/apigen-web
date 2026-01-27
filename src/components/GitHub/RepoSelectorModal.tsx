@@ -23,7 +23,11 @@ import { IconPlus, IconSearch } from '@tabler/icons-react';
 import { useCallback, useMemo, useState } from 'react';
 
 import { githubApi } from '../../api/githubApi';
-import { useGitHubAccessToken, useGitHubActions, useGitHubRepoSelector } from '../../store/githubStore';
+import {
+  useGitHubAccessToken,
+  useGitHubActions,
+  useGitHubRepoSelector,
+} from '../../store/githubStore';
 import { notify } from '../../utils/notifications';
 
 interface RepoSelectorModalProps {
