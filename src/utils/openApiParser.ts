@@ -85,9 +85,7 @@ function parseContent(content: string): OpenAPISpec {
  */
 function validateVersion(spec: OpenAPISpec): void {
   if (spec.swagger) {
-    throw new Error(
-      'OpenAPI 2.x (Swagger) is not supported. Please convert to OpenAPI 3.x first.',
-    );
+    throw new Error('OpenAPI 2.x (Swagger) is not supported. Please convert to OpenAPI 3.x first.');
   }
 
   if (!spec.openapi) {
@@ -96,9 +94,7 @@ function validateVersion(spec: OpenAPISpec): void {
 
   const version = spec.openapi;
   if (!version.startsWith('3.')) {
-    throw new Error(
-      `Unsupported OpenAPI version: ${version}. Only 3.x is supported.`,
-    );
+    throw new Error(`Unsupported OpenAPI version: ${version}. Only 3.x is supported.`);
   }
 }
 
@@ -109,9 +105,7 @@ function extractSchemas(spec: OpenAPISpec): Record<string, OpenAPISchema> {
   const schemas = spec.components?.schemas ?? spec.definitions ?? {};
 
   if (Object.keys(schemas).length === 0) {
-    throw new Error(
-      'No schemas found. Expected schemas in components.schemas (OpenAPI 3.x)',
-    );
+    throw new Error('No schemas found. Expected schemas in components.schemas (OpenAPI 3.x)');
   }
 
   return schemas;
@@ -137,7 +131,7 @@ function filterSchemas(schemas: Record<string, OpenAPISchema>): ParsedSchema[] {
     }
 
     const entityName = toPascalCase(name);
-    const tableName = toSnakeCase(name) + 's';
+    const tableName = `${toSnakeCase(name)}s`;
 
     result.push({
       name,
@@ -222,9 +216,7 @@ function toFieldName(name: string): string {
  */
 function toColumnName(name: string): string {
   // Convert camelCase to snake_case by inserting underscores before uppercase letters
-  return name
-    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
-    .toLowerCase();
+  return name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
 }
 
 /**
@@ -289,18 +281,14 @@ function extractFields(parsedSchema: ParsedSchema): FieldDesign[] {
 /**
  * Finds all relationship candidates from schemas
  */
-function findRelationshipCandidates(
-  schemas: ParsedSchema[],
-): RelationshipCandidate[] {
+function findRelationshipCandidates(schemas: ParsedSchema[]): RelationshipCandidate[] {
   const candidates: RelationshipCandidate[] = [];
   const schemaNames = new Set(schemas.map((s) => s.name));
 
   for (const parsedSchema of schemas) {
     if (!parsedSchema.schema.properties) continue;
 
-    for (const [propName, propSchema] of Object.entries(
-      parsedSchema.schema.properties,
-    )) {
+    for (const [propName, propSchema] of Object.entries(parsedSchema.schema.properties)) {
       // Direct $ref -> ManyToOne candidate
       if (isRefProperty(propSchema) && propSchema.$ref) {
         const targetName = extractRefName(propSchema.$ref);
@@ -402,9 +390,7 @@ function buildRelations(
           sourceEntityId,
           sourceFieldName: toCamelCase(candidate.propertyName),
           targetEntityId,
-          targetFieldName: hasInverse
-            ? `${toCamelCase(candidate.sourceSchemaName)}s`
-            : undefined,
+          targetFieldName: hasInverse ? `${toCamelCase(candidate.sourceSchemaName)}s` : undefined,
           bidirectional: hasInverse,
           fetchType: 'LAZY',
           cascade: [],
@@ -448,9 +434,7 @@ function detectManyToMany(
     if (!inverse) continue;
 
     // Create canonical key (alphabetically sorted)
-    const sortedPair = [candidate.sourceSchemaName, candidate.targetSchemaName]
-      .sort()
-      .join('-');
+    const sortedPair = [candidate.sourceSchemaName, candidate.targetSchemaName].sort().join('-');
     if (processed.has(sortedPair)) continue;
     processed.add(sortedPair);
 
@@ -464,10 +448,8 @@ function detectManyToMany(
     for (let i = 0; i < existingRelations.length; i++) {
       const r = existingRelations[i];
       if (
-        (r.sourceEntityId === sourceEntityId &&
-          r.targetEntityId === targetEntityId) ||
-        (r.sourceEntityId === targetEntityId &&
-          r.targetEntityId === sourceEntityId)
+        (r.sourceEntityId === sourceEntityId && r.targetEntityId === targetEntityId) ||
+        (r.sourceEntityId === targetEntityId && r.targetEntityId === sourceEntityId)
       ) {
         indicesToRemove.push(i);
       }
@@ -514,9 +496,10 @@ function detectManyToMany(
 /**
  * Creates EntityDesign objects from ParsedSchemas
  */
-function buildEntities(
-  schemas: ParsedSchema[],
-): { entities: EntityDesign[]; entityIdMap: Map<string, string> } {
+function buildEntities(schemas: ParsedSchema[]): {
+  entities: EntityDesign[];
+  entityIdMap: Map<string, string>;
+} {
   const entities: EntityDesign[] = [];
   const entityIdMap = new Map<string, string>();
 
@@ -589,11 +572,7 @@ export function parseOpenAPI(content: string): OpenAPIParseResult {
   const relations = buildRelations(candidates, entityIdMap);
 
   // Detect ManyToMany (mutates relations array)
-  const manyToManyRelations = detectManyToMany(
-    candidates,
-    entityIdMap,
-    relations,
-  );
+  const manyToManyRelations = detectManyToMany(candidates, entityIdMap, relations);
 
   return {
     entities,

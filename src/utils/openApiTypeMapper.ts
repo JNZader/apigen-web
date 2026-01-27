@@ -44,16 +44,12 @@ const TYPE_MAPPINGS: OpenAPITypeMapping[] = [
 export function toJavaType(type: string, format?: string): JavaType {
   // Try exact match with format first
   if (format) {
-    const exactMatch = TYPE_MAPPINGS.find(
-      (m) => m.type === type && m.format === format,
-    );
+    const exactMatch = TYPE_MAPPINGS.find((m) => m.type === type && m.format === format);
     if (exactMatch) return exactMatch.javaType;
   }
 
   // Fall back to type-only match
-  const typeMatch = TYPE_MAPPINGS.find(
-    (m) => m.type === type && !m.format,
-  );
+  const typeMatch = TYPE_MAPPINGS.find((m) => m.type === type && !m.format);
 
   return typeMatch?.javaType ?? 'String';
 }
@@ -111,10 +107,7 @@ export function extractRefName(ref: string): string {
 /**
  * Extracts validation rules from OpenAPI schema constraints
  */
-export function extractValidations(
-  schema: OpenAPISchema,
-  isRequired: boolean,
-): ValidationRule[] {
+export function extractValidations(schema: OpenAPISchema, isRequired: boolean): ValidationRule[] {
   const validations: ValidationRule[] = [];
   const javaType = schema.type ? toJavaType(schema.type, schema.format) : 'String';
 
@@ -163,10 +156,7 @@ export function extractValidations(
   }
 
   // Email detection (common pattern)
-  if (
-    schema.format === 'email' ||
-    (schema.pattern && schema.pattern.toLowerCase().includes('email'))
-  ) {
+  if (schema.format === 'email' || schema.pattern?.toLowerCase().includes('email')) {
     // Add Email validation if not already present via pattern
     if (!validations.some((v) => v.type === 'Pattern')) {
       validations.push({ type: 'Email' });
