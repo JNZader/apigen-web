@@ -1,10 +1,30 @@
 import { ActionIcon, Badge, Card, Group, Stack, Text, Tooltip } from '@mantine/core';
-import { IconCloud, IconDatabase, IconServer, IconSettings, IconTrash } from '@tabler/icons-react';
+import {
+  IconCloud,
+  IconCode,
+  IconDatabase,
+  IconServer,
+  IconSettings,
+  IconTrash,
+} from '@tabler/icons-react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { Handle, NodeResizer, Position } from '@xyflow/react';
 import { memo } from 'react';
-import type { ServiceDesign } from '../../types';
+import type { Language, ServiceDesign } from '../../types';
+import { LANGUAGE_METADATA } from '../../types/target';
 import { SERVICE_NODE } from '../../utils/canvasConstants';
+
+// Color mapping for languages (visual distinction in badges)
+const LANGUAGE_BADGE_COLORS: Record<Language, string> = {
+  java: 'orange',
+  kotlin: 'violet',
+  python: 'blue',
+  typescript: 'cyan',
+  php: 'indigo',
+  go: 'teal',
+  rust: 'red',
+  csharp: 'grape',
+};
 
 export interface ServiceNodeData extends Record<string, unknown> {
   service: ServiceDesign;
@@ -141,6 +161,27 @@ function ServiceNodeComponent({ id, data, selected }: NodeProps<ServiceNodeType>
               </Text>
             </Group>
             <Group gap={4}>
+              {/* Language badge - only show when service has custom target config */}
+              {service.config.targetConfig && (
+                <Tooltip
+                  label={`Using ${LANGUAGE_METADATA[service.config.targetConfig.language].label}`}
+                  position="bottom"
+                  withArrow
+                >
+                  <Badge
+                    color={LANGUAGE_BADGE_COLORS[service.config.targetConfig.language]}
+                    variant="filled"
+                    size="xs"
+                  >
+                    <Group gap={4}>
+                      <IconCode size={10} />
+                      <Text size="xs">
+                        {LANGUAGE_METADATA[service.config.targetConfig.language].label}
+                      </Text>
+                    </Group>
+                  </Badge>
+                </Tooltip>
+              )}
               <Badge color="dark" variant="filled" size="xs">
                 <Group gap={4}>
                   <IconDatabase size={10} />

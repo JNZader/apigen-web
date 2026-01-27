@@ -2,6 +2,8 @@
 // SERVICE DESIGN TYPES FOR MICROSERVICES DESIGNER
 // ============================================================================
 
+import type { TargetConfig } from './target';
+
 /**
  * Communication protocol between services
  */
@@ -32,6 +34,8 @@ export interface ServiceConfig {
   enableRateLimiting: boolean;
   enableTracing: boolean;
   enableMetrics: boolean;
+  /** Per-service language/framework. If undefined, inherits from project. */
+  targetConfig?: TargetConfig;
 }
 
 /**
@@ -49,6 +53,7 @@ export const defaultServiceConfig: ServiceConfig = {
   enableRateLimiting: true,
   enableTracing: true,
   enableMetrics: true,
+  targetConfig: undefined, // Inherits from project by default
 };
 
 /**

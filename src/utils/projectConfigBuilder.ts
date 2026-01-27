@@ -180,10 +180,14 @@ function buildFeaturePackConfig(baseProject: ProjectConfig) {
  * Builds language-specific options based on the target configuration.
  *
  * @param baseProject - The base project configuration
+ * @param effectiveTargetConfig - The effective target config (service or project)
  * @returns Object containing language-specific options
  */
-function buildLanguageSpecificOptions(baseProject: ProjectConfig) {
-  const { language, framework } = baseProject.targetConfig;
+function buildLanguageSpecificOptions(
+  baseProject: ProjectConfig,
+  effectiveTargetConfig: TargetConfig,
+) {
+  const { language, framework } = effectiveTargetConfig;
 
   // Rust/Axum options
   let rustOptions = baseProject.rustOptions ?? defaultRustAxumOptions;
@@ -249,6 +253,7 @@ function buildTargetConfig(baseProject: ProjectConfig): TargetConfig {
  * - Conditionally includes Feature Pack 2025 configurations
  * - Includes language-specific options (Rust/Axum, Go/Chi)
  * - Applies service-specific overrides when generating microservices
+ * - Uses service-specific target config if defined, otherwise inherits from project
  *
  * @param baseProject - The base project configuration
  * @param service - Optional service design for microservice-specific overrides
@@ -258,11 +263,17 @@ export function buildProjectConfig(
   baseProject: ProjectConfig,
   service?: ServiceDesign,
 ): ProjectConfig {
-  // Build target configuration
-  const targetConfig = buildTargetConfig(baseProject);
+  // Use service target config if defined, otherwise use project target config
+  const effectiveTargetConfig = service?.config.targetConfig ?? baseProject.targetConfig;
 
-  // Build language-specific options
-  const { rustOptions, goChiOptions } = buildLanguageSpecificOptions(baseProject);
+  // Build target configuration using effective target
+  const targetConfig = buildTargetConfig({
+    ...baseProject,
+    targetConfig: effectiveTargetConfig,
+  });
+
+  // Build language-specific options using effective target
+  const { rustOptions, goChiOptions } = buildLanguageSpecificOptions(baseProject, targetConfig);
 
   // Build Feature Pack configuration with feature flag synchronization
   const featurePackConfig = buildFeaturePackConfig(baseProject);

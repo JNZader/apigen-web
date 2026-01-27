@@ -17,6 +17,7 @@ import {
 } from '@mantine/core';
 import {
   IconCloud,
+  IconCode,
   IconCube,
   IconDatabase,
   IconNetwork,
@@ -26,8 +27,19 @@ import {
 } from '@tabler/icons-react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useCallback, useRef, useState } from 'react';
-import { useEntities, useServiceActions, useServices } from '../store/projectStore';
-import type { ServiceConfig, ServiceDatabaseType, ServiceDiscoveryType } from '../types';
+import {
+  useEntities,
+  useServiceActions,
+  useServices,
+  useTargetConfig,
+} from '../store/projectStore';
+import type {
+  ServiceConfig,
+  ServiceDatabaseType,
+  ServiceDiscoveryType,
+  TargetConfig,
+} from '../types';
+import { ServiceLanguageSelector } from './ServiceLanguageSelector';
 
 // Estimated row height for entity checkbox items
 const ENTITY_ROW_HEIGHT = 72;
@@ -76,6 +88,7 @@ export function ServiceConfigPanel({
 }: Readonly<ServiceConfigPanelProps>) {
   const services = useServices();
   const entities = useEntities();
+  const projectTargetConfig = useTargetConfig();
   const { updateService, assignEntityToService, removeEntityFromService } = useServiceActions();
 
   const service = services.find((s) => s.id === serviceId);
@@ -198,6 +211,9 @@ export function ServiceConfigPanel({
           <Tabs.List>
             <Tabs.Tab value="entities" leftSection={<IconCube size={14} />}>
               Entities
+            </Tabs.Tab>
+            <Tabs.Tab value="language" leftSection={<IconCode size={14} />}>
+              Language
             </Tabs.Tab>
             <Tabs.Tab value="general" leftSection={<IconSettings size={14} />}>
               General
@@ -365,6 +381,18 @@ export function ServiceConfigPanel({
                 service.
               </Text>
             </Stack>
+          </Tabs.Panel>
+
+          {/* Language Tab */}
+          <Tabs.Panel value="language" pt="md">
+            <ServiceLanguageSelector
+              currentTarget={config.targetConfig}
+              projectTarget={projectTargetConfig}
+              onTargetChange={(target: TargetConfig | undefined) =>
+                setConfig((prev) => ({ ...prev, targetConfig: target }))
+              }
+              databaseType={config.databaseType}
+            />
           </Tabs.Panel>
 
           {/* General Tab */}
