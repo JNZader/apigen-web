@@ -20,9 +20,9 @@ import type { GitHubRepo, GitHubUser } from '../api/githubApi';
 
 interface GitHubState {
   // Authentication state
+  // Note: Access token is now stored in HttpOnly cookie, not in state
   isAuthenticated: boolean;
   user: GitHubUser | null;
-  accessToken: string | null;
 
   // Repository state
   repos: GitHubRepo[];
@@ -43,7 +43,6 @@ interface GitHubState {
   } | null;
 
   // Actions
-  setAccessToken: (token: string | null) => void;
   setUser: (user: GitHubUser | null) => void;
   setRepos: (repos: GitHubRepo[]) => void;
   selectRepo: (repoName: string | null) => void;
@@ -64,7 +63,7 @@ interface GitHubState {
 const initialState = {
   isAuthenticated: false,
   user: null,
-  accessToken: null,
+  // Note: accessToken removed - now stored in HttpOnly cookie
   repos: [],
   selectedRepo: null,
   isLoading: false,
@@ -84,17 +83,8 @@ export const useGitHubStore = create<GitHubState>()(
       ...initialState,
 
       /**
-       * Sets the GitHub access token.
-       * @param token - The access token or null
-       */
-      setAccessToken: (token) =>
-        set({
-          accessToken: token,
-          isAuthenticated: token !== null,
-        }),
-
-      /**
        * Sets the authenticated user. If user is null, clears authentication.
+       * Note: Token is now stored in HttpOnly cookie, not in state.
        * @param user - The GitHub user or null
        */
       setUser: (user) =>
@@ -160,12 +150,12 @@ export const useGitHubStore = create<GitHubState>()(
 
       /**
        * Logs out the user, clearing authentication but preserving selected repo preference.
+       * Note: HttpOnly cookie is cleared by the server via /api/github/logout endpoint.
        */
       logout: () =>
         set({
           isAuthenticated: false,
           user: null,
-          accessToken: null,
           repos: [],
           error: null,
           lastPushResult: null,
@@ -178,11 +168,11 @@ export const useGitHubStore = create<GitHubState>()(
     }),
     {
       name: 'apigen-github',
-      // Persist token and selected repo
+      // Only persist selected repo preference
+      // Note: Token is now in HttpOnly cookie (handled by browser)
       partialize: (state) => ({
-        accessToken: state.accessToken,
         selectedRepo: state.selectedRepo,
-        // Don't persist: user, repos (will be re-fetched on load using token)
+        // Don't persist: user, repos (will be re-fetched on load via cookie auth)
         // Don't persist: isLoading, isPushing, error, lastPushResult (transient)
       }),
     },
@@ -205,11 +195,7 @@ export const useGitHubAuthenticated = () => useGitHubStore((state) => state.isAu
  */
 export const useGitHubUser = () => useGitHubStore((state) => state.user);
 
-/**
- * Selector for the access token.
- * @returns The GitHub access token or null
- */
-export const useGitHubAccessToken = () => useGitHubStore((state) => state.accessToken);
+// Note: useGitHubAccessToken removed - token is now in HttpOnly cookie
 
 /**
  * Selector for the repository list.
@@ -309,7 +295,6 @@ export const useGitHubPushActions = () =>
 export const useGitHubActions = () =>
   useGitHubStore(
     useShallow((state) => ({
-      setAccessToken: state.setAccessToken,
       setUser: state.setUser,
       setRepos: state.setRepos,
       selectRepo: state.selectRepo,

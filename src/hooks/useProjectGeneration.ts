@@ -27,6 +27,34 @@ export function useProjectGeneration() {
   const clearError = useCallback(() => setError(null), []);
 
   /**
+   * Returns the project configuration for server-side generation.
+   * Used by GitHub push to send config to backend which generates and pushes.
+   * @throws Error if no entities exist
+   */
+  const getProjectConfig = useCallback(() => {
+    if (entities.length === 0) {
+      throw new Error('Add at least one entity before generating');
+    }
+
+    const sql = generateSQL(entities, relations, project.name);
+    const projectConfig = buildProjectConfig(project);
+
+    // Extract target config to send at request level (backend expects it there)
+    const target = projectConfig.targetConfig
+      ? {
+          language: projectConfig.targetConfig.language,
+          framework: projectConfig.targetConfig.framework,
+        }
+      : undefined;
+
+    return {
+      project: projectConfig as Record<string, unknown>,
+      target,
+      sql,
+    };
+  }, [project, entities, relations]);
+
+  /**
    * Generates the project ZIP blob without downloading.
    * Used by GitHub push functionality to get the blob for upload.
    * @throws Error if generation fails or no entities exist
@@ -122,5 +150,7 @@ export function useProjectGeneration() {
     generateProject,
     /** Generate project ZIP blob without downloading (for GitHub push) */
     generateProjectZip,
+    /** Get project config for server-side generation (for GitHub push) */
+    getProjectConfig,
   };
 }

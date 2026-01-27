@@ -22,6 +22,8 @@ export interface ApiClientConfig {
   retryDelayMs?: number;
   /** Default headers to include in all requests */
   defaultHeaders?: Record<string, string>;
+  /** Include credentials (cookies) in requests (default: false) */
+  credentials?: RequestCredentials;
 }
 
 export interface RequestOptions<T = unknown> {
@@ -264,6 +266,7 @@ export function createApiClient(config: ApiClientConfig) {
     maxRetries = DEFAULT_MAX_RETRIES,
     retryDelayMs = DEFAULT_RETRY_DELAY_MS,
     defaultHeaders = {},
+    credentials,
   } = config;
 
   /**
@@ -303,6 +306,7 @@ export function createApiClient(config: ApiClientConfig) {
           headers: requestHeaders,
           body: body === undefined ? undefined : JSON.stringify(body),
           signal,
+          credentials,
         });
 
         clearTimeout(timeoutId);

@@ -23,11 +23,7 @@ import { IconPlus, IconSearch } from '@tabler/icons-react';
 import { useCallback, useMemo, useState } from 'react';
 
 import { githubApi } from '../../api/githubApi';
-import {
-  useGitHubAccessToken,
-  useGitHubActions,
-  useGitHubRepoSelector,
-} from '../../store/githubStore';
+import { useGitHubActions, useGitHubRepoSelector } from '../../store/githubStore';
 import { notify } from '../../utils/notifications';
 
 interface RepoSelectorModalProps {
@@ -39,7 +35,6 @@ interface RepoSelectorModalProps {
 export function RepoSelectorModal({ opened, onClose, onSelect }: RepoSelectorModalProps) {
   const { repos, selectedRepo, isLoadingRepos, selectRepo } = useGitHubRepoSelector();
   const { setRepos, setError } = useGitHubActions();
-  const accessToken = useGitHubAccessToken();
 
   // Local state for the modal
   const [mode, setMode] = useState<'select' | 'create'>('select');
@@ -60,13 +55,14 @@ export function RepoSelectorModal({ opened, onClose, onSelect }: RepoSelectorMod
   }, [repos, searchQuery]);
 
   const handleCreateRepo = useCallback(async () => {
-    if (!newRepoName.trim() || !accessToken) return;
+    if (!newRepoName.trim()) return;
 
     setIsCreating(true);
     setError(null);
 
     try {
-      const newRepo = await githubApi.createRepo(accessToken, {
+      // Uses HttpOnly cookie for auth
+      const newRepo = await githubApi.createRepo({
         name: newRepoName.trim(),
         private: newRepoPrivate,
       });
@@ -95,7 +91,7 @@ export function RepoSelectorModal({ opened, onClose, onSelect }: RepoSelectorMod
     } finally {
       setIsCreating(false);
     }
-  }, [accessToken, newRepoName, newRepoPrivate, repos, setRepos, setError]);
+  }, [newRepoName, newRepoPrivate, repos, setRepos, setError]);
 
   const handleConfirm = useCallback(() => {
     if (localSelection) {

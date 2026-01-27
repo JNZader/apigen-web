@@ -66,7 +66,7 @@ export function Layout({ children, sidebar }: Readonly<LayoutProps>) {
   const isExportingRef = useRef(false);
 
   // Use custom hooks
-  const { generating, generateProject, generateProjectZip } = useProjectGeneration();
+  const { generating, generateProject, getProjectConfig } = useProjectGeneration();
   const { undo, redo, canUndo, canRedo } = useHistory();
 
   // Atomic selectors for better performance
@@ -337,7 +337,7 @@ export function Layout({ children, sidebar }: Readonly<LayoutProps>) {
               <GitHubConnectButton />
               {isGitHubAuthenticated && (
                 <PushToGitHubButton
-                  generateProjectZip={generateProjectZip}
+                  getProjectConfig={getProjectConfig}
                   disabled={entities.length === 0}
                 />
               )}
