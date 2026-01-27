@@ -12,6 +12,7 @@ import { useCallback, useEffect } from 'react';
 
 import { githubApi } from '../api/githubApi';
 import {
+  useGitHubAccessToken,
   useGitHubActions,
   useGitHubAuthenticated,
   useGitHubSelectedRepo,
@@ -51,54 +52,71 @@ export function useGitHubPush({
 }: UseGitHubPushOptions): UseGitHubPushReturn {
   const isAuthenticated = useGitHubAuthenticated();
   const selectedRepo = useGitHubSelectedRepo();
-  const { setUser, setRepos, setLoading, setLoadingRepos, setPushing, setPushResult, setError } =
-    useGitHubActions();
+  const accessToken = useGitHubAccessToken();
+  const {
+    setAccessToken,
+    setUser,
+    setRepos,
+    setLoading,
+    setLoadingRepos,
+    setPushing,
+    setPushResult,
+    setError,
+  } = useGitHubActions();
 
   // Check authentication on mount
   useEffect(() => {
     const checkAuthStatus = async () => {
+      if (!accessToken) return;
+
       try {
-        const status = await githubApi.checkAuthStatus();
+        const status = await githubApi.checkAuthStatus(accessToken);
         if (status.authenticated && status.user) {
           setUser(status.user);
+        } else {
+          setAccessToken(null);
         }
       } catch {
-        // Not authenticated
+        setAccessToken(null);
       }
     };
 
-    if (!isAuthenticated) {
+    if (!isAuthenticated && accessToken) {
       checkAuthStatus();
     }
-  }, [isAuthenticated, setUser]);
+  }, [isAuthenticated, accessToken, setUser, setAccessToken]);
 
   const checkAuth = useCallback(async (): Promise<boolean> => {
+    if (!accessToken) return false;
+
     setLoading(true);
     try {
-      const status = await githubApi.checkAuthStatus();
+      const status = await githubApi.checkAuthStatus(accessToken);
       if (status.authenticated && status.user) {
         setUser(status.user);
         // Also fetch repos
-        const repos = await githubApi.getRepos();
+        const repos = await githubApi.getRepos(accessToken);
         setRepos(repos);
         return true;
       }
+      setAccessToken(null);
       return false;
     } catch {
+      setAccessToken(null);
       return false;
     } finally {
       setLoading(false);
     }
-  }, [setUser, setRepos, setLoading]);
+  }, [accessToken, setAccessToken, setUser, setRepos, setLoading]);
 
   const refreshRepos = useCallback(async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !accessToken) return;
 
     setLoadingRepos(true);
     setError(null);
 
     try {
-      const repos = await githubApi.getRepos();
+      const repos = await githubApi.getRepos(accessToken);
       setRepos(repos);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch repositories';
@@ -110,11 +128,11 @@ export function useGitHubPush({
     } finally {
       setLoadingRepos(false);
     }
-  }, [isAuthenticated, setRepos, setLoadingRepos, setError]);
+  }, [isAuthenticated, accessToken, setRepos, setLoadingRepos, setError]);
 
   const pushToGitHub = useCallback(
     async (commitMessage?: string) => {
-      if (!isAuthenticated) {
+      if (!isAuthenticated || !accessToken) {
         notify.warning({
           title: 'Not Connected',
           message: 'Please connect to GitHub first',
@@ -148,7 +166,7 @@ export function useGitHubPush({
           message: `Pushing to ${selectedRepo}...`,
         });
 
-        const result = await githubApi.pushToRepo(selectedRepo, projectZip, {
+        const result = await githubApi.pushToRepo(accessToken, selectedRepo, projectZip, {
           commitMessage: commitMessage ?? 'Initial commit from APiGen Studio',
         });
 
@@ -185,6 +203,7 @@ export function useGitHubPush({
     },
     [
       isAuthenticated,
+      accessToken,
       selectedRepo,
       generateProjectZip,
       setPushing,

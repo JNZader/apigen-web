@@ -23,6 +23,7 @@ import { useCallback } from 'react';
 
 import { githubApi } from '../../api/githubApi';
 import {
+  useGitHubAccessToken,
   useGitHubActions,
   useGitHubAuthenticated,
   useGitHubPushState,
@@ -40,6 +41,7 @@ interface PushToGitHubButtonProps {
 export function PushToGitHubButton({ generateProjectZip, disabled }: PushToGitHubButtonProps) {
   const isAuthenticated = useGitHubAuthenticated();
   const selectedRepo = useGitHubSelectedRepo();
+  const accessToken = useGitHubAccessToken();
   const { isPushing, lastPushResult } = useGitHubPushState();
   const { setPushing, setPushResult, clearPushResult, setError } = useGitHubActions();
 
@@ -52,6 +54,11 @@ export function PushToGitHubButton({ generateProjectZip, disabled }: PushToGitHu
       return;
     }
 
+    if (!accessToken) {
+      setError('Not authenticated');
+      return;
+    }
+
     setPushing(true);
     setError(null);
     clearPushResult();
@@ -61,7 +68,7 @@ export function PushToGitHubButton({ generateProjectZip, disabled }: PushToGitHu
       const projectZip = await generateProjectZip();
 
       // Then push to GitHub
-      const result = await githubApi.pushToRepo(selectedRepo, projectZip, {
+      const result = await githubApi.pushToRepo(accessToken, selectedRepo, projectZip, {
         commitMessage: 'Initial commit from APiGen Studio',
       });
 
@@ -79,6 +86,7 @@ export function PushToGitHubButton({ generateProjectZip, disabled }: PushToGitHu
     }
   }, [
     selectedRepo,
+    accessToken,
     generateProjectZip,
     setPushing,
     setPushResult,

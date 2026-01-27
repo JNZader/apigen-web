@@ -114,10 +114,14 @@ export function getAuthUrl(): string {
 
 /**
  * Check if user is authenticated with GitHub.
+ * @param token - Optional access token to verify
  */
-export async function checkAuthStatus(signal?: AbortSignal): Promise<AuthStatus> {
+export async function checkAuthStatus(token?: string, signal?: AbortSignal): Promise<AuthStatus> {
+  if (!token) {
+    return { authenticated: false };
+  }
   try {
-    const user = await getUser(signal);
+    const user = await getUser(token, signal);
     return { authenticated: true, user };
   } catch {
     return { authenticated: false };
@@ -126,13 +130,17 @@ export async function checkAuthStatus(signal?: AbortSignal): Promise<AuthStatus>
 
 /**
  * Get the authenticated GitHub user info.
+ * @param token - GitHub access token
  * @throws ApiError if not authenticated (401)
  */
-export async function getUser(signal?: AbortSignal): Promise<GitHubUser> {
+export async function getUser(token: string, signal?: AbortSignal): Promise<GitHubUser> {
   const response = await apiClient.get<GitHubUser>('/api/github/user', {
     schema: GitHubUserSchema,
     signal,
     maxRetries: 1,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 
   return response.data;
@@ -140,12 +148,16 @@ export async function getUser(signal?: AbortSignal): Promise<GitHubUser> {
 
 /**
  * List repositories for the authenticated user.
+ * @param token - GitHub access token
  * @throws ApiError if not authenticated (401)
  */
-export async function getRepos(signal?: AbortSignal): Promise<GitHubRepo[]> {
+export async function getRepos(token: string, signal?: AbortSignal): Promise<GitHubRepo[]> {
   const response = await apiClient.get<GitHubRepo[]>('/api/github/repos', {
     schema: GitHubReposSchema,
     signal,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 
   return response.data;
@@ -153,9 +165,11 @@ export async function getRepos(signal?: AbortSignal): Promise<GitHubRepo[]> {
 
 /**
  * Create a new repository for the authenticated user.
+ * @param token - GitHub access token
  * @throws ApiError if not authenticated (401) or repo already exists (422)
  */
 export async function createRepo(
+  token: string,
   request: CreateRepoRequest,
   signal?: AbortSignal,
 ): Promise<CreateRepoResponse> {
@@ -163,6 +177,9 @@ export async function createRepo(
     schema: CreateRepoResponseSchema,
     signal,
     skipRetry: true, // Don't retry creation (could cause issues)
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 
   return response.data;
@@ -172,12 +189,14 @@ export async function createRepo(
  * Push a generated project ZIP to a GitHub repository.
  * The project ZIP should be sent as FormData with the file.
  *
+ * @param token - GitHub access token
  * @param repoName - The name of the repository to push to
  * @param projectZip - The generated project as a Blob
  * @param options - Push options (commit message, etc.)
  * @throws ApiError if not authenticated (401) or push fails
  */
 export async function pushToRepo(
+  token: string,
   repoName: string,
   projectZip: Blob,
   options?: PushToRepoRequest,
@@ -202,7 +221,9 @@ export async function pushToRepo(
         method: 'POST',
         body: formData,
         signal: signal ?? controller.signal,
-        credentials: 'include', // Include cookies for auth
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
     );
 

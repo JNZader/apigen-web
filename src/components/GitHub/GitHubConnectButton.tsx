@@ -11,41 +11,85 @@ import { IconBrandGithub, IconLogout, IconRefresh } from '@tabler/icons-react';
 import { useCallback, useEffect } from 'react';
 
 import { githubApi } from '../../api/githubApi';
-import { useGitHubActions, useGitHubConnectionStatus } from '../../store/githubStore';
+import {
+  useGitHubAccessToken,
+  useGitHubActions,
+  useGitHubConnectionStatus,
+} from '../../store/githubStore';
 import { notify } from '../../utils/notifications';
 
 export function GitHubConnectButton() {
   const { isAuthenticated, user, isLoading } = useGitHubConnectionStatus();
-  const { setUser, setRepos, setLoading, setLoadingRepos, setError, logout } = useGitHubActions();
+  const accessToken = useGitHubAccessToken();
+  const { setAccessToken, setUser, setRepos, setLoading, setLoadingRepos, setError, logout } =
+    useGitHubActions();
 
-  // Check authentication status on mount
+  // Capture token from URL hash on mount (after OAuth redirect)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes('github_token=')) {
+      const params = new URLSearchParams(hash.substring(1));
+      const token = params.get('github_token');
+      if (token) {
+        setAccessToken(token);
+        // Clean up URL
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        notify.success({
+          title: 'Connected',
+          message: 'Successfully connected to GitHub',
+        });
+      }
+    }
+
+    // Check for errors in query params
+    const searchParams = new URLSearchParams(window.location.search);
+    const error = searchParams.get('github_error');
+    if (error) {
+      notify.error({
+        title: 'GitHub Error',
+        message: decodeURIComponent(error),
+      });
+      // Clean up URL
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, [setAccessToken]);
+
+  // Check authentication status on mount or when token changes
   useEffect(() => {
     const checkAuth = async () => {
+      if (!accessToken) {
+        return;
+      }
+
       setLoading(true);
       try {
-        const status = await githubApi.checkAuthStatus();
+        const status = await githubApi.checkAuthStatus(accessToken);
         if (status.authenticated && status.user) {
           setUser(status.user);
           // Also fetch repos
           setLoadingRepos(true);
           try {
-            const repos = await githubApi.getRepos();
+            const repos = await githubApi.getRepos(accessToken);
             setRepos(repos);
           } catch {
             // Failed to fetch repos, but user is still authenticated
           } finally {
             setLoadingRepos(false);
           }
+        } else {
+          // Token invalid, clear it
+          setAccessToken(null);
         }
       } catch {
-        // Not authenticated, that's OK
+        // Token invalid, clear it
+        setAccessToken(null);
       } finally {
         setLoading(false);
       }
     };
 
     checkAuth();
-  }, [setUser, setRepos, setLoading, setLoadingRepos]);
+  }, [accessToken, setAccessToken, setUser, setRepos, setLoading, setLoadingRepos]);
 
   const handleConnect = useCallback(() => {
     // Redirect to GitHub OAuth
@@ -53,10 +97,12 @@ export function GitHubConnectButton() {
   }, []);
 
   const handleRefreshRepos = useCallback(async () => {
+    if (!accessToken) return;
+
     setLoadingRepos(true);
     setError(null);
     try {
-      const repos = await githubApi.getRepos();
+      const repos = await githubApi.getRepos(accessToken);
       setRepos(repos);
       notify.success({
         title: 'Refreshed',
@@ -72,7 +118,7 @@ export function GitHubConnectButton() {
     } finally {
       setLoadingRepos(false);
     }
-  }, [setRepos, setLoadingRepos, setError]);
+  }, [accessToken, setRepos, setLoadingRepos, setError]);
 
   const handleLogout = useCallback(async () => {
     try {
