@@ -45,7 +45,7 @@ describe('SqlImportExport', () => {
         </TestProviders>,
       );
 
-      expect(screen.getByText('SQL Import / Export')).toBeInTheDocument();
+      expect(screen.getByText('Schema Import / Export')).toBeInTheDocument();
     });
 
     it('should not render when closed', () => {
@@ -55,7 +55,7 @@ describe('SqlImportExport', () => {
         </TestProviders>,
       );
 
-      expect(screen.queryByText('SQL Import / Export')).not.toBeInTheDocument();
+      expect(screen.queryByText('Schema Import / Export')).not.toBeInTheDocument();
     });
 
     it('should render export and import tabs', () => {
