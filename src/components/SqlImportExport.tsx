@@ -19,6 +19,7 @@ import { Dropzone } from '@mantine/dropzone';
 import { modals } from '@mantine/modals';
 import {
   IconAlertCircle,
+  IconApi,
   IconCheck,
   IconCopy,
   IconDownload,
@@ -35,6 +36,7 @@ import {
   useRelations,
 } from '../store';
 import { notify } from '../utils/notifications';
+import { parseOpenAPI } from '../utils/openApiParser';
 import { generateSQL } from '../utils/sqlGenerator';
 import { parseSQL } from '../utils/sqlParser';
 
@@ -51,29 +53,38 @@ export function SqlImportExport({ opened, onClose }: Readonly<SqlImportExportPro
   const { setRelations } = useRelationActions();
 
   const [importSql, setImportSql] = useState('');
+  const [importOpenApi, setImportOpenApi] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
+  const [openApiError, setOpenApiError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string | null>('export');
 
   // Refs to prevent rapid consecutive actions
   const isDownloadingRef = useRef(false);
   const isImportingRef = useRef(false);
+  const isImportingOpenApiRef = useRef(false);
 
   // Generate SQL from current design
   const exportedSql = generateSQL(entities, relations, project.name);
 
-  // Apply the parsed SQL
+  // Apply the parsed data (shared between SQL and OpenAPI)
   const applyImport = useCallback(
-    (parsedEntities: typeof entities, parsedRelations: typeof relations) => {
+    (
+      parsedEntities: typeof entities,
+      parsedRelations: typeof relations,
+      source: 'SQL' | 'OpenAPI',
+    ) => {
       setEntities(parsedEntities);
       setRelations(parsedRelations);
 
       notify.success({
-        title: 'SQL Imported',
+        title: `${source} Imported`,
         message: `Imported ${parsedEntities.length} entities and ${parsedRelations.length} relations`,
       });
 
       setImportSql('');
+      setImportOpenApi('');
       setImportError(null);
+      setOpenApiError(null);
       onClose();
     },
     [setEntities, setRelations, onClose],
@@ -108,7 +119,7 @@ export function SqlImportExport({ opened, onClose }: Readonly<SqlImportExportPro
           labels: { confirm: 'Replace', cancel: 'Cancel' },
           confirmProps: { color: 'orange' },
           onConfirm: () => {
-            applyImport(parsedEntities, parsedRelations);
+            applyImport(parsedEntities, parsedRelations, 'SQL');
             isImportingRef.current = false;
           },
           onCancel: () => {
@@ -116,7 +127,7 @@ export function SqlImportExport({ opened, onClose }: Readonly<SqlImportExportPro
           },
         });
       } else {
-        applyImport(parsedEntities, parsedRelations);
+        applyImport(parsedEntities, parsedRelations, 'SQL');
         isImportingRef.current = false;
       }
     } catch (error) {
@@ -125,7 +136,47 @@ export function SqlImportExport({ opened, onClose }: Readonly<SqlImportExportPro
     }
   }, [importSql, entities.length, applyImport]);
 
-  // Handle file upload (drag & drop or click)
+  // Handle OpenAPI import
+  const handleOpenApiImport = useCallback(() => {
+    // Prevent rapid consecutive imports
+    if (isImportingOpenApiRef.current) return;
+
+    if (!importOpenApi.trim()) {
+      setOpenApiError('Please enter an OpenAPI specification to import');
+      return;
+    }
+
+    isImportingOpenApiRef.current = true;
+
+    try {
+      const { entities: parsedEntities, relations: parsedRelations } = parseOpenAPI(importOpenApi);
+
+      // Confirm before replacing if there are existing entities
+      if (entities.length > 0) {
+        modals.openConfirmModal({
+          title: 'Replace Current Design',
+          children: `This will replace your current design (${entities.length} entities). Continue?`,
+          labels: { confirm: 'Replace', cancel: 'Cancel' },
+          confirmProps: { color: 'orange' },
+          onConfirm: () => {
+            applyImport(parsedEntities, parsedRelations, 'OpenAPI');
+            isImportingOpenApiRef.current = false;
+          },
+          onCancel: () => {
+            isImportingOpenApiRef.current = false;
+          },
+        });
+      } else {
+        applyImport(parsedEntities, parsedRelations, 'OpenAPI');
+        isImportingOpenApiRef.current = false;
+      }
+    } catch (error) {
+      setOpenApiError(error instanceof Error ? error.message : 'Failed to parse OpenAPI spec');
+      isImportingOpenApiRef.current = false;
+    }
+  }, [importOpenApi, entities.length, applyImport]);
+
+  // Handle SQL file upload (drag & drop or click)
   const handleFileDrop = async (files: File[]) => {
     const file = files[0];
     if (!file) return;
@@ -140,6 +191,24 @@ export function SqlImportExport({ opened, onClose }: Readonly<SqlImportExportPro
       });
     } catch {
       setImportError('Failed to read file');
+    }
+  };
+
+  // Handle OpenAPI file upload (drag & drop or click)
+  const handleOpenApiFileDrop = async (files: File[]) => {
+    const file = files[0];
+    if (!file) return;
+
+    try {
+      const content = await file.text();
+      setImportOpenApi(content);
+      setOpenApiError(null);
+      notify.info({
+        title: 'File loaded',
+        message: `${file.name} loaded successfully`,
+      });
+    } catch {
+      setOpenApiError('Failed to read file');
     }
   };
 
@@ -176,7 +245,7 @@ export function SqlImportExport({ opened, onClose }: Readonly<SqlImportExportPro
     <Modal
       opened={opened}
       onClose={onClose}
-      title="SQL Import / Export"
+      title="Schema Import / Export"
       size="xl"
       closeButtonProps={{ 'aria-label': 'Close' }}
     >
@@ -187,6 +256,9 @@ export function SqlImportExport({ opened, onClose }: Readonly<SqlImportExportPro
           </Tabs.Tab>
           <Tabs.Tab value="import" leftSection={<IconUpload size={16} />}>
             Import SQL
+          </Tabs.Tab>
+          <Tabs.Tab value="openapi" leftSection={<IconApi size={16} />}>
+            Import OpenAPI
           </Tabs.Tab>
         </Tabs.List>
 
@@ -388,6 +460,167 @@ export function SqlImportExport({ opened, onClose }: Readonly<SqlImportExportPro
                 disabled={!importSql.trim()}
               >
                 Import SQL
+              </Button>
+            </Group>
+          </Stack>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="openapi" pt="md">
+          <Stack>
+            {openApiError && (
+              <Alert
+                color="red"
+                icon={<IconAlertCircle size={16} />}
+                title="Import Error"
+                withCloseButton
+                onClose={() => setOpenApiError(null)}
+              >
+                {openApiError}
+              </Alert>
+            )}
+
+            {importOpenApi ? (
+              <>
+                <Group justify="space-between">
+                  <Text size="sm" c="dimmed">
+                    Edit OpenAPI spec or clear to upload another file
+                  </Text>
+                  <Button
+                    variant="subtle"
+                    color="gray"
+                    size="xs"
+                    onClick={() => setImportOpenApi('')}
+                  >
+                    Clear
+                  </Button>
+                </Group>
+                <Textarea
+                  value={importOpenApi}
+                  onChange={(e) => {
+                    setImportOpenApi(e.target.value);
+                    setOpenApiError(null);
+                  }}
+                  rows={12}
+                  styles={{
+                    input: {
+                      fontFamily: 'monospace',
+                      fontSize: '12px',
+                    },
+                  }}
+                />
+              </>
+            ) : (
+              <Stack>
+                <Dropzone
+                  onDrop={handleOpenApiFileDrop}
+                  onReject={() =>
+                    setOpenApiError(
+                      'Invalid file type. Please use .json, .yaml, or .yml files.',
+                    )
+                  }
+                  maxSize={5 * 1024 * 1024}
+                  accept={{
+                    'application/json': ['.json'],
+                    'text/yaml': ['.yaml', '.yml'],
+                    'application/x-yaml': ['.yaml', '.yml'],
+                  }}
+                  multiple={false}
+                >
+                  <Group justify="center" gap="xl" mih={150} style={{ pointerEvents: 'none' }}>
+                    <Dropzone.Accept>
+                      <IconUpload
+                        style={{
+                          width: rem(52),
+                          height: rem(52),
+                          color: 'var(--mantine-color-blue-6)',
+                        }}
+                        stroke={1.5}
+                      />
+                    </Dropzone.Accept>
+                    <Dropzone.Reject>
+                      <IconX
+                        style={{
+                          width: rem(52),
+                          height: rem(52),
+                          color: 'var(--mantine-color-red-6)',
+                        }}
+                        stroke={1.5}
+                      />
+                    </Dropzone.Reject>
+                    <Dropzone.Idle>
+                      <IconApi
+                        style={{
+                          width: rem(52),
+                          height: rem(52),
+                          color: 'var(--mantine-color-dimmed)',
+                        }}
+                        stroke={1.5}
+                      />
+                    </Dropzone.Idle>
+
+                    <div>
+                      <Text size="xl" inline>
+                        Drag OpenAPI file here or click to select
+                      </Text>
+                      <Text size="sm" c="dimmed" inline mt={7}>
+                        Supports .json, .yaml, and .yml files up to 5MB
+                      </Text>
+                    </div>
+                  </Group>
+                </Dropzone>
+
+                <Text size="sm" c="dimmed" ta="center">
+                  — or paste OpenAPI specification directly —
+                </Text>
+
+                <Textarea
+                  placeholder={`openapi: '3.0.0'
+components:
+  schemas:
+    User:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email`}
+                  value={importOpenApi}
+                  onChange={(e) => {
+                    setImportOpenApi(e.target.value);
+                    setOpenApiError(null);
+                  }}
+                  rows={6}
+                  styles={{
+                    input: {
+                      fontFamily: 'monospace',
+                      fontSize: '12px',
+                    },
+                  }}
+                />
+              </Stack>
+            )}
+
+            <Alert color="blue" variant="light" icon={<IconAlertCircle size={16} />}>
+              <Text size="sm">
+                <strong>Supported:</strong> OpenAPI 3.x (JSON or YAML). Entities are extracted from{' '}
+                <Code>components.schemas</Code>.
+                <br />
+                Schemas ending with Request, Response, DTO, etc. are automatically excluded.
+                <br />
+                Relationships are detected from <Code>$ref</Code> references.
+              </Text>
+            </Alert>
+
+            <Group justify="flex-end">
+              <Button variant="default" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button
+                leftSection={<IconApi size={16} />}
+                onClick={handleOpenApiImport}
+                disabled={!importOpenApi.trim()}
+              >
+                Import OpenAPI
               </Button>
             </Group>
           </Stack>
