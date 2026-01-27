@@ -1,5 +1,6 @@
 export { useResetOnboarding } from '../components/Onboarding';
 export { useEntityDeletion } from './useEntityDeletion';
+export { useGitHubPush } from './useGitHubPush';
 export { useHistory } from './useHistory';
 export {
   formatShortcut,
