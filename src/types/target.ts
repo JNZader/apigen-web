@@ -191,8 +191,8 @@ export const FRAMEWORK_METADATA: Record<Framework, FrameworkMetadata> = {
   'spring-boot': {
     label: 'Spring Boot',
     language: 'java',
-    defaultVersion: '3.4.0',
-    availableVersions: ['3.4.0'],
+    defaultVersion: '4.0.0',
+    availableVersions: ['4.0.0'],
     docsUrl: 'https://spring.io/projects/spring-boot',
     icon: 'spring',
   },
