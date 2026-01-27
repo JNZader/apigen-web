@@ -47,6 +47,12 @@ export function createMockProjectFeatures(
     mailService: false,
     fileStorage: false,
     jteTemplates: false,
+    // Developer Experience (DX) Features
+    miseTasks: true,
+    preCommit: true,
+    setupScript: true,
+    githubTemplates: true,
+    devCompose: true,
     ...overrides,
   };
 }
