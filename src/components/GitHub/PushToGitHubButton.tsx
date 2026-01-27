@@ -17,6 +17,7 @@ import {
   IconCheck,
   IconChevronDown,
   IconExternalLink,
+  IconTrash,
   IconX,
 } from '@tabler/icons-react';
 import { useCallback } from 'react';
@@ -26,6 +27,7 @@ import {
   useGitHubActions,
   useGitHubAuthenticated,
   useGitHubPushState,
+  useGitHubRepoActions,
   useGitHubSelectedRepo,
 } from '../../store/githubStore';
 import { RepoSelectorModal } from './RepoSelectorModal';
@@ -49,6 +51,7 @@ export function PushToGitHubButton({ getProjectConfig, disabled }: PushToGitHubB
   const selectedRepo = useGitHubSelectedRepo();
   const { isPushing, lastPushResult } = useGitHubPushState();
   const { setPushing, setPushResult, clearPushResult, setError } = useGitHubActions();
+  const { selectRepo } = useGitHubRepoActions();
 
   const [repoModalOpened, { open: openRepoModal, close: closeRepoModal }] = useDisclosure(false);
   const [popoverOpened, { open: openPopover, close: closePopover }] = useDisclosure(false);
@@ -127,6 +130,11 @@ export function PushToGitHubButton({ getProjectConfig, disabled }: PushToGitHubB
     },
     [closeRepoModal],
   );
+
+  const handleClearRepo = useCallback(() => {
+    selectRepo(null);
+    closePopover();
+  }, [selectRepo, closePopover]);
 
   // Not authenticated
   if (!isAuthenticated) {
@@ -234,16 +242,32 @@ export function PushToGitHubButton({ getProjectConfig, disabled }: PushToGitHubB
             <Text size="xs" c="dimmed">
               {selectedRepo ?? 'No repository selected'}
             </Text>
-            <Button
-              variant="light"
-              size="xs"
-              onClick={() => {
-                closePopover();
-                openRepoModal();
-              }}
-            >
-              Change Repository
-            </Button>
+            <Group gap="xs">
+              <Button
+                variant="light"
+                size="xs"
+                onClick={() => {
+                  closePopover();
+                  openRepoModal();
+                }}
+                style={{ flex: 1 }}
+              >
+                Change Repository
+              </Button>
+              {selectedRepo && (
+                <Tooltip label="Clear repository selection">
+                  <Button
+                    variant="light"
+                    color="red"
+                    size="xs"
+                    onClick={handleClearRepo}
+                    aria-label="Clear repository selection"
+                  >
+                    <IconTrash size={14} />
+                  </Button>
+                </Tooltip>
+              )}
+            </Group>
           </Stack>
         </Popover.Dropdown>
       </Popover>
