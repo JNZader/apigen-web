@@ -32,6 +32,7 @@ import {
 import { saveAs } from 'file-saver';
 import { lazy, type ReactNode, Suspense, useCallback, useRef, useState } from 'react';
 import { useHistory, useProjectGeneration } from '../hooks';
+import { useGitHubAuthenticated } from '../store/githubStore';
 import { useProjectStore } from '../store/projectStore';
 import { notify } from '../utils/notifications';
 import { GitHubConnectButton, PushToGitHubButton } from './GitHub';
@@ -72,6 +73,7 @@ export function Layout({ children, sidebar }: Readonly<LayoutProps>) {
   const project = useProjectStore((state) => state.project);
   const entities = useProjectStore((state) => state.entities);
   const relations = useProjectStore((state) => state.relations);
+  const isGitHubAuthenticated = useGitHubAuthenticated();
   const exportProject = useProjectStore((state) => state.exportProject);
   const importProject = useProjectStore((state) => state.importProject);
   const resetProject = useProjectStore((state) => state.resetProject);
@@ -333,10 +335,12 @@ export function Layout({ children, sidebar }: Readonly<LayoutProps>) {
               {/* GitHub Integration */}
               <Divider orientation="vertical" />
               <GitHubConnectButton />
-              <PushToGitHubButton
-                generateProjectZip={generateProjectZip}
-                disabled={entities.length === 0}
-              />
+              {isGitHubAuthenticated && (
+                <PushToGitHubButton
+                  generateProjectZip={generateProjectZip}
+                  disabled={entities.length === 0}
+                />
+              )}
               <Divider orientation="vertical" />
 
               <Tooltip label="Reset Project">
