@@ -6,12 +6,10 @@ import {
   Drawer,
   Grid,
   Group,
-  Modal,
   Paper,
   SegmentedControl,
   Stack,
   Text,
-  TextInput,
   Title,
 } from '@mantine/core';
 import { useDisclosure, useHotkeys } from '@mantine/hooks';
@@ -38,9 +36,9 @@ import { ProjectWizard } from '../components/ProjectWizard';
 import { RelationForm } from '../components/RelationForm';
 import { SectionErrorBoundary } from '../components/SectionErrorBoundary';
 import { ServiceConfigPanel } from '../components/ServiceConfigPanel';
+import { ServiceWizard } from '../components/ServiceWizard';
 import { useEntityDeletion, useHistory, useKeyboardShortcuts, useSelectedEntity } from '../hooks';
-import { useDesignerPageData, useProjectStore, useServiceActions } from '../store/projectStore';
-import { notify } from '../utils/notifications';
+import { useDesignerPageData, useProjectStore } from '../store/projectStore';
 
 type ViewMode = 'canvas' | 'grid';
 
@@ -51,7 +49,7 @@ export function DesignerPage() {
   const [entityFormOpened, { open: openEntityForm, close: closeEntityForm }] = useDisclosure(false);
   const [relationFormOpened, { open: openRelationForm, close: closeRelationForm }] =
     useDisclosure(false);
-  const [serviceFormOpened, { open: openServiceForm, close: closeServiceForm }] =
+  const [serviceWizardOpened, { open: openServiceWizard, close: closeServiceWizard }] =
     useDisclosure(false);
   const [serviceConfigOpened, { open: openServiceConfig, close: closeServiceConfig }] =
     useDisclosure(false);
@@ -68,7 +66,6 @@ export function DesignerPage() {
   const [editingEntity, setEditingEntity] = useState<string | null>(null);
   const [relationSource, setRelationSource] = useState<string>('');
   const [relationTarget, setRelationTarget] = useState<string>('');
-  const [newServiceName, setNewServiceName] = useState('');
   const [configureServiceId, setConfigureServiceId] = useState<string | null>(null);
 
   // Use custom hooks for cleaner code
@@ -88,9 +85,6 @@ export function DesignerPage() {
   const { project, exportProject } = useDesignerPageData();
   const entities = useProjectStore((state) => state.entities);
   const getEntity = useProjectStore((state) => state.getEntity);
-
-  // Service actions
-  const { addService } = useServiceActions();
 
   // Track if wizard check has run (to ensure it only runs once on mount)
   const hasCheckedWizard = useRef(false);
@@ -137,25 +131,12 @@ export function DesignerPage() {
 
   // Service handlers
   const handleAddService = () => {
-    setNewServiceName('');
-    openServiceForm();
+    openServiceWizard();
   };
 
-  const handleCreateService = () => {
-    if (!newServiceName.trim()) {
-      notify.error({
-        title: 'Invalid name',
-        message: 'Please enter a service name',
-      });
-      return;
-    }
-    addService(newServiceName.trim());
-    closeServiceForm();
-    setNewServiceName('');
-    notify.success({
-      title: 'Service created',
-      message: `Service "${newServiceName.trim()}" has been created`,
-    });
+  const handleServiceWizardComplete = (serviceId: string) => {
+    // Optionally open the service config panel after creation
+    setConfigureServiceId(serviceId);
   };
 
   const handleConfigureService = (serviceId: string) => {
@@ -263,7 +244,6 @@ export function DesignerPage() {
                   onAddRelation={handleAddRelation}
                   onAddService={handleAddService}
                   onConfigureService={handleConfigureService}
-                  onOpenWizard={openWizard}
                 />
               </SectionErrorBoundary>
             </Paper>
@@ -398,40 +378,12 @@ export function DesignerPage() {
         targetEntityId={relationTarget}
       />
 
-      {/* Service creation modal */}
-      <Modal
-        opened={serviceFormOpened}
-        onClose={closeServiceForm}
-        title="Create New Service"
-        size="sm"
-      >
-        <Stack>
-          <TextInput
-            label="Service Name"
-            placeholder="e.g., OrderService, UserService"
-            value={newServiceName}
-            onChange={(e) => setNewServiceName(e.currentTarget.value)}
-            data-autofocus
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleCreateService();
-              }
-            }}
-          />
-          <Text size="xs" c="dimmed">
-            Each service can contain multiple entities and will be generated as an independent
-            Spring Boot application.
-          </Text>
-          <Group justify="flex-end">
-            <Button variant="default" onClick={closeServiceForm}>
-              Cancel
-            </Button>
-            <Button color="teal" onClick={handleCreateService}>
-              Create Service
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+      {/* Service creation wizard */}
+      <ServiceWizard
+        opened={serviceWizardOpened}
+        onClose={closeServiceWizard}
+        onComplete={handleServiceWizardComplete}
+      />
 
       {/* Service configuration panel */}
       <ServiceConfigPanel

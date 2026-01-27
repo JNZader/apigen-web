@@ -1,6 +1,7 @@
 import {
   ActionIcon,
   AppShell,
+  Button,
   Divider,
   Group,
   LoadingOverlay,
@@ -28,6 +29,7 @@ import {
   IconTemplate,
   IconTrash,
   IconUpload,
+  IconWand,
 } from '@tabler/icons-react';
 import { saveAs } from 'file-saver';
 import { lazy, type ReactNode, Suspense, useCallback, useRef, useState } from 'react';
@@ -48,6 +50,9 @@ const TemplateSelector = lazy(() =>
 const SqlImportExport = lazy(() =>
   import('./SqlImportExport').then((m) => ({ default: m.SqlImportExport })),
 );
+const ProjectWizard = lazy(() =>
+  import('./ProjectWizard').then((m) => ({ default: m.ProjectWizard })),
+);
 
 interface LayoutProps {
   readonly children: ReactNode;
@@ -59,6 +64,7 @@ export function Layout({ children, sidebar }: Readonly<LayoutProps>) {
   const [settingsOpened, { open: openSettings, close: closeSettings }] = useDisclosure(false);
   const [templatesOpened, { open: openTemplates, close: closeTemplates }] = useDisclosure(false);
   const [sqlOpened, { open: openSql, close: closeSql }] = useDisclosure(false);
+  const [wizardOpened, { open: openWizard, close: closeWizard }] = useDisclosure(false);
   const [sidebarCollapsed, { toggle: toggleSidebar }] = useDisclosure(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -216,6 +222,18 @@ export function Layout({ children, sidebar }: Readonly<LayoutProps>) {
               <Text size="sm" c="dimmed">
                 v1.0.0
               </Text>
+              <Divider orientation="vertical" />
+              <Tooltip label="Configure a new project with the wizard">
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="violet"
+                  leftSection={<IconWand size={14} aria-hidden="true" />}
+                  onClick={openWizard}
+                >
+                  New Project
+                </Button>
+              </Tooltip>
             </Group>
 
             <Group wrap="nowrap">
@@ -395,6 +413,9 @@ export function Layout({ children, sidebar }: Readonly<LayoutProps>) {
         </Suspense>
         <Suspense fallback={<LoadingOverlay visible />}>
           {sqlOpened && <SqlImportExport opened={sqlOpened} onClose={closeSql} />}
+        </Suspense>
+        <Suspense fallback={<LoadingOverlay visible />}>
+          {wizardOpened && <ProjectWizard opened={wizardOpened} onClose={closeWizard} />}
         </Suspense>
       </AppShell>
 

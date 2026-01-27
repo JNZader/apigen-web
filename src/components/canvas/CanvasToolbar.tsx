@@ -16,7 +16,6 @@ import {
   IconPlus,
   IconServer,
   IconTable,
-  IconWand,
 } from '@tabler/icons-react';
 import type { Node } from '@xyflow/react';
 import { getNodesBounds } from '@xyflow/react';
@@ -47,7 +46,6 @@ interface CanvasToolbarProps {
   readonly reactFlowWrapper: React.RefObject<HTMLDivElement | null>;
   readonly onAddEntity: () => void;
   readonly onAddService?: () => void;
-  readonly onOpenWizard?: () => void;
 }
 
 export const CanvasToolbar = memo(function CanvasToolbar({
@@ -55,7 +53,6 @@ export const CanvasToolbar = memo(function CanvasToolbar({
   reactFlowWrapper,
   onAddEntity,
   onAddService,
-  onOpenWizard,
 }: CanvasToolbarProps) {
   const { colorScheme } = useMantineColorScheme();
 
@@ -224,21 +221,6 @@ export const CanvasToolbar = memo(function CanvasToolbar({
         {/* Service filter tabs - only in entities view with services */}
         {canvasView === CANVAS_VIEWS.ENTITIES && services.length > 0 && (
           <EntityServiceTabs entityServiceFilter={entityServiceFilter} />
-        )}
-
-        {/* New Project Wizard button */}
-        {onOpenWizard && (
-          <Tooltip label="Start a new project with the wizard">
-            <Button
-              size="xs"
-              variant="light"
-              color="violet"
-              leftSection={<IconWand size={14} aria-hidden="true" />}
-              onClick={onOpenWizard}
-            >
-              New Project
-            </Button>
-          </Tooltip>
         )}
 
         {/* Add buttons based on view */}
