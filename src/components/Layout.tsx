@@ -1,6 +1,7 @@
 import {
   ActionIcon,
   AppShell,
+  Divider,
   Group,
   LoadingOverlay,
   Menu,
@@ -33,6 +34,7 @@ import { lazy, type ReactNode, Suspense, useCallback, useRef, useState } from 'r
 import { useHistory, useProjectGeneration } from '../hooks';
 import { useProjectStore } from '../store/projectStore';
 import { notify } from '../utils/notifications';
+import { GitHubConnectButton, PushToGitHubButton } from './GitHub';
 import { Onboarding } from './Onboarding';
 
 // Lazy load modals for better initial load performance
@@ -63,7 +65,7 @@ export function Layout({ children, sidebar }: Readonly<LayoutProps>) {
   const isExportingRef = useRef(false);
 
   // Use custom hooks
-  const { generating, generateProject } = useProjectGeneration();
+  const { generating, generateProject, generateProjectZip } = useProjectGeneration();
   const { undo, redo, canUndo, canRedo } = useHistory();
 
   // Atomic selectors for better performance
@@ -327,6 +329,15 @@ export function Layout({ children, sidebar }: Readonly<LayoutProps>) {
                   <IconDownload size={18} aria-hidden="true" />
                 </ActionIcon>
               </Tooltip>
+
+              {/* GitHub Integration */}
+              <Divider orientation="vertical" />
+              <GitHubConnectButton />
+              <PushToGitHubButton
+                generateProjectZip={generateProjectZip}
+                disabled={entities.length === 0}
+              />
+              <Divider orientation="vertical" />
 
               <Tooltip label="Reset Project">
                 <ActionIcon

@@ -26,6 +26,36 @@ export function useProjectGeneration() {
   /** Clears the error state. Call this before retrying generation. */
   const clearError = useCallback(() => setError(null), []);
 
+  /**
+   * Generates the project ZIP blob without downloading.
+   * Used by GitHub push functionality to get the blob for upload.
+   * @throws Error if generation fails or no entities exist
+   */
+  const generateProjectZip = useCallback(async (): Promise<Blob> => {
+    if (entities.length === 0) {
+      throw new Error('Add at least one entity before generating');
+    }
+
+    const sql = generateSQL(entities, relations, project.name);
+    const projectConfig = buildProjectConfig(project);
+
+    // Extract target config to send at request level (backend expects it there)
+    const target = projectConfig.targetConfig
+      ? {
+          language: projectConfig.targetConfig.language,
+          framework: projectConfig.targetConfig.framework,
+        }
+      : undefined;
+
+    const blob = await generateWithServer({
+      project: projectConfig,
+      target,
+      sql,
+    });
+
+    return blob;
+  }, [project, entities, relations]);
+
   const generateProject = useCallback(async (): Promise<boolean> => {
     // Synchronous check prevents multiple calls even before React updates state
     if (isGeneratingRef.current) {
@@ -46,23 +76,7 @@ export function useProjectGeneration() {
     setError(null);
 
     try {
-      const sql = generateSQL(entities, relations, project.name);
-
-      const projectConfig = buildProjectConfig(project);
-
-      // Extract target config to send at request level (backend expects it there)
-      const target = projectConfig.targetConfig
-        ? {
-            language: projectConfig.targetConfig.language,
-            framework: projectConfig.targetConfig.framework,
-          }
-        : undefined;
-
-      const blob = await generateWithServer({
-        project: projectConfig,
-        target,
-        sql,
-      });
+      const blob = await generateProjectZip();
 
       saveAs(blob, `${project.artifactId}.zip`);
 
@@ -99,12 +113,14 @@ export function useProjectGeneration() {
       isGeneratingRef.current = false;
       setGenerating(false);
     }
-  }, [project, entities, relations]);
+  }, [project.artifactId, entities.length, generateProjectZip]);
 
   return {
     generating,
     error,
     clearError,
     generateProject,
+    /** Generate project ZIP blob without downloading (for GitHub push) */
+    generateProjectZip,
   };
 }

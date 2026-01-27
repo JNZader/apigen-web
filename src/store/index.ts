@@ -5,6 +5,7 @@
 // Individual stores
 export { useCanvasUIStore } from './canvasUIStore';
 export { useEntityStore } from './entityStore';
+export { useGitHubStore } from './githubStore';
 export { useHistoryStore } from './historyStore';
 export { useLayoutStore } from './layoutStore';
 // Combined store facade (for backward compatibility)
@@ -147,3 +148,29 @@ export {
   useRustServer,
   useRustValidation,
 } from './rustSlice';
+
+// ============================================================================
+// GitHub Store Exports
+// ============================================================================
+
+export {
+  useGitHubActions,
+  // Action selectors
+  useGitHubAuthActions,
+  // Atomic selectors
+  useGitHubAuthenticated,
+  // Combined selectors
+  useGitHubConnectionStatus,
+  useGitHubError,
+  useGitHubLoading,
+  useGitHubLoadingActions,
+  useGitHubPushActions,
+  useGitHubPushing,
+  useGitHubPushResult,
+  useGitHubPushState,
+  useGitHubRepoActions,
+  useGitHubRepoSelector,
+  useGitHubRepos,
+  useGitHubSelectedRepo,
+  useGitHubUser,
+} from './githubStore';
