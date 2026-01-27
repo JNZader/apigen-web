@@ -114,16 +114,35 @@ const ProjectConfigSchema = z
   .passthrough();
 
 /**
+ * Target configuration schema for backend API (simpler than frontend TargetConfigSchema).
+ */
+const BackendTargetConfigSchema = z
+  .object({
+    language: z.string(),
+    framework: z.string(),
+  })
+  .optional();
+
+/**
  * Generate request schema with Zod validation.
  */
 export const GenerateRequestSchema = z.object({
   project: ProjectConfigSchema,
+  target: BackendTargetConfigSchema,
   sql: z.string().min(1, 'SQL schema is required'),
 });
 
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
+
+/**
+ * Target configuration for the backend API.
+ */
+export interface TargetConfigDTO {
+  language: string;
+  framework: string;
+}
 
 /**
  * Generate request type inferred from Zod schema.
@@ -137,6 +156,8 @@ export interface GenerateRequest {
     artifactId: string;
     packageName: string;
   };
+  /** Target language/framework configuration (sent at request level for backend) */
+  target?: TargetConfigDTO;
   /** SQL schema for code generation */
   sql: string;
 }

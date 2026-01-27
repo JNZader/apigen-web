@@ -110,8 +110,17 @@ export function useMultiServiceExport() {
 
         const projectConfig = buildProjectConfig(project, service);
 
+        // Extract target config to send at request level (backend expects it there)
+        const target = projectConfig.targetConfig
+          ? {
+              language: projectConfig.targetConfig.language,
+              framework: projectConfig.targetConfig.framework,
+            }
+          : undefined;
+
         const blob = await generateWithServer({
           project: projectConfig,
+          target,
           sql: serviceSql,
         });
 
