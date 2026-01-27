@@ -50,8 +50,17 @@ export function useProjectGeneration() {
 
       const projectConfig = buildProjectConfig(project);
 
+      // Extract target config to send at request level (backend expects it there)
+      const target = projectConfig.targetConfig
+        ? {
+            language: projectConfig.targetConfig.language,
+            framework: projectConfig.targetConfig.framework,
+          }
+        : undefined;
+
       const blob = await generateWithServer({
         project: projectConfig,
+        target,
         sql,
       });
 
