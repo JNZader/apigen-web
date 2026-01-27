@@ -272,7 +272,11 @@ export async function pushToRepo(
     if (!validationResult.success) {
       logger.warn('Zod validation failed', 'GitHubPush', validationResult.error.issues);
       // Return raw data anyway if it has success=true
-      if (rawResponse.data && typeof rawResponse.data === 'object' && 'success' in rawResponse.data) {
+      if (
+        rawResponse.data &&
+        typeof rawResponse.data === 'object' &&
+        'success' in rawResponse.data
+      ) {
         return rawResponse.data as PushResponse;
       }
       throw new Error(`Validation failed: ${validationResult.error.issues[0]?.message}`);
